@@ -26,7 +26,15 @@ Agent desktop, thêm `https://minhtung263.github.io` vào cấu hình `webOrigin
 bản debug của app EasyPOS tự nhận trang `http://localhost`. Không nhận được thì
 nhập tay mã công ty + mã chủ.
 
-> Đăng nhập tài khoản EasyPOS ngay trên trang này CHƯA làm được: máy chủ
-> `api.easypos.vn` chỉ cho phép trang `https://app.easypos.vn` gọi. Muốn đăng
-> nhập tự động cần backend thêm tên miền trang này vào CORS (hoặc đặt trang
-> dưới `easypos.vn`).
+## Đăng nhập
+
+Trang có ô đăng nhập tài khoản EasyPOS (máy chủ thật): lấy danh sách công ty, chọn
+công ty rồi tự nối kênh in. Mật khẩu chỉ dùng một lần, không lưu.
+
+Máy chủ `api.easypos.vn` chỉ cho trang `https://*.easypos.vn` gọi (CORS), nên đăng
+nhập chỉ chạy khi trang được đặt dưới tên miền easypos.vn, VD
+`https://trainin.easypos.vn`: thêm bản ghi DNS `CNAME <tên> → minhtung263.github.io`
+rồi đặt tên miền đó ở Settings → Pages (tạo file `docs/CNAME`). Ở địa chỉ
+`github.io` ô đăng nhập báo lỗi và trang dùng cách nhập tay mã cửa hàng.
+
+`login.js` có test: `node --test docs/test/login.test.js`.

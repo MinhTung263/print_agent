@@ -47,13 +47,26 @@
   <section class="card" id="shopCard">
     <h2>1. Cửa hàng</h2>
     <div id="shopStatus" style="margin-bottom:12px"></div>
-    <div class="row field">
-      <div><label for="env">Môi trường</label>
-        <select id="env"><option value="production">Production</option><option value="staging">Staging</option><option value="test">Test</option><option value="test_88">Test 88</option></select></div>
-      <div><label for="company">Mã công ty</label><input type="text" id="company" inputmode="numeric" placeholder="VD 12345"></div>
-      <div><label for="owner">Mã chủ</label><input type="text" id="owner" inputmode="numeric" placeholder="VD 6789"></div>
+    <div id="loginBox">
+      <div class="field"><label for="user">Tài khoản EasyPOS</label><input type="text" id="user" autocomplete="username" placeholder="Tên đăng nhập"></div>
+      <div class="field"><label for="pass">Mật khẩu</label><input type="password" id="pass" autocomplete="current-password" placeholder="Mật khẩu"></div>
+      <button class="primary" id="btnLogin" style="width:100%">Đăng nhập</button>
+      <div class="hint">Mật khẩu chỉ dùng để lấy danh sách công ty, không lưu lại.</div>
     </div>
-    <button class="primary" id="btnConnect" style="width:100%">Kết nối</button>
+    <div id="companyBox" style="display:none">
+      <div class="field"><label for="companySel">Công ty</label><select id="companySel"></select></div>
+      <button class="ghost" id="btnLogout" style="width:100%">Đăng xuất / đổi tài khoản</button>
+    </div>
+    <details id="manual">
+      <summary>Nhập tay mã cửa hàng</summary>
+      <div class="row field" style="margin-top:12px">
+        <div><label for="env">Môi trường</label>
+          <select id="env"><option value="production">Production</option><option value="staging">Staging</option><option value="test">Test</option><option value="test_88">Test 88</option></select></div>
+        <div><label for="company">Mã công ty</label><input type="text" id="company" inputmode="numeric" placeholder="VD 12345"></div>
+        <div><label for="owner">Mã chủ</label><input type="text" id="owner" inputmode="numeric" placeholder="VD 6789"></div>
+      </div>
+      <button class="ghost" id="btnConnect" style="width:100%">Kết nối</button>
+    </details>
     <div class="hint" id="shopHint"></div>
   </section>
 
@@ -80,6 +93,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="relay.js"></script>
+<script src="login.js"></script>
 <script>
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -247,12 +261,45 @@ $('btnPrint').onclick = async () => {
   finally { b.disabled = false; }
 };
 
+// ---------- Đăng nhập ----------
+let loginCompanies = [];
+function showCompanies(list, fullName) {
+  loginCompanies = list;
+  $('loginBox').style.display = 'none'; $('companyBox').style.display = '';
+  $('companySel').innerHTML = list.map((c, k) => `<option value="${k}">${esc(c.name)}${c.address ? ' — ' + esc(c.address) : ''}</option>`).join('');
+  $('shopHint').textContent = `Xin chào ${fullName}.`;
+}
+function pickCompany() {
+  const c = loginCompanies[+$('companySel').value]; if (!c) return;
+  fillFields(PrintRelay.shopKey('production', c.id, c.ownerId)); connect();
+}
+$('btnLogin').onclick = async () => {
+  const b = $('btnLogin'), u = $('user').value.trim(), p = $('pass').value;
+  if (!u || !p) { $('shopStatus').innerHTML = pill('err', 'Nhập tài khoản và mật khẩu'); return; }
+  b.disabled = true; $('shopStatus').innerHTML = pill('warn', 'Đang đăng nhập…');
+  try {
+    const r = await EasyposLogin.login(u, p);
+    $('pass').value = ''; store.set('user', u);
+    showCompanies(r.companies, r.fullName); pickCompany();
+  } catch (e) {
+    $('shopStatus').innerHTML = pill('err', e.message || 'Đăng nhập không thành công');
+    if (e.code === 'cors') $('manual').open = true;
+  } finally { b.disabled = false; }
+};
+$('pass').onkeydown = (e) => { if (e.key === 'Enter') $('btnLogin').click(); };
+$('companySel').onchange = pickCompany;
+$('btnLogout').onclick = async () => {
+  await disconnect(); stations.clear(); selected = null; renderStations(); updatePrinters();
+  $('companyBox').style.display = 'none'; $('loginBox').style.display = ''; $('shopStatus').innerHTML = ''; $('shopHint').textContent = '';
+};
+
 // ---------- Khởi động ----------
 $('btnConnect').onclick = connect;
 (async () => {
   const saved = store.get('shop'); if (saved) fillFields(saved);
+  const lastUser = store.get('user'); if (lastUser) $('user').value = lastUser;
   const auto = await autoDetect();
-  if (!auto && !saved) $('shopHint').textContent = 'Nhập mã công ty và mã chủ. Mở http://127.0.0.1:9102/v1/info trên máy có Trạm in desktop để xem "shopKey" (dạng production/c12345_6789).';
+  if (!auto && !saved) $('shopHint').textContent = 'Đăng nhập tài khoản EasyPOS, hoặc nhập tay mã cửa hàng.';
   if (shopFromFields()) connect();
 })();
 </script>
