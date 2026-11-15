@@ -76,6 +76,19 @@ void main() {
       },
     );
 
+    test('đặt tên theo model, trùng thì thêm số', () {
+      final r = PrinterAutoAddPlan.plan(
+        found: const [
+          FoundPrinter(address: '10.0.0.5', mac: _mac1, model: 'Bếp'),
+          FoundPrinter(address: '10.0.0.6', mac: _mac2, model: 'XP-80C'),
+        ],
+        existing: [_store('10.0.0.9', name: 'Bếp')],
+        memory: const AutoAddMemory(),
+        now: now,
+      );
+      expect(r.toCreate.map((p) => p.name), ['Bếp 2', 'XP-80C']);
+    });
+
     test('tên không trùng tên đã có', () {
       final r = PrinterAutoAddPlan.plan(
         found: const [

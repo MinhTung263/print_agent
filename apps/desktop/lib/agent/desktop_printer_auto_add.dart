@@ -1,5 +1,6 @@
 import 'package:print_agent/print_agent.dart';
 import 'package:printer_label/desktop.dart';
+import 'package:printer_label/printer_label.dart' show PrinterLabel;
 
 import '../store/printer_auto_add.dart';
 import '../store/printer_auto_add_plan.dart';
@@ -36,7 +37,17 @@ Future<List<FoundPrinter>> _scan() async {
   if (found.isEmpty) return const [];
   // Vừa mở kết nối tới từng máy in: bảng ARP đã có MAC.
   final arp = await ArpTable.read();
+  // Tên model (SNMP / mDNS... — không gửi gì vào cổng in) để đặt tên máy in.
+  final models = await Future.wait([
+    for (final f in found)
+      PrinterLabel.getLanPrinterName(f.host).catchError((_) => null),
+  ]);
   return [
-    for (final f in found) FoundPrinter(address: f.address, mac: arp[f.host]),
+    for (var i = 0; i < found.length; i++)
+      FoundPrinter(
+        address: found[i].address,
+        mac: arp[found[i].host],
+        model: models[i],
+      ),
   ];
 }

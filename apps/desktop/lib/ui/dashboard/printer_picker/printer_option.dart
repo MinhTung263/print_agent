@@ -12,13 +12,18 @@ class PrinterOption {
     this.setupPort,
   });
 
-  factory PrinterOption.lan(String address, {bool manual = false}) =>
-      PrinterOption(
-        kind: PrinterOptionKind.lan,
-        address: address,
-        title: manual ? 'Máy in nhập tay' : 'Máy in mạng (LAN)',
-        subtitle: address,
-      );
+  factory PrinterOption.lan(
+    String address, {
+    bool manual = false,
+    String? model,
+  }) => PrinterOption(
+    kind: PrinterOptionKind.lan,
+    address: address,
+    title: (model ?? '').trim().isNotEmpty
+        ? model!.trim()
+        : (manual ? 'Máy in nhập tay' : 'Máy in mạng (LAN)'),
+    subtitle: address,
+  );
 
   factory PrinterOption.usb(UsbPrinterInfo p) => PrinterOption(
     kind: PrinterOptionKind.usb,

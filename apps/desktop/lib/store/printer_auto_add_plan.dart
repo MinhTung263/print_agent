@@ -2,7 +2,11 @@ import 'store_printer.dart';
 
 /// Máy in LAN dò thấy trong mạng (mở cổng in).
 class FoundPrinter {
-  const FoundPrinter({required this.address, this.mac});
+  const FoundPrinter({required this.address, this.mac, this.model});
+
+  /// Tên model máy in đọc được (VD "Xprinter XP-80C"); `null` khi không đọc
+  /// được — đặt "Máy in mới N".
+  final String? model;
 
   /// `ip` hoặc `ip:cổng`.
   final String address;
@@ -56,8 +60,9 @@ class AutoAddResult {
 /// Chọn máy in LAN cần tự thêm vào cửa hàng (không gọi mạng — test được):
 ///
 /// - Máy in dò thấy mà danh sách cửa hàng CHƯA có (trùng MAC hoặc trùng IP
-///   đều coi là đã có — không tạo trùng) → thêm, tên "Máy in mới N", mọi mẫu
-///   hoá đơn, khổ K80.
+///   đều coi là đã có — không tạo trùng) → thêm, tên theo model (VD
+///   "Xprinter XP-80C"; không đọc được thì "Máy in mới N"), mọi mẫu hoá đơn,
+///   khổ K80.
 /// - Máy in người dùng vừa xoá khỏi danh sách (lượt trước có, lượt này mất)
 ///   → không tự thêm lại trong [removedHold] (người dùng chủ ý xoá).
 abstract final class PrinterAutoAddPlan {
@@ -85,7 +90,16 @@ abstract final class PrinterAutoAddPlan {
 
     final names = {for (final p in existing) p.name.trim()};
     var n = 0;
-    String nextName() {
+    String nextName(String? model) {
+      final base = (model ?? '').trim();
+      if (base.isNotEmpty) {
+        var name = base;
+        for (var i = 2; names.contains(name); i++) {
+          name = '$base $i';
+        }
+        names.add(name);
+        return name;
+      }
       String name;
       do {
         name = '$namePrefix ${++n}';
@@ -110,7 +124,7 @@ abstract final class PrinterAutoAddPlan {
       taken.addAll(keys);
       toCreate.add(
         StorePrinter(
-          name: nextName(),
+          name: nextName(f.model),
           ip: f.address,
           mac: _mac(f.mac),
           templates: StorePrinter.receiptTemplates,
