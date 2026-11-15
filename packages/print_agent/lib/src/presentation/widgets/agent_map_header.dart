@@ -1,7 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:print_agent/src/presentation/kit/kit.dart';
+
+import 'agent_map_header_action.dart';
 
 /// Tiêu đề sơ đồ + nút làm mới.
 class AgentMapHeader extends StatelessWidget {
@@ -32,36 +32,14 @@ class AgentMapHeader extends StatelessWidget {
             maxLines: 2,
           ),
         ),
-        // Máy này là trạm in: thêm máy in (hộp chọn / thêm nhanh của app chủ).
-        if (isAgent && PrintAgentUi.onAddPrinter != null)
-          BaseTap(
-            onTap: () => unawaited(PrintAgentUi.onAddPrinter!()),
-            child: const Icon(
-              Icons.add_circle_outline_rounded,
-              color: AppColors.primaryBlueBase,
-            ),
-          ),
         if (onArrange != null)
-          BaseTap(
-            onTap: onArrange,
-            child: const Icon(
-              Icons.swap_vert_rounded,
-              color: AppColors.primaryBlueBase,
-            ),
-          ),
+          AgentMapHeaderAction(icon: Icons.swap_vert_rounded, onTap: onArrange),
         Obx(
-          () => PrintAgentUi.station.watchdog.isChecking.value
-              ? const SizedBox.square(
-                  dimension: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : BaseTap(
-                  onTap: onRefresh,
-                  child: const Icon(
-                    Icons.refresh_rounded,
-                    color: AppColors.primaryBlueBase,
-                  ),
-                ),
+          () => AgentMapHeaderAction(
+            icon: Icons.refresh_rounded,
+            onTap: onRefresh,
+            busy: PrintAgentUi.station.watchdog.isChecking.value,
+          ),
         ),
       ],
     );
