@@ -30,11 +30,12 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  # tool/gen_tray_icon.dart (vẽ biểu tượng khay).
+  # tool/gen_tray_icon.dart, tool/gen_app_icon.dart (biểu tượng khay / app).
   image: ^4.5.0
   flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true
   assets:
+    - assets/app/
     - assets/tray/
