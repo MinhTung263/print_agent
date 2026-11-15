@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:get/get.dart';
@@ -7,6 +8,7 @@ import 'package:print_agent_core/print_agent_core.dart';
 import 'package:printer_label/printer_label.dart';
 
 import '../domain/agent_identity.dart';
+import '../domain/agent_primary.dart';
 import '../domain/entities/agent_printer_ref.dart';
 import '../domain/entities/agent_printer_status.dart';
 import '../domain/entities/peer_built_in_printer.dart';
@@ -176,7 +178,51 @@ class AgentService<P extends AgentPrinterRef> {
     builtIn: _gateway.hasBuiltIn ? _printer.builtInSpec() : null,
     builtInConnected: _gateway.builtInConnected,
     statuses: watchdog.statuses,
+    rank: rank,
+    nets: _nets,
   );
+
+  /// Ưu tiên làm trạm in chính của máy này ([AgentPrimary]).
+  static int get rank {
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      return AgentPrimary.rankDesktop;
+    }
+    return Platform.isAndroid
+        ? AgentPrimary.rankAndroid
+        : AgentPrimary.rankOther;
+  }
+
+  /// Dải mạng hiện tại của máy này.
+  Set<String> _nets = const {};
+
+  /// Máy này là trạm in chính trong mạng (không có trạm nào cùng mạng ưu tiên
+  /// hơn). Trạm dự phòng canh máy in thưa hơn; đơn tự động chỉ trạm chính in.
+  final RxBool isPrimary = true.obs;
+
+  Future<void> _refreshNets() async {
+    final nets = AgentPrimary.netsOf(await PrintRelayLanServer.localIpv4s());
+    if (nets.length == _nets.length && nets.containsAll(_nets)) return;
+    _nets = nets;
+    _updatePrimary();
+    if (relay.isStation.value) unawaited(relay.refreshStationInfo());
+  }
+
+  void _updatePrimary() {
+    final primary = AgentPrimary.isPrimary(
+      selfId: stationId,
+      selfRank: rank,
+      selfNets: _nets,
+      stations: relay.stations.value,
+    );
+    if (primary == isPrimary.value) return;
+    isPrimary.value = primary;
+    watchdog.standby = !primary;
+    PrintAgentModule.host.log(
+      primary
+          ? '[AGENT] Máy này là trạm in chính trong mạng'
+          : '[AGENT] Có trạm in ưu tiên hơn cùng mạng — máy này làm dự phòng',
+    );
+  }
 
   /// Lệnh tới máy in tích hợp: chỉ nhận khi máy này có máy in tích hợp. Máy in
   /// đã tắt nhận lệnh trên Agent này: bỏ qua — Agent khác vẫn nhận được.
@@ -357,7 +403,10 @@ class AgentService<P extends AgentPrinterRef> {
   void _watchStations() {
     if (_watchingStations) return;
     _watchingStations = true;
+    unawaited(_refreshNets());
+    _gateway.networkChanges.listen((_) => unawaited(_refreshNets()));
     relay.stations.addListener(() {
+      _updatePrimary();
       PeerBuiltInPrinters.ensureLoaded();
       PeerBuiltInPrinters.sync(relay.stations.value);
       // Agent vừa tắt vẫn được nhớ (ngoại tuyến + lần thấy cuối).

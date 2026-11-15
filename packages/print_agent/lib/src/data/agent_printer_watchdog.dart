@@ -35,6 +35,20 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
   /// Đang mở màn Máy Agent thì dày ([_probeVisible]), chạy nền thì thưa hơn.
   static const Duration _probeVisible = Duration(seconds: 3);
   static const Duration _probeBackground = Duration(seconds: 15);
+
+  /// Trạm dự phòng (có trạm in chính cùng mạng): dò nền thưa hơn — máy in LAN
+  /// chỉ nhận một kết nối 9100 một lúc, không tranh với trạm chính.
+  static const Duration _probeStandby = Duration(seconds: 60);
+  bool _standby = false;
+
+  /// Đổi giữa trạm chính / dự phòng ([AgentPrimary]).
+  set standby(bool on) {
+    if (_standby == on) return;
+    _standby = on;
+    _restartProbe();
+  }
+
+  bool get standby => _standby;
   Timer? _probeTimer;
   bool _probing = false;
   int _watchers = 0;
@@ -188,7 +202,9 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
     _probeTimer?.cancel();
     if (_timer == null) return;
     _probeTimer = Timer.periodic(
-      _watchers > 0 ? _probeVisible : _probeBackground,
+      _watchers > 0
+          ? _probeVisible
+          : (_standby ? _probeStandby : _probeBackground),
       (_) => unawaited(_quickProbe()),
     );
   }

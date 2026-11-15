@@ -17,6 +17,8 @@ abstract final class AgentStationInfo {
     required AgentBuiltInSpec? builtIn,
     required bool builtInConnected,
     required List<AgentPrinterStatus<AgentPrinterRef>> statuses,
+    int? rank,
+    Set<String> nets = const {},
   }) {
     final builtInOff = AgentPrinterSwitches.off.contains('builtin');
     final info = <String, Object?>{
@@ -28,6 +30,9 @@ abstract final class AgentStationInfo {
       // Biết lệnh ngắt kết nối từ xa cả khi còn máy in (bản cũ chỉ nhận khi
       // không có máy in).
       'stop': true,
+      // Bầu trạm in chính giữa các trạm cùng mạng ([AgentPrimary]).
+      'rank': ?rank,
+      if (nets.isNotEmpty) 'net': (nets.toList()..sort()),
     };
     // Mã cũ (ngẫu nhiên) của máy này: máy khác gộp Agent cũ vào mã mới.
     final prev = AgentDeviceIdentity.previousIds;

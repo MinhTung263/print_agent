@@ -19,6 +19,7 @@ export 'src/data/agent_service.dart';
 export 'src/data/known_agents.dart';
 export 'src/data/peer_built_in_printers.dart';
 export 'src/domain/agent_identity.dart';
+export 'src/domain/agent_primary.dart';
 export 'src/domain/entities/agent_job_log.dart';
 export 'src/domain/entities/agent_print_activity.dart';
 export 'src/domain/entities/agent_printer_ref.dart';
