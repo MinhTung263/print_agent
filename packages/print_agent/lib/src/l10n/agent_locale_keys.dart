@@ -506,10 +506,10 @@ abstract final class LocaleKeys {
   static const printerSetting_agentReconnectUsb =
       'printerSetting_agentReconnectUsb';
 
-  /// "Tắt trạm in này"
+  /// "Ngắt kết nối trạm in"
   static const printerSetting_agentRemove = 'printerSetting_agentRemove';
 
-  /// "Tắt trạm in trên @agent? Máy đó sẽ không in giúp nữa"
+  /// "Ngắt kết nối trạm in @agent? Máy đó sẽ thôi in giúp các máy khác cho tới khi bật lại Trạm in ngay trên máy đó"
   static const printerSetting_agentRemoveConfirm =
       'printerSetting_agentRemoveConfirm';
   static String printerSetting_agentRemoveConfirmTr({required Object agent}) =>
@@ -519,11 +519,15 @@ abstract final class LocaleKeys {
   static const printerSetting_agentRemoveFailed =
       'printerSetting_agentRemoveFailed';
 
-  /// "Trạm in này không có máy in nào. Tắt sẽ tắt chế độ trạm in trên máy đó (máy đó tự kiểm tra lại, có máy in thì không tắt)"
+  /// "Máy đó sẽ thôi làm trạm in. Muốn dùng lại thì bật Trạm in ngay trên máy đó"
   static const printerSetting_agentRemoveHint =
       'printerSetting_agentRemoveHint';
 
-  /// "Đã gửi yêu cầu tắt @agent"
+  /// "Trạm in này đang nối máy in — sau khi ngắt, phiếu gửi qua trạm in này sẽ không in được. Muốn dùng lại thì bật Trạm in ngay trên máy đó"
+  static const printerSetting_agentRemoveHintPrinters =
+      'printerSetting_agentRemoveHintPrinters';
+
+  /// "Đã gửi yêu cầu ngắt kết nối @agent"
   static const printerSetting_agentRemoved = 'printerSetting_agentRemoved';
   static String printerSetting_agentRemovedTr({required Object agent}) =>
       printerSetting_agentRemoved.trParams({'agent': '$agent'});
@@ -549,7 +553,13 @@ abstract final class LocaleKeys {
     'failed': '$failed',
   });
 
-  /// "Máy này đã được tắt chế độ trạm in từ máy khác (@by) vì không có máy in nào"
+  /// "@agent đang dùng bản app cũ nên chưa ngắt kết nối từ xa được khi còn máy in. Cập nhật EasyPOS trên máy đó (hoặc tắt Trạm in ngay trên máy đó)."
+  static const printerSetting_agentStopOldVersion =
+      'printerSetting_agentStopOldVersion';
+  static String printerSetting_agentStopOldVersionTr({required Object agent}) =>
+      printerSetting_agentStopOldVersion.trParams({'agent': '$agent'});
+
+  /// "@by đã ngắt kết nối trạm in trên máy này. Bật lại Trạm in để in giúp các máy khác"
   static const printerSetting_agentStoppedRemotely =
       'printerSetting_agentStoppedRemotely';
   static String printerSetting_agentStoppedRemotelyTr({required Object by}) =>

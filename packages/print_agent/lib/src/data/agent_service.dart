@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:print_agent_core/print_agent_core.dart';
 import 'package:printer_label/printer_label.dart';
 
+import '../domain/agent_identity.dart';
 import '../domain/entities/agent_printer_ref.dart';
 import '../domain/entities/agent_printer_status.dart';
 import '../domain/entities/peer_built_in_printer.dart';
@@ -219,8 +220,17 @@ class AgentService<P extends AgentPrinterRef> {
       watchdog.statuses.isEmpty &&
       !_gateway.hasBuiltIn;
 
-  /// Lệnh điều khiển từ máy khác. `stop`: tắt Agent — CHỈ làm theo khi máy này
-  /// thật sự không có máy in (máy gửi có thể dùng thông tin cũ).
+  /// Làm theo lệnh `stop` không: người dùng đã xác nhận ngắt cả khi còn máy in
+  /// (`force`), hoặc máy này thật sự không có máy in.
+  static bool shouldStop(
+    Map<Object?, Object?> command, {
+    required bool hasNoPrinters,
+  }) => command['force'] == true || hasNoPrinters;
+
+  /// Lệnh điều khiển từ máy khác. `stop`: ngắt kết nối trạm in (như tự tắt
+  /// trên máy này). Không kèm `force` (máy gửi thấy trạm "rỗng") thì CHỈ làm
+  /// theo khi máy này thật sự không có máy in — máy gửi có thể dùng thông tin
+  /// cũ; `force` là người dùng đã xác nhận ngắt cả khi còn máy in.
   Future<void> _onControl(Map<Object?, Object?> command) async {
     if (command['cmd'] == AgentPrinterRemote.command) {
       return remote.apply(command);
@@ -228,11 +238,11 @@ class AgentService<P extends AgentPrinterRef> {
     if (command['cmd'] != 'stop') return;
     final by = command['by']?.toString() ?? '';
     final host = PrintAgentModule.host;
-    if (!_hasNoPrinters) {
+    if (!shouldStop(command, hasNoPrinters: _hasNoPrinters)) {
       host.log('[AGENT] Bỏ qua lệnh tắt từ xa ($by): máy này có máy in');
       return;
     }
-    host.log('[AGENT] Tắt Agent theo lệnh từ xa ($by): không có máy in');
+    host.log('[AGENT] Ngắt kết nối trạm in theo lệnh từ xa ($by)');
     await setEnabled(false);
     host.notify(
       LocaleKeys.printerSetting_agentStoppedRemotelyTr(by: by),
@@ -241,13 +251,16 @@ class AgentService<P extends AgentPrinterRef> {
     );
   }
 
-  /// Xoá một máy Agent KHÁC không có máy in: gửi lệnh tắt + quên trên máy này.
+  /// Ngắt kết nối một máy Agent KHÁC: gửi lệnh tắt + quên trên máy này. Trạm
+  /// còn máy in thì kèm `force` (người dùng đã xác nhận) — trạm bản cũ không
+  /// biết cờ này ([AgentIdentity.canStopRemotely]).
   Future<bool> removeAgent(Map<Object?, Object?> station) async {
     final id = station['id']?.toString() ?? '';
     if (id.isEmpty) return false;
     final sent = await relay.sendControl(id, {
       'cmd': 'stop',
       'by': AgentDeviceName.label ?? displayName,
+      if (!AgentIdentity.hasNoPrinters(station)) 'force': true,
     });
     if (sent) {
       KnownAgents.forget(id);

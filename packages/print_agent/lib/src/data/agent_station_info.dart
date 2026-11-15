@@ -25,6 +25,9 @@ abstract final class AgentStationInfo {
       // Nhận ra máy: model + bản app (Dev / prod...).
       'model': ?model,
       'app': PrintAgentModule.host.appPackage,
+      // Biết lệnh ngắt kết nối từ xa cả khi còn máy in (bản cũ chỉ nhận khi
+      // không có máy in).
+      'stop': true,
     };
     // Mã cũ (ngẫu nhiên) của máy này: máy khác gộp Agent cũ vào mã mới.
     final prev = AgentDeviceIdentity.previousIds;

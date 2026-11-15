@@ -163,9 +163,8 @@ class _Body extends StatelessWidget {
           ),
         // Agent đã tắt (thôi dùng / mã cũ): quên trên máy này.
         if (!online) AgentForgetButton(station: info),
-        // Đang trực tuyến mà không có máy in nào: cho xoá (tắt Agent từ xa).
-        if (online && AgentIdentity.hasNoPrinters(info))
-          AgentRemoveButton(station: info),
+        // Đang trực tuyến: cho ngắt kết nối trạm in từ xa.
+        if (online) AgentRemoveButton(station: info),
       ],
     );
   }

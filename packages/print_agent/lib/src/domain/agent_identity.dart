@@ -47,8 +47,7 @@ abstract final class AgentIdentity {
     return [model, app].where((e) => e.isNotEmpty).join(' · ');
   }
 
-  /// Agent không có máy in nào (không báo máy in, không có máy in tích hợp) —
-  /// được phép xoá (tắt từ xa).
+  /// Agent không có máy in nào (không báo máy in, không có máy in tích hợp).
   static bool hasNoPrinters(Map<Object?, Object?> station) {
     if (station['builtIn'] is Map) return false;
     final printers = station['printers'];
@@ -56,4 +55,9 @@ abstract final class AgentIdentity {
     final total = printers['total'];
     return total is! int || total == 0;
   }
+
+  /// Ngắt kết nối từ xa được: trạm không có máy in, hoặc trạm bản mới (biết
+  /// lệnh ngắt cả khi còn máy in — báo `stop` trong thông tin trạm).
+  static bool canStopRemotely(Map<Object?, Object?> station) =>
+      station['stop'] == true || hasNoPrinters(station);
 }

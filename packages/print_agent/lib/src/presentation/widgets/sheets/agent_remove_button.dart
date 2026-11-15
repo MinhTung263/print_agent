@@ -5,9 +5,9 @@ import 'package:print_agent/src/presentation/kit/kit.dart';
 
 import 'package:print_agent/src/agent_domain.dart';
 
-/// "Xoá Agent này" — chỉ cho Agent ĐANG TRỰC TUYẾN mà KHÔNG có máy in: gửi lệnh
-/// tắt chế độ Agent tới máy đó (máy đó tự kiểm tra lại, có máy in thì bỏ qua) +
-/// quên trên máy này. Hỏi xác nhận trước.
+/// "Ngắt kết nối trạm in" — cho Agent ĐANG TRỰC TUYẾN: gửi lệnh tắt chế độ
+/// Agent tới máy đó + quên trên máy này. Hỏi xác nhận trước. Trạm còn máy in mà
+/// chạy bản cũ (chỉ nhận lệnh khi không có máy in): báo cần cập nhật.
 class AgentRemoveButton extends StatelessWidget {
   const AgentRemoveButton({super.key, required this.station});
 
@@ -15,6 +15,16 @@ class AgentRemoveButton extends StatelessWidget {
 
   Future<void> _confirm() async {
     final name = AgentIdentity.ofStation(station);
+    if (!AgentIdentity.canStopRemotely(station)) {
+      unawaited(
+        AppNotification.show(
+          message: LocaleKeys.printerSetting_agentStopOldVersionTr(agent: name),
+          type: AppNotificationType.warning,
+          duration: const Duration(seconds: 6),
+        ),
+      );
+      return;
+    }
     await Get.dialog<void>(
       AppConfirmDialog(
         title: LocaleKeys.printerSetting_agentRemove.tr,
@@ -51,8 +61,10 @@ class AgentRemoveButton extends StatelessWidget {
           title: LocaleKeys.printerSetting_agentRemove,
           backgroundColor: AppColors.errorRed,
         ),
-        const AppText(
-          LocaleKeys.printerSetting_agentRemoveHint,
+        AppText(
+          AgentIdentity.hasNoPrinters(station)
+              ? LocaleKeys.printerSetting_agentRemoveHint
+              : LocaleKeys.printerSetting_agentRemoveHintPrinters,
           variant: .caption,
           tone: .secondary,
           textAlign: TextAlign.center,

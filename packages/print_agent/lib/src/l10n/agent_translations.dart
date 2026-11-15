@@ -145,20 +145,24 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentReconnectTitle': "Kết nối lại máy in",
     'printerSetting_agentReconnectUsb':
         "Không thấy máy in USB. Cắm lại cáp USB rồi thử lại",
-    'printerSetting_agentRemove': "Tắt trạm in này",
+    'printerSetting_agentRemove': "Ngắt kết nối trạm in",
     'printerSetting_agentRemoveConfirm':
-        "Tắt trạm in trên @agent? Máy đó sẽ không in giúp nữa",
+        "Ngắt kết nối trạm in @agent? Máy đó sẽ thôi in giúp các máy khác cho tới khi bật lại Trạm in ngay trên máy đó",
     'printerSetting_agentRemoveFailed':
         "Không gửi được yêu cầu — kiểm tra kết nối mạng",
     'printerSetting_agentRemoveHint':
-        "Trạm in này không có máy in nào. Tắt sẽ tắt chế độ trạm in trên máy đó (máy đó tự kiểm tra lại, có máy in thì không tắt)",
-    'printerSetting_agentRemoved': "Đã gửi yêu cầu tắt @agent",
+        "Máy đó sẽ thôi làm trạm in. Muốn dùng lại thì bật Trạm in ngay trên máy đó",
+    'printerSetting_agentRemoveHintPrinters':
+        "Trạm in này đang nối máy in — sau khi ngắt, phiếu gửi qua trạm in này sẽ không in được. Muốn dùng lại thì bật Trạm in ngay trên máy đó",
+    'printerSetting_agentRemoved': "Đã gửi yêu cầu ngắt kết nối @agent",
     'printerSetting_agentStandby': "Sẵn sàng in giúp",
     'printerSetting_agentStateDisconnected': "Mất kết nối",
     'printerSetting_agentStateOtherNetwork': "Khác mạng",
     'printerSetting_agentStats': "Đã in giúp @printed phiếu · lỗi @failed",
+    'printerSetting_agentStopOldVersion':
+        "@agent đang dùng bản app cũ nên chưa ngắt kết nối từ xa được khi còn máy in. Cập nhật EasyPOS trên máy đó (hoặc tắt Trạm in ngay trên máy đó).",
     'printerSetting_agentStoppedRemotely':
-        "Máy này đã được tắt chế độ trạm in từ máy khác (@by) vì không có máy in nào",
+        "@by đã ngắt kết nối trạm in trên máy này. Bật lại Trạm in để in giúp các máy khác",
     'printerSetting_agentSwitchNetwork': "Đổi mạng",
     'printerSetting_agentSwitchNetworkHint':
         "Máy này chưa kết nối được các máy in dưới đây. Chuyển sang đúng Wi-Fi của máy in để in",
@@ -356,20 +360,24 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentReconnectTitle': "Reconnect printer",
     'printerSetting_agentReconnectUsb':
         "USB printer not found. Re-plug the USB cable and retry",
-    'printerSetting_agentRemove': "Remove this print station",
+    'printerSetting_agentRemove': "Disconnect print station",
     'printerSetting_agentRemoveConfirm':
-        "Turn off print station mode on @agent? It will stop printing for other devices",
+        "Disconnect print station @agent? It will stop printing for other devices until Print station is turned on again on that device",
     'printerSetting_agentRemoveFailed':
         "Could not send the request — check the network",
     'printerSetting_agentRemoveHint':
-        "This print station has no printers. Removing turns off print station mode on that device (it double-checks and ignores the request if it has printers)",
-    'printerSetting_agentRemoved': "Sent the turn-off request to @agent",
+        "That device will stop being a print station. To use it again, turn on Print station on that device",
+    'printerSetting_agentRemoveHintPrinters':
+        "This print station has printers connected — after disconnecting, tickets sent through it will not print. To use it again, turn on Print station on that device",
+    'printerSetting_agentRemoved': "Sent the disconnect request to @agent",
     'printerSetting_agentStandby': "Standby backup",
     'printerSetting_agentStateDisconnected': "Disconnected",
     'printerSetting_agentStateOtherNetwork': "Other network",
     'printerSetting_agentStats': "Printed @printed jobs · failed @failed",
+    'printerSetting_agentStopOldVersion':
+        "@agent is on an old app version, so it can't be disconnected remotely while it has printers. Update EasyPOS on that device (or turn off Print station on that device).",
     'printerSetting_agentStoppedRemotely':
-        "Print station mode on this device was turned off remotely (@by) because it has no printers",
+        "@by disconnected the print station on this device. Turn Print station back on to print for other devices",
     'printerSetting_agentSwitchNetwork': "Switch network",
     'printerSetting_agentSwitchNetworkHint':
         "This device cannot reach the printers below. Switch to the printer's Wi-Fi to print",
