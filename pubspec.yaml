@@ -1,0 +1,9 @@
+name: print_agent_workspace
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+
+workspace:
+  - packages/print_agent_core
+  - apps/desktop

@@ -1,0 +1,5 @@
+# Chép thành pubspec_overrides.yaml (đã gitignore) để dùng printer_label trên máy
+# thay vì bản trên GitHub khi đang sửa plugin cùng lúc.
+dependency_overrides:
+  printer_label:
+    path: ../lib/printer_label

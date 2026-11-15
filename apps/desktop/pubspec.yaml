@@ -1,0 +1,34 @@
+name: print_agent_desktop
+description: "EasyPOS Print Agent — in ESC/POS qua LAN, không cần driver (Windows/Linux/macOS)."
+publish_to: 'none'
+version: 0.1.0+1
+resolution: workspace
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  crypto: ^3.0.8
+  encrypt: ^5.0.3
+  flutter:
+    sdk: flutter
+  launch_at_startup: ^0.5.1
+  mqtt_client: ^10.14.0
+  print_agent_core:
+    path: ../../packages/print_agent_core
+  printer_label:
+    git:
+      url: https://github.com/MinhTung263/printer_label.git
+      ref: feature/print-agent
+  tray_manager: ^0.5.3
+  window_manager: ^0.5.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/tray/

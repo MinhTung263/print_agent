@@ -1,0 +1,25 @@
+name: print_agent_core
+description: "Lõi máy Agent EasyPOS: hàng đợi lệnh in MQTT, trạm, máy gửi, đường LAN."
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.41.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  printer_label:
+    git:
+      url: https://github.com/MinhTung263/printer_label.git
+      ref: feature/print-agent
+  mqtt_client: ^10.11.0
+  encrypt: ^5.0.3
+  crypto: ^3.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
