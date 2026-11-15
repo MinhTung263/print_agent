@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'secret_store.dart';
 
 /// Tài khoản + mật khẩu đã ghi nhớ (ô "Ghi nhớ mật khẩu" ở màn đăng nhập).
 class SavedLogin {
@@ -18,29 +18,20 @@ abstract interface class SavedLoginStore {
   Future<void> clear();
 }
 
-/// Lưu trong kho bảo mật của hệ điều hành, KHÔNG ghi mật khẩu ra file cấu
-/// hình: macOS Keychain, Windows mã hoá DPAPI theo tài khoản Windows, Linux
-/// libsecret (GNOME Keyring / KWallet).
+/// Lưu trong kho bảo mật của hệ điều hành ([SecretStore]), KHÔNG ghi mật
+/// khẩu ra file cấu hình.
 class SecureSavedLoginStore implements SavedLoginStore {
-  SecureSavedLoginStore([FlutterSecureStorage? storage])
-    : _storage =
-          storage ??
-          const FlutterSecureStorage(
-            // Keychain thường: không cần ký app / quyền keychain-access-groups.
-            mOptions: MacOsOptions(
-              accountName: 'EasyPOS Agent',
-              usesDataProtectionKeychain: false,
-            ),
-          );
+  SecureSavedLoginStore([SecretStore? store])
+    : _store = store ?? SecureSecretStore();
 
   static const String _key = 'saved_login';
 
-  final FlutterSecureStorage _storage;
+  final SecretStore _store;
 
   @override
   Future<SavedLogin?> read() async {
     try {
-      final raw = await _storage.read(key: _key);
+      final raw = await _store.read(_key);
       if (raw == null) return null;
       final m = jsonDecode(raw);
       if (m is! Map) return null;
@@ -53,19 +44,11 @@ class SecureSavedLoginStore implements SavedLoginStore {
   }
 
   @override
-  Future<void> save(SavedLogin login) async {
-    try {
-      await _storage.write(
-        key: _key,
-        value: jsonEncode({'u': login.username, 'p': login.password}),
-      );
-    } catch (_) {}
-  }
+  Future<void> save(SavedLogin login) => _store.write(
+    _key,
+    jsonEncode({'u': login.username, 'p': login.password}),
+  );
 
   @override
-  Future<void> clear() async {
-    try {
-      await _storage.delete(key: _key);
-    } catch (_) {}
-  }
+  Future<void> clear() => _store.write(_key, null);
 }

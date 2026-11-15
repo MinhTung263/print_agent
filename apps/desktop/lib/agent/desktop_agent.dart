@@ -16,6 +16,9 @@ import 'desktop_job_printer.dart';
 import 'desktop_printer.dart';
 import 'desktop_printer_gateway.dart';
 import 'desktop_web_print.dart';
+import 'desktop_printer_auto_add.dart';
+import '../auth/auth_session.dart';
+import '../store/printer_auto_add.dart';
 import '../ui/dashboard/desktop_header.dart';
 import 'desktop_wifi.dart';
 
@@ -54,6 +57,14 @@ class DesktopAgent extends ChangeNotifier {
     _wake = WakeDetector(_onWake)..start();
   }
 
+  StreamSubscription<void>? _autoAddNet;
+
+  /// Phiên gọi API EasyPOS của công ty (tự thêm máy in vào cửa hàng).
+  late final AuthSession auth = AuthSession(companyId: () => _config.companyId);
+
+  /// Tự thêm máy in LAN dò thấy vào danh sách máy in của cửa hàng.
+  late final PrinterAutoAdd autoAdd = desktopPrinterAutoAdd(this);
+
   late final WakeDetector _wake;
 
   /// Cổng web: trang EasyPOS trên trình duyệt của máy này in qua trạm in
@@ -67,6 +78,8 @@ class DesktopAgent extends ChangeNotifier {
   /// Đang làm Agent: chặn máy ngủ (máy ngủ = không nhận lệnh in).
   void _onStationChanged() {
     unawaited(KeepAwake.set(isOn));
+    // Vừa bật trạm in: dò + thêm máy in sớm (không chờ lượt định kỳ).
+    if (isOn) autoAdd.networkChanged();
     notifyListeners();
   }
 
@@ -148,6 +161,10 @@ class DesktopAgent extends ChangeNotifier {
   Future<void> start() async {
     if (!_config.ready) return;
     await service.init();
+    autoAdd.start();
+    _autoAddNet ??= gateway.networkChanges.listen(
+      (_) => autoAdd.networkChanged(),
+    );
     unawaited(gateway.reconnectBuiltIn());
     unawaited(_learnPrinterMac());
   }
@@ -157,6 +174,7 @@ class DesktopAgent extends ChangeNotifier {
   /// Thoát ứng dụng: rút khỏi danh sách Agent, thôi chặn máy ngủ.
   Future<void> shutdown() async {
     _wake.stop();
+    _stopAutoAdd();
     await web.stop();
     await KeepAwake.set(false);
     // Tạm dừng (GIỮ ghim công ty): bật lại máy / mở lại app thì Agent tự bật.
@@ -167,6 +185,8 @@ class DesktopAgent extends ChangeNotifier {
   /// Đăng xuất: tạm dừng Agent (giữ ghim công ty — đăng nhập lại cửa hàng
   /// này thì tự bật lại), bỏ công ty đã lưu.
   Future<void> logout() async {
+    _stopAutoAdd();
+    await auth.clear();
     await service.suspend();
     AgentConfig.clearSession();
     _config = _config.withoutCompany();
@@ -198,9 +218,16 @@ class DesktopAgent extends ChangeNotifier {
     return failure == null ? null : (failure.detail ?? failure.error.name);
   }
 
+  void _stopAutoAdd() {
+    autoAdd.stop();
+    unawaited(_autoAddNet?.cancel());
+    _autoAddNet = null;
+  }
+
   @override
   void dispose() {
     _wake.stop();
+    _stopAutoAdd();
     super.dispose();
   }
 }

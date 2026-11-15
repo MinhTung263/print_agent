@@ -33,6 +33,10 @@ class _LoginPageState extends State<LoginPage> {
   late final SavedLoginStore _saved =
       widget.savedLogin ?? SecureSavedLoginStore();
   bool _remember = false;
+
+  /// Mật khẩu vừa đăng nhập — giữ tới khi chọn xong công ty để lấy token của
+  /// công ty đó, rồi bỏ.
+  String? _password;
   bool _loading = false;
   String? _error;
   LoginResult? _result;
@@ -80,6 +84,7 @@ class _LoginPageState extends State<LoginPage> {
       await (_remember
           ? _saved.save(SavedLogin(username: user, password: password))
           : _saved.clear());
+      _password = password;
       if (!_remember) _pass.clear();
       if (result.companies.length == 1) {
         await _choose(result.companies.first);
@@ -103,7 +108,27 @@ class _LoginPageState extends State<LoginPage> {
         userName: _user.text.trim(),
       ),
     );
+    await _signIn(c.id);
     await agent.start();
+  }
+
+  /// Lấy token của công ty (tự thêm máy in vào cửa hàng). Lỗi thì bỏ qua —
+  /// trạm in vẫn chạy, chỉ không tự thêm máy in.
+  Future<void> _signIn(int companyId) async {
+    final password = _password;
+    _password = null;
+    if (password == null) return;
+    try {
+      await widget.agent.auth.signedIn(
+        await AuthService.companyToken(
+          username: _user.text.trim(),
+          password: password,
+          companyId: companyId,
+        ),
+      );
+    } on LoginException catch (e) {
+      debugPrint('[AUTH] Không lấy được token công ty: ${e.message}');
+    }
   }
 
   Widget _panel() {
