@@ -9,682 +9,476 @@ abstract final class LocaleKeys {
   static const bills_rePrint = 'bills_rePrint';
 
   /// "Đã in"
-  static const printerSetting_agentActivityDone =
-      'printerSetting_agentActivityDone';
+  static const printerSetting_agentActivityDone = 'printerSetting_agentActivityDone';
 
   /// "In lỗi"
-  static const printerSetting_agentActivityFailed =
-      'printerSetting_agentActivityFailed';
+  static const printerSetting_agentActivityFailed = 'printerSetting_agentActivityFailed';
 
   /// "Đang in tem"
-  static const printerSetting_agentActivityPrintingLabel =
-      'printerSetting_agentActivityPrintingLabel';
+  static const printerSetting_agentActivityPrintingLabel = 'printerSetting_agentActivityPrintingLabel';
 
   /// "Đang in hoá đơn"
-  static const printerSetting_agentActivityPrintingReceipt =
-      'printerSetting_agentActivityPrintingReceipt';
+  static const printerSetting_agentActivityPrintingReceipt = 'printerSetting_agentActivityPrintingReceipt';
 
   /// "Sắp xếp sơ đồ"
   static const printerSetting_agentArrange = 'printerSetting_agentArrange';
 
-  /// "Chưa có máy Agent hay máy in nào để sắp xếp"
-  static const printerSetting_agentArrangeEmpty =
-      'printerSetting_agentArrangeEmpty';
+  /// "Chưa có trạm in hay máy in nào để sắp xếp"
+  static const printerSetting_agentArrangeEmpty = 'printerSetting_agentArrangeEmpty';
 
-  /// "Kéo biểu tượng ⋮⋮ để đổi thứ tự các máy Agent; kéo từng máy in để đổi thứ tự trong Agent đó. Chỉ đổi cách hiển thị trên máy này, không đổi Agent nào in máy in nào"
-  static const printerSetting_agentArrangeHint =
-      'printerSetting_agentArrangeHint';
+  /// "Kéo biểu tượng ⋮⋮ để đổi thứ tự các trạm in; kéo từng máy in để đổi thứ tự trong trạm in đó. Chỉ đổi cách hiển thị trên máy này, không đổi trạm in nào in máy in nào"
+  static const printerSetting_agentArrangeHint = 'printerSetting_agentArrangeHint';
 
   /// "Về mặc định"
-  static const printerSetting_agentArrangeReset =
-      'printerSetting_agentArrangeReset';
+  static const printerSetting_agentArrangeReset = 'printerSetting_agentArrangeReset';
 
   /// "Lưu"
-  static const printerSetting_agentArrangeSave =
-      'printerSetting_agentArrangeSave';
+  static const printerSetting_agentArrangeSave = 'printerSetting_agentArrangeSave';
 
   /// "Tự khởi động lại khi bật máy: Chưa cấp quyền (bấm để cấp)"
-  static const printerSetting_agentAutoRestartOff =
-      'printerSetting_agentAutoRestartOff';
+  static const printerSetting_agentAutoRestartOff = 'printerSetting_agentAutoRestartOff';
 
   /// "Tự khởi động lại khi bật máy: Đã bật"
-  static const printerSetting_agentAutoRestartOn =
-      'printerSetting_agentAutoRestartOn';
+  static const printerSetting_agentAutoRestartOn = 'printerSetting_agentAutoRestartOn';
 
-  /// "Để máy Agent tự chạy lại khi khởi động máy hoặc bị tắt, hãy cấp quyền "Hiển thị trên ứng dụng khác" cho app"
-  static const printerSetting_agentAutoRestartPermission =
-      'printerSetting_agentAutoRestartPermission';
+  /// "Để trạm in tự chạy lại khi bật máy hoặc bị tắt, hãy cấp quyền "Hiển thị trên ứng dụng khác" cho app"
+  static const printerSetting_agentAutoRestartPermission = 'printerSetting_agentAutoRestartPermission';
 
-  /// "Máy này đang làm Agent cho cửa hàng khác. Bật ở đây để chuyển trạm in sang cửa hàng này."
-  static const printerSetting_agentBoundElsewhere =
-      'printerSetting_agentBoundElsewhere';
+  /// "Máy này đang là trạm in của cửa hàng khác. Bật ở đây để chuyển trạm in sang cửa hàng này."
+  static const printerSetting_agentBoundElsewhere = 'printerSetting_agentBoundElsewhere';
 
-  /// "Tích hợp"
+  /// "Có sẵn trên máy"
   static const printerSetting_agentBuiltIn = 'printerSetting_agentBuiltIn';
 
   /// "Đang dùng để in"
-  static const printerSetting_agentBuiltInInUse =
-      'printerSetting_agentBuiltInInUse';
+  static const printerSetting_agentBuiltInInUse = 'printerSetting_agentBuiltInInUse';
 
   /// "Chưa bật dùng"
-  static const printerSetting_agentBuiltInNotUsed =
-      'printerSetting_agentBuiltInNotUsed';
+  static const printerSetting_agentBuiltInNotUsed = 'printerSetting_agentBuiltInNotUsed';
 
-  /// "Máy in tích hợp"
-  static const printerSetting_agentBuiltInPrinter =
-      'printerSetting_agentBuiltInPrinter';
+  /// "Máy in có sẵn trên máy"
+  static const printerSetting_agentBuiltInPrinter = 'printerSetting_agentBuiltInPrinter';
 
-  /// "Đám mây"
+  /// "Internet"
   static const printerSetting_agentCloud = 'printerSetting_agentCloud';
 
-  /// "Máy Agent"
+  /// "Trạm in"
   static const printerSetting_agentDashboard = 'printerSetting_agentDashboard';
 
-  /// "Tự in dự phòng qua máy Agent khi không in thẳng được · bấm để xem"
+  /// "Tự in qua trạm in khi máy in không in được · bấm để xem"
   static const printerSetting_agentEntryOff = 'printerSetting_agentEntryOff';
 
-  /// "Máy này đang là Agent · bấm để xem sơ đồ kết nối"
+  /// "Máy này đang là trạm in · bấm để xem sơ đồ"
   static const printerSetting_agentEntryOn = 'printerSetting_agentEntryOn';
 
-  /// "Máy Agent"
-  static const printerSetting_agentEntryTitle =
-      'printerSetting_agentEntryTitle';
+  /// "Trạm in"
+  static const printerSetting_agentEntryTitle = 'printerSetting_agentEntryTitle';
 
-  /// "Quên Agent này"
+  /// "Bỏ trạm in này khỏi danh sách"
   static const printerSetting_agentForget = 'printerSetting_agentForget';
 
-  /// "Chỉ bỏ khỏi danh sách trên máy này (kèm máy in tích hợp của Agent đó). Agent bật lại sẽ tự hiện lại"
-  static const printerSetting_agentForgetHint =
-      'printerSetting_agentForgetHint';
+  /// "Chỉ bỏ khỏi danh sách trên máy này (kèm máy in có sẵn trên trạm in đó). Trạm in bật lại sẽ tự hiện lại"
+  static const printerSetting_agentForgetHint = 'printerSetting_agentForgetHint';
 
   /// "Đã quên @agent"
   static const printerSetting_agentForgot = 'printerSetting_agentForgot';
-  static String printerSetting_agentForgotTr({required Object agent}) =>
-      printerSetting_agentForgot.trParams({'agent': '$agent'});
+  static String printerSetting_agentForgotTr({required Object agent}) => printerSetting_agentForgot.trParams({'agent': '$agent'});
 
   /// "Cấp quyền"
-  static const printerSetting_agentGrantPermission =
-      'printerSetting_agentGrantPermission';
+  static const printerSetting_agentGrantPermission = 'printerSetting_agentGrantPermission';
 
-  /// "Có máy in tích hợp"
-  static const printerSetting_agentHasBuiltIn =
-      'printerSetting_agentHasBuiltIn';
+  /// "Có máy in có sẵn trên máy"
+  static const printerSetting_agentHasBuiltIn = 'printerSetting_agentHasBuiltIn';
 
   /// "@count bản"
   static const printerSetting_agentJobCopies = 'printerSetting_agentJobCopies';
-  static String printerSetting_agentJobCopiesTr({required Object count}) =>
-      printerSetting_agentJobCopies.trParams({'count': '$count'});
+  static String printerSetting_agentJobCopiesTr({required Object count}) => printerSetting_agentJobCopies.trParams({'count': '$count'});
 
-  /// "Máy in tích hợp chưa sẵn sàng"
-  static const printerSetting_agentJobErrBuiltIn =
-      'printerSetting_agentJobErrBuiltIn';
+  /// "Máy in có sẵn trên máy chưa sẵn sàng"
+  static const printerSetting_agentJobErrBuiltIn = 'printerSetting_agentJobErrBuiltIn';
 
   /// "Máy in đang bận (máy khác đang in)"
-  static const printerSetting_agentJobErrBusy =
-      'printerSetting_agentJobErrBusy';
+  static const printerSetting_agentJobErrBusy = 'printerSetting_agentJobErrBusy';
 
   /// "Máy in đang mở nắp"
-  static const printerSetting_agentJobErrCoverOpen =
-      'printerSetting_agentJobErrCoverOpen';
+  static const printerSetting_agentJobErrCoverOpen = 'printerSetting_agentJobErrCoverOpen';
 
-  /// "Lệnh in không có nội dung"
-  static const printerSetting_agentJobErrNoContent =
-      'printerSetting_agentJobErrNoContent';
+  /// "Phiếu in không có nội dung"
+  static const printerSetting_agentJobErrNoContent = 'printerSetting_agentJobErrNoContent';
 
   /// "Máy in không phản hồi (tắt nguồn, mất mạng hoặc hết giấy)"
-  static const printerSetting_agentJobErrNotReady =
-      'printerSetting_agentJobErrNotReady';
+  static const printerSetting_agentJobErrNotReady = 'printerSetting_agentJobErrNotReady';
 
-  /// "Máy in ở mạng khác, máy Agent không tới được"
-  static const printerSetting_agentJobErrOtherNetwork =
-      'printerSetting_agentJobErrOtherNetwork';
+  /// "Máy in ở mạng khác, trạm in không kết nối tới được"
+  static const printerSetting_agentJobErrOtherNetwork = 'printerSetting_agentJobErrOtherNetwork';
 
   /// "Máy in hết giấy"
-  static const printerSetting_agentJobErrOutOfPaper =
-      'printerSetting_agentJobErrOutOfPaper';
+  static const printerSetting_agentJobErrOutOfPaper = 'printerSetting_agentJobErrOutOfPaper';
 
   /// "Máy in quá nóng"
-  static const printerSetting_agentJobErrOverheated =
-      'printerSetting_agentJobErrOverheated';
+  static const printerSetting_agentJobErrOverheated = 'printerSetting_agentJobErrOverheated';
 
-  /// "Gửi lệnh tới máy in bị lỗi"
-  static const printerSetting_agentJobErrSend =
-      'printerSetting_agentJobErrSend';
+  /// "Gửi phiếu tới máy in bị lỗi"
+  static const printerSetting_agentJobErrSend = 'printerSetting_agentJobErrSend';
 
-  /// "Không kết nối được máy in lúc gửi lệnh (tắt nguồn, mất mạng hoặc sai IP)"
-  static const printerSetting_agentJobErrUnreachable =
-      'printerSetting_agentJobErrUnreachable';
+  /// "Không kết nối được máy in lúc gửi phiếu (tắt nguồn, mất mạng hoặc sai IP)"
+  static const printerSetting_agentJobErrUnreachable = 'printerSetting_agentJobErrUnreachable';
 
   /// "Từ @sender"
   static const printerSetting_agentJobFrom = 'printerSetting_agentJobFrom';
-  static String printerSetting_agentJobFromTr({required Object sender}) =>
-      printerSetting_agentJobFrom.trParams({'sender': '$sender'});
+  static String printerSetting_agentJobFromTr({required Object sender}) => printerSetting_agentJobFrom.trParams({'sender': '$sender'});
 
   /// "Tem"
   static const printerSetting_agentJobLabel = 'printerSetting_agentJobLabel';
 
-  /// "Lệnh in gần đây"
+  /// "Phiếu in gần đây"
   static const printerSetting_agentJobLog = 'printerSetting_agentJobLog';
 
-  /// "Chưa có lệnh in nào được gửi tới máy này"
-  static const printerSetting_agentJobLogEmpty =
-      'printerSetting_agentJobLogEmpty';
+  /// "Chưa có phiếu in nào được gửi tới máy này"
+  static const printerSetting_agentJobLogEmpty = 'printerSetting_agentJobLogEmpty';
 
   /// "Tất cả (@count)"
-  static const printerSetting_agentJobLogFilterAll =
-      'printerSetting_agentJobLogFilterAll';
-  static String printerSetting_agentJobLogFilterAllTr({
-    required Object count,
-  }) => printerSetting_agentJobLogFilterAll.trParams({'count': '$count'});
+  static const printerSetting_agentJobLogFilterAll = 'printerSetting_agentJobLogFilterAll';
+  static String printerSetting_agentJobLogFilterAllTr({required Object count}) => printerSetting_agentJobLogFilterAll.trParams({'count': '$count'});
 
   /// "Lỗi (@count)"
-  static const printerSetting_agentJobLogFilterFailed =
-      'printerSetting_agentJobLogFilterFailed';
-  static String printerSetting_agentJobLogFilterFailedTr({
-    required Object count,
-  }) => printerSetting_agentJobLogFilterFailed.trParams({'count': '$count'});
+  static const printerSetting_agentJobLogFilterFailed = 'printerSetting_agentJobLogFilterFailed';
+  static String printerSetting_agentJobLogFilterFailedTr({required Object count}) => printerSetting_agentJobLogFilterFailed.trParams({'count': '$count'});
 
-  /// "Không có lệnh in lỗi"
-  static const printerSetting_agentJobLogNoFailed =
-      'printerSetting_agentJobLogNoFailed';
+  /// "Không có phiếu in lỗi"
+  static const printerSetting_agentJobLogNoFailed = 'printerSetting_agentJobLogNoFailed';
 
   /// "@ok thành công · @failed lỗi"
-  static const printerSetting_agentJobLogSummary =
-      'printerSetting_agentJobLogSummary';
-  static String printerSetting_agentJobLogSummaryTr({
-    required Object ok,
-    required Object failed,
-  }) => printerSetting_agentJobLogSummary.trParams({
-    'ok': '$ok',
-    'failed': '$failed',
-  });
+  static const printerSetting_agentJobLogSummary = 'printerSetting_agentJobLogSummary';
+  static String printerSetting_agentJobLogSummaryTr({required Object ok, required Object failed}) => printerSetting_agentJobLogSummary.trParams({'ok': '$ok', 'failed': '$failed'});
 
   /// "Xem tất cả (@count)"
-  static const printerSetting_agentJobLogViewAll =
-      'printerSetting_agentJobLogViewAll';
-  static String printerSetting_agentJobLogViewAllTr({required Object count}) =>
-      printerSetting_agentJobLogViewAll.trParams({'count': '$count'});
+  static const printerSetting_agentJobLogViewAll = 'printerSetting_agentJobLogViewAll';
+  static String printerSetting_agentJobLogViewAllTr({required Object count}) => printerSetting_agentJobLogViewAll.trParams({'count': '$count'});
 
   /// "Hoá đơn"
-  static const printerSetting_agentJobReceipt =
-      'printerSetting_agentJobReceipt';
+  static const printerSetting_agentJobReceipt = 'printerSetting_agentJobReceipt';
 
   /// "máy chưa rõ tên"
-  static const printerSetting_agentJobUnknownSender =
-      'printerSetting_agentJobUnknownSender';
+  static const printerSetting_agentJobUnknownSender = 'printerSetting_agentJobUnknownSender';
 
-  /// "đám mây"
-  static const printerSetting_agentJobViaCloud =
-      'printerSetting_agentJobViaCloud';
+  /// "Internet"
+  static const printerSetting_agentJobViaCloud = 'printerSetting_agentJobViaCloud';
 
   /// "mạng nội bộ"
   static const printerSetting_agentJobViaLan = 'printerSetting_agentJobViaLan';
 
-  /// "Lệnh gần nhất lúc @time"
+  /// "Phiếu gần nhất lúc @time"
   static const printerSetting_agentLastJob = 'printerSetting_agentLastJob';
-  static String printerSetting_agentLastJobTr({required Object time}) =>
-      printerSetting_agentLastJob.trParams({'time': '$time'});
+  static String printerSetting_agentLastJobTr({required Object time}) => printerSetting_agentLastJob.trParams({'time': '$time'});
 
-  /// "Đổi công ty sẽ tạm dừng in hộ cho cửa hàng hiện tại. Khi quay lại cửa hàng này, Agent tự bật lại."
-  static const printerSetting_agentLeaveChangeCompany =
-      'printerSetting_agentLeaveChangeCompany';
+  /// "Đổi công ty sẽ tạm dừng trạm in của cửa hàng hiện tại. Khi quay lại cửa hàng này, trạm in tự bật lại."
+  static const printerSetting_agentLeaveChangeCompany = 'printerSetting_agentLeaveChangeCompany';
 
   /// "Vẫn tiếp tục"
-  static const printerSetting_agentLeaveContinue =
-      'printerSetting_agentLeaveContinue';
+  static const printerSetting_agentLeaveContinue = 'printerSetting_agentLeaveContinue';
 
-  /// "Đăng xuất sẽ tạm dừng in hộ cho cửa hàng. Khi đăng nhập lại cửa hàng này, Agent tự bật lại."
-  static const printerSetting_agentLeaveLogout =
-      'printerSetting_agentLeaveLogout';
+  /// "Đăng xuất sẽ tạm dừng trạm in của cửa hàng. Khi đăng nhập lại cửa hàng này, trạm in tự bật lại."
+  static const printerSetting_agentLeaveLogout = 'printerSetting_agentLeaveLogout';
 
-  /// "Máy này đang là Agent in hộ"
-  static const printerSetting_agentLeaveTitle =
-      'printerSetting_agentLeaveTitle';
+  /// "Máy này đang là trạm in"
+  static const printerSetting_agentLeaveTitle = 'printerSetting_agentLeaveTitle';
 
-  /// "Máy này đang là Agent — các máy in đang quản lý"
+  /// "Máy này đang là trạm in — các máy in đang quản lý"
   static const printerSetting_agentMapAgent = 'printerSetting_agentMapAgent';
 
-  /// "Máy Agent dự phòng của công ty"
+  /// "Trạm in của cửa hàng"
   static const printerSetting_agentMapSender = 'printerSetting_agentMapSender';
 
   /// "Lưu"
   static const printerSetting_agentNameSave = 'printerSetting_agentNameSave';
 
-  /// "Đặt tên dễ nhớ (VD "Quầy bar", "Bếp") để các máy khác phân biệt máy Agent này. Mã sau dấu # là mã riêng của máy, không đổi"
-  static const printerSetting_agentNameSheetHint =
-      'printerSetting_agentNameSheetHint';
+  /// "Đặt tên dễ nhớ (VD "Quầy bar", "Bếp") để các máy khác phân biệt trạm in này. Mã sau dấu # là mã riêng của máy, không đổi"
+  static const printerSetting_agentNameSheetHint = 'printerSetting_agentNameSheetHint';
 
-  /// "Tên máy Agent"
+  /// "Tên trạm in"
   static const printerSetting_agentNameTitle = 'printerSetting_agentNameTitle';
 
-  /// "Chưa có máy Agent nào đang bật. Khi máy in lỗi, app sẽ tự in qua máy Agent nếu công ty có"
-  static const printerSetting_agentNoAgentHint =
-      'printerSetting_agentNoAgentHint';
+  /// "Chưa có trạm in nào đang bật. Khi máy in không in được, app sẽ tự in qua trạm in nếu cửa hàng có"
+  static const printerSetting_agentNoAgentHint = 'printerSetting_agentNoAgentHint';
 
   /// "Chưa có máy in nào"
-  static const printerSetting_agentNoPrinters =
-      'printerSetting_agentNoPrinters';
+  static const printerSetting_agentNoPrinters = 'printerSetting_agentNoPrinters';
 
-  /// "Ngoại tuyến · lần cuối @time"
-  static const printerSetting_agentOfflineSince =
-      'printerSetting_agentOfflineSince';
-  static String printerSetting_agentOfflineSinceTr({required Object time}) =>
-      printerSetting_agentOfflineSince.trParams({'time': '$time'});
+  /// "Đang tắt · lần cuối @time"
+  static const printerSetting_agentOfflineSince = 'printerSetting_agentOfflineSince';
+  static String printerSetting_agentOfflineSinceTr({required Object time}) => printerSetting_agentOfflineSince.trParams({'time': '$time'});
 
-  /// "Máy này đang làm Agent ở bản app khác (@app). Tắt Agent ở bản đó trước rồi bật lại ở đây"
-  static const printerSetting_agentOtherAppIsAgent =
-      'printerSetting_agentOtherAppIsAgent';
-  static String printerSetting_agentOtherAppIsAgentTr({required Object app}) =>
-      printerSetting_agentOtherAppIsAgent.trParams({'app': '$app'});
+  /// "Máy này đang làm trạm in ở bản app khác (@app). Tắt trạm in ở bản đó trước rồi bật lại ở đây"
+  static const printerSetting_agentOtherAppIsAgent = 'printerSetting_agentOtherAppIsAgent';
+  static String printerSetting_agentOtherAppIsAgentTr({required Object app}) => printerSetting_agentOtherAppIsAgent.trParams({'app': '$app'});
 
-  /// "Máy Agent khác trong công ty (@count)"
-  static const printerSetting_agentOthersTitle =
-      'printerSetting_agentOthersTitle';
-  static String printerSetting_agentOthersTitleTr({required Object count}) =>
-      printerSetting_agentOthersTitle.trParams({'count': '$count'});
+  /// "Trạm in khác của cửa hàng (@count)"
+  static const printerSetting_agentOthersTitle = 'printerSetting_agentOthersTitle';
+  static String printerSetting_agentOthersTitleTr({required Object count}) => printerSetting_agentOthersTitle.trParams({'count': '$count'});
 
-  /// "Còn @count máy in khác (máy Agent dùng bản cũ chỉ báo một phần)"
+  /// "Còn @count máy in khác (trạm in dùng bản app cũ chỉ báo một phần)"
   static const printerSetting_agentPeerMore = 'printerSetting_agentPeerMore';
-  static String printerSetting_agentPeerMoreTr({required Object count}) =>
-      printerSetting_agentPeerMore.trParams({'count': '$count'});
+  static String printerSetting_agentPeerMoreTr({required Object count}) => printerSetting_agentPeerMore.trParams({'count': '$count'});
 
-  /// "Máy Agent này chưa báo máy in nào"
-  static const printerSetting_agentPeerNoPrinters =
-      'printerSetting_agentPeerNoPrinters';
+  /// "Trạm in này chưa báo máy in nào"
+  static const printerSetting_agentPeerNoPrinters = 'printerSetting_agentPeerNoPrinters';
 
-  /// "Máy Agent đang tắt — trạng thái máy in dưới đây là lần cuối lúc @time"
-  static const printerSetting_agentPeerOfflineHint =
-      'printerSetting_agentPeerOfflineHint';
-  static String printerSetting_agentPeerOfflineHintTr({required Object time}) =>
-      printerSetting_agentPeerOfflineHint.trParams({'time': '$time'});
+  /// "Trạm in đang tắt — trạng thái máy in dưới đây là lần cuối lúc @time"
+  static const printerSetting_agentPeerOfflineHint = 'printerSetting_agentPeerOfflineHint';
+  static String printerSetting_agentPeerOfflineHintTr({required Object time}) => printerSetting_agentPeerOfflineHint.trParams({'time': '$time'});
 
-  /// "@agent đang chạy bản app cũ nên chưa bật / tắt máy in từ xa được. Cập nhật EasyPOS trên máy Agent đó (hoặc bấm máy in ngay trên máy Agent)."
-  static const printerSetting_agentPeerOldVersion =
-      'printerSetting_agentPeerOldVersion';
-  static String printerSetting_agentPeerOldVersionTr({required Object agent}) =>
-      printerSetting_agentPeerOldVersion.trParams({'agent': '$agent'});
+  /// "@agent đang dùng bản app cũ nên chưa tạm ngưng / bật lại máy in từ xa được. Cập nhật EasyPOS trên máy đó (hoặc bấm máy in ngay trên trạm in)."
+  static const printerSetting_agentPeerOldVersion = 'printerSetting_agentPeerOldVersion';
+  static String printerSetting_agentPeerOldVersionTr({required Object agent}) => printerSetting_agentPeerOldVersion.trParams({'agent': '$agent'});
 
-  /// "Đang trực tuyến"
-  static const printerSetting_agentPeerOnline =
-      'printerSetting_agentPeerOnline';
+  /// "Đang bật"
+  static const printerSetting_agentPeerOnline = 'printerSetting_agentPeerOnline';
 
   /// "Mất kết nối"
-  static const printerSetting_agentPeerPrinterFail =
-      'printerSetting_agentPeerPrinterFail';
+  static const printerSetting_agentPeerPrinterFail = 'printerSetting_agentPeerPrinterFail';
 
-  /// "Đã tắt"
-  static const printerSetting_agentPeerPrinterOff =
-      'printerSetting_agentPeerPrinterOff';
+  /// "Tạm ngưng"
+  static const printerSetting_agentPeerPrinterOff = 'printerSetting_agentPeerPrinterOff';
 
-  /// "Đang kết nối"
-  static const printerSetting_agentPeerPrinterOk =
-      'printerSetting_agentPeerPrinterOk';
+  /// "Đang hoạt động"
+  static const printerSetting_agentPeerPrinterOk = 'printerSetting_agentPeerPrinterOk';
 
   /// "Chưa rõ"
-  static const printerSetting_agentPeerPrinterUnknown =
-      'printerSetting_agentPeerPrinterUnknown';
+  static const printerSetting_agentPeerPrinterUnknown = 'printerSetting_agentPeerPrinterUnknown';
 
-  /// "Máy in của máy Agent"
-  static const printerSetting_agentPeerPrintersTitle =
-      'printerSetting_agentPeerPrintersTitle';
+  /// "Máy in của trạm in"
+  static const printerSetting_agentPeerPrintersTitle = 'printerSetting_agentPeerPrintersTitle';
 
   /// "@count máy in chưa kết nối"
-  static const printerSetting_agentPrinterIssues =
-      'printerSetting_agentPrinterIssues';
-  static String printerSetting_agentPrinterIssuesTr({required Object count}) =>
-      printerSetting_agentPrinterIssues.trParams({'count': '$count'});
+  static const printerSetting_agentPrinterIssues = 'printerSetting_agentPrinterIssues';
+  static String printerSetting_agentPrinterIssuesTr({required Object count}) => printerSetting_agentPrinterIssues.trParams({'count': '$count'});
 
-  /// "Đã tắt nhận lệnh"
-  static const printerSetting_agentPrinterOffState =
-      'printerSetting_agentPrinterOffState';
+  /// "Đang tạm ngưng in"
+  static const printerSetting_agentPrinterOffState = 'printerSetting_agentPrinterOffState';
 
-  /// "Đã gửi lệnh tắt nhận lệnh cho @printer trên @agent"
-  static const printerSetting_agentPrinterRemoteOff =
-      'printerSetting_agentPrinterRemoteOff';
-  static String printerSetting_agentPrinterRemoteOffTr({
-    required Object printer,
-    required Object agent,
-  }) => printerSetting_agentPrinterRemoteOff.trParams({
-    'printer': '$printer',
-    'agent': '$agent',
-  });
+  /// "Đã gửi yêu cầu tạm ngưng in @printer trên @agent"
+  static const printerSetting_agentPrinterRemoteOff = 'printerSetting_agentPrinterRemoteOff';
+  static String printerSetting_agentPrinterRemoteOffTr({required Object printer, required Object agent}) => printerSetting_agentPrinterRemoteOff.trParams({'printer': '$printer', 'agent': '$agent'});
 
-  /// "Đã gửi lệnh bật nhận lệnh cho @printer trên @agent"
-  static const printerSetting_agentPrinterRemoteOn =
-      'printerSetting_agentPrinterRemoteOn';
-  static String printerSetting_agentPrinterRemoteOnTr({
-    required Object printer,
-    required Object agent,
-  }) => printerSetting_agentPrinterRemoteOn.trParams({
-    'printer': '$printer',
-    'agent': '$agent',
-  });
+  /// "Đã gửi yêu cầu in lại @printer trên @agent"
+  static const printerSetting_agentPrinterRemoteOn = 'printerSetting_agentPrinterRemoteOn';
+  static String printerSetting_agentPrinterRemoteOnTr({required Object printer, required Object agent}) => printerSetting_agentPrinterRemoteOn.trParams({'printer': '$printer', 'agent': '$agent'});
 
-  /// "Đã tắt nhận lệnh cho @printer"
-  static const printerSetting_agentPrinterTurnedOff =
-      'printerSetting_agentPrinterTurnedOff';
-  static String printerSetting_agentPrinterTurnedOffTr({
-    required Object printer,
-  }) => printerSetting_agentPrinterTurnedOff.trParams({'printer': '$printer'});
+  /// "Đã tạm ngưng in @printer"
+  static const printerSetting_agentPrinterTurnedOff = 'printerSetting_agentPrinterTurnedOff';
+  static String printerSetting_agentPrinterTurnedOffTr({required Object printer}) => printerSetting_agentPrinterTurnedOff.trParams({'printer': '$printer'});
 
-  /// "@by đã tắt nhận lệnh cho @printer từ xa"
-  static const printerSetting_agentPrinterTurnedOffBy =
-      'printerSetting_agentPrinterTurnedOffBy';
-  static String printerSetting_agentPrinterTurnedOffByTr({
-    required Object by,
-    required Object printer,
-  }) => printerSetting_agentPrinterTurnedOffBy.trParams({
-    'by': '$by',
-    'printer': '$printer',
-  });
+  /// "@by đã tạm ngưng in @printer từ máy khác"
+  static const printerSetting_agentPrinterTurnedOffBy = 'printerSetting_agentPrinterTurnedOffBy';
+  static String printerSetting_agentPrinterTurnedOffByTr({required Object by, required Object printer}) => printerSetting_agentPrinterTurnedOffBy.trParams({'by': '$by', 'printer': '$printer'});
 
-  /// "Đã bật nhận lệnh cho @printer"
-  static const printerSetting_agentPrinterTurnedOn =
-      'printerSetting_agentPrinterTurnedOn';
-  static String printerSetting_agentPrinterTurnedOnTr({
-    required Object printer,
-  }) => printerSetting_agentPrinterTurnedOn.trParams({'printer': '$printer'});
+  /// "@printer đã in lại bình thường"
+  static const printerSetting_agentPrinterTurnedOn = 'printerSetting_agentPrinterTurnedOn';
+  static String printerSetting_agentPrinterTurnedOnTr({required Object printer}) => printerSetting_agentPrinterTurnedOn.trParams({'printer': '$printer'});
 
-  /// "@by đã bật nhận lệnh cho @printer từ xa"
-  static const printerSetting_agentPrinterTurnedOnBy =
-      'printerSetting_agentPrinterTurnedOnBy';
-  static String printerSetting_agentPrinterTurnedOnByTr({
-    required Object by,
-    required Object printer,
-  }) => printerSetting_agentPrinterTurnedOnBy.trParams({
-    'by': '$by',
-    'printer': '$printer',
-  });
+  /// "@by đã cho @printer in lại từ máy khác"
+  static const printerSetting_agentPrinterTurnedOnBy = 'printerSetting_agentPrinterTurnedOnBy';
+  static String printerSetting_agentPrinterTurnedOnByTr({required Object by, required Object printer}) => printerSetting_agentPrinterTurnedOnBy.trParams({'by': '$by', 'printer': '$printer'});
 
-  /// "@ok/@total máy in đang kết nối"
-  static const printerSetting_agentPrintersConnected =
-      'printerSetting_agentPrintersConnected';
-  static String printerSetting_agentPrintersConnectedTr({
-    required Object ok,
-    required Object total,
-  }) => printerSetting_agentPrintersConnected.trParams({
-    'ok': '$ok',
-    'total': '$total',
-  });
+  /// "@ok/@total máy in đang hoạt động"
+  static const printerSetting_agentPrintersConnected = 'printerSetting_agentPrintersConnected';
+  static String printerSetting_agentPrintersConnectedTr({required Object ok, required Object total}) => printerSetting_agentPrintersConnected.trParams({'ok': '$ok', 'total': '$total'});
 
   /// "Kết nối lại"
   static const printerSetting_agentReconnect = 'printerSetting_agentReconnect';
 
-  /// "Không kết nối được máy in tích hợp. Thử tắt mở lại máy"
-  static const printerSetting_agentReconnectBuiltIn =
-      'printerSetting_agentReconnectBuiltIn';
+  /// "Không kết nối được máy in có sẵn trên máy. Thử tắt mở lại máy"
+  static const printerSetting_agentReconnectBuiltIn = 'printerSetting_agentReconnectBuiltIn';
 
   /// "Máy in đang bận hoặc đang được máy khác giữ kết nối. Đợi máy kia in xong rồi thử lại"
-  static const printerSetting_agentReconnectBusy =
-      'printerSetting_agentReconnectBusy';
+  static const printerSetting_agentReconnectBusy = 'printerSetting_agentReconnectBusy';
 
   /// "Xong"
-  static const printerSetting_agentReconnectDone =
-      'printerSetting_agentReconnectDone';
+  static const printerSetting_agentReconnectDone = 'printerSetting_agentReconnectDone';
 
   /// "Máy in đã đổi IP @oldIp → @newIp. Đã cập nhật và kết nối lại"
-  static const printerSetting_agentReconnectMoved =
-      'printerSetting_agentReconnectMoved';
-  static String printerSetting_agentReconnectMovedTr({
-    required Object oldIp,
-    required Object newIp,
-  }) => printerSetting_agentReconnectMoved.trParams({
-    'oldIp': '$oldIp',
-    'newIp': '$newIp',
-  });
+  static const printerSetting_agentReconnectMoved = 'printerSetting_agentReconnectMoved';
+  static String printerSetting_agentReconnectMovedTr({required Object oldIp, required Object newIp}) => printerSetting_agentReconnectMoved.trParams({'oldIp': '$oldIp', 'newIp': '$newIp'});
 
   /// "Không thấy máy in trong mạng. Kiểm tra máy in đã bật và cắm cáp mạng / Wi-Fi"
-  static const printerSetting_agentReconnectNotFound =
-      'printerSetting_agentReconnectNotFound';
+  static const printerSetting_agentReconnectNotFound = 'printerSetting_agentReconnectNotFound';
 
   /// "Không kết nối được máy in. Kiểm tra máy in đã bật, cắm cáp mạng và IP trên máy in còn đúng"
-  static const printerSetting_agentReconnectNotFoundNoMac =
-      'printerSetting_agentReconnectNotFoundNoMac';
+  static const printerSetting_agentReconnectNotFoundNoMac = 'printerSetting_agentReconnectNotFoundNoMac';
 
   /// "Đã kết nối lại @printer"
-  static const printerSetting_agentReconnectOk =
-      'printerSetting_agentReconnectOk';
-  static String printerSetting_agentReconnectOkTr({required Object printer}) =>
-      printerSetting_agentReconnectOk.trParams({'printer': '$printer'});
+  static const printerSetting_agentReconnectOk = 'printerSetting_agentReconnectOk';
+  static String printerSetting_agentReconnectOkTr({required Object printer}) => printerSetting_agentReconnectOk.trParams({'printer': '$printer'});
 
   /// "Máy in ở mạng khác, máy này không tới được. Chuyển máy này sang Wi-Fi của máy in"
-  static const printerSetting_agentReconnectOtherNet =
-      'printerSetting_agentReconnectOtherNet';
+  static const printerSetting_agentReconnectOtherNet = 'printerSetting_agentReconnectOtherNet';
 
   /// "Máy in ở Wi-Fi "@wifi", máy này đang ở mạng khác nên không tới được"
-  static const printerSetting_agentReconnectOtherWifi =
-      'printerSetting_agentReconnectOtherWifi';
-  static String printerSetting_agentReconnectOtherWifiTr({
-    required Object wifi,
-  }) => printerSetting_agentReconnectOtherWifi.trParams({'wifi': '$wifi'});
+  static const printerSetting_agentReconnectOtherWifi = 'printerSetting_agentReconnectOtherWifi';
+  static String printerSetting_agentReconnectOtherWifiTr({required Object wifi}) => printerSetting_agentReconnectOtherWifi.trParams({'wifi': '$wifi'});
 
   /// "Thử lại"
-  static const printerSetting_agentReconnectRetry =
-      'printerSetting_agentReconnectRetry';
+  static const printerSetting_agentReconnectRetry = 'printerSetting_agentReconnectRetry';
 
-  /// "Khởi động lại máy in tích hợp"
-  static const printerSetting_agentReconnectStepBuiltIn =
-      'printerSetting_agentReconnectStepBuiltIn';
+  /// "Khởi động lại máy in có sẵn trên máy"
+  static const printerSetting_agentReconnectStepBuiltIn = 'printerSetting_agentReconnectStepBuiltIn';
 
   /// "Thử kết nối @ip"
-  static const printerSetting_agentReconnectStepIp =
-      'printerSetting_agentReconnectStepIp';
-  static String printerSetting_agentReconnectStepIpTr({required Object ip}) =>
-      printerSetting_agentReconnectStepIp.trParams({'ip': '$ip'});
+  static const printerSetting_agentReconnectStepIp = 'printerSetting_agentReconnectStepIp';
+  static String printerSetting_agentReconnectStepIpTr({required Object ip}) => printerSetting_agentReconnectStepIp.trParams({'ip': '$ip'});
 
   /// "Tìm máy in theo địa chỉ MAC (máy in có thể đã đổi IP)"
-  static const printerSetting_agentReconnectStepMac =
-      'printerSetting_agentReconnectStepMac';
+  static const printerSetting_agentReconnectStepMac = 'printerSetting_agentReconnectStepMac';
 
   /// "Kiểm tra mạng của máy này"
-  static const printerSetting_agentReconnectStepNetwork =
-      'printerSetting_agentReconnectStepNetwork';
+  static const printerSetting_agentReconnectStepNetwork = 'printerSetting_agentReconnectStepNetwork';
 
   /// "Kiểm tra cáp và quyền USB"
-  static const printerSetting_agentReconnectStepUsb =
-      'printerSetting_agentReconnectStepUsb';
+  static const printerSetting_agentReconnectStepUsb = 'printerSetting_agentReconnectStepUsb';
 
   /// "Kết nối lại máy in"
-  static const printerSetting_agentReconnectTitle =
-      'printerSetting_agentReconnectTitle';
+  static const printerSetting_agentReconnectTitle = 'printerSetting_agentReconnectTitle';
 
   /// "Không thấy máy in USB. Cắm lại cáp USB rồi thử lại"
-  static const printerSetting_agentReconnectUsb =
-      'printerSetting_agentReconnectUsb';
+  static const printerSetting_agentReconnectUsb = 'printerSetting_agentReconnectUsb';
 
-  /// "Xoá Agent này"
+  /// "Tắt trạm in này"
   static const printerSetting_agentRemove = 'printerSetting_agentRemove';
 
-  /// "Tắt chế độ Agent trên @agent? Máy đó sẽ không còn nhận lệnh in hộ"
-  static const printerSetting_agentRemoveConfirm =
-      'printerSetting_agentRemoveConfirm';
-  static String printerSetting_agentRemoveConfirmTr({required Object agent}) =>
-      printerSetting_agentRemoveConfirm.trParams({'agent': '$agent'});
+  /// "Tắt trạm in trên @agent? Máy đó sẽ không in giúp nữa"
+  static const printerSetting_agentRemoveConfirm = 'printerSetting_agentRemoveConfirm';
+  static String printerSetting_agentRemoveConfirmTr({required Object agent}) => printerSetting_agentRemoveConfirm.trParams({'agent': '$agent'});
 
-  /// "Không gửi được lệnh — kiểm tra kết nối mạng"
-  static const printerSetting_agentRemoveFailed =
-      'printerSetting_agentRemoveFailed';
+  /// "Không gửi được yêu cầu — kiểm tra kết nối mạng"
+  static const printerSetting_agentRemoveFailed = 'printerSetting_agentRemoveFailed';
 
-  /// "Máy Agent này không có máy in nào. Xoá sẽ tắt chế độ Agent trên máy đó (máy đó tự kiểm tra lại, có máy in thì không tắt)"
-  static const printerSetting_agentRemoveHint =
-      'printerSetting_agentRemoveHint';
+  /// "Trạm in này không có máy in nào. Tắt sẽ tắt chế độ trạm in trên máy đó (máy đó tự kiểm tra lại, có máy in thì không tắt)"
+  static const printerSetting_agentRemoveHint = 'printerSetting_agentRemoveHint';
 
-  /// "Đã gửi lệnh tắt @agent"
+  /// "Đã gửi yêu cầu tắt @agent"
   static const printerSetting_agentRemoved = 'printerSetting_agentRemoved';
-  static String printerSetting_agentRemovedTr({required Object agent}) =>
-      printerSetting_agentRemoved.trParams({'agent': '$agent'});
+  static String printerSetting_agentRemovedTr({required Object agent}) => printerSetting_agentRemoved.trParams({'agent': '$agent'});
 
-  /// "Sẵn sàng dự phòng"
+  /// "Sẵn sàng in giúp"
   static const printerSetting_agentStandby = 'printerSetting_agentStandby';
 
   /// "Mất kết nối"
-  static const printerSetting_agentStateDisconnected =
-      'printerSetting_agentStateDisconnected';
+  static const printerSetting_agentStateDisconnected = 'printerSetting_agentStateDisconnected';
 
   /// "Khác mạng"
-  static const printerSetting_agentStateOtherNetwork =
-      'printerSetting_agentStateOtherNetwork';
+  static const printerSetting_agentStateOtherNetwork = 'printerSetting_agentStateOtherNetwork';
 
-  /// "Đã in hộ @printed lệnh · lỗi @failed"
+  /// "Đã in giúp @printed phiếu · lỗi @failed"
   static const printerSetting_agentStats = 'printerSetting_agentStats';
-  static String printerSetting_agentStatsTr({
-    required Object printed,
-    required Object failed,
-  }) => printerSetting_agentStats.trParams({
-    'printed': '$printed',
-    'failed': '$failed',
-  });
+  static String printerSetting_agentStatsTr({required Object printed, required Object failed}) => printerSetting_agentStats.trParams({'printed': '$printed', 'failed': '$failed'});
 
-  /// "Máy này đã được tắt chế độ Agent từ xa (@by) vì không có máy in nào"
-  static const printerSetting_agentStoppedRemotely =
-      'printerSetting_agentStoppedRemotely';
-  static String printerSetting_agentStoppedRemotelyTr({required Object by}) =>
-      printerSetting_agentStoppedRemotely.trParams({'by': '$by'});
+  /// "Máy này đã được tắt chế độ trạm in từ máy khác (@by) vì không có máy in nào"
+  static const printerSetting_agentStoppedRemotely = 'printerSetting_agentStoppedRemotely';
+  static String printerSetting_agentStoppedRemotelyTr({required Object by}) => printerSetting_agentStoppedRemotely.trParams({'by': '$by'});
 
   /// "Đổi mạng"
-  static const printerSetting_agentSwitchNetwork =
-      'printerSetting_agentSwitchNetwork';
+  static const printerSetting_agentSwitchNetwork = 'printerSetting_agentSwitchNetwork';
 
   /// "Máy này chưa kết nối được các máy in dưới đây. Chuyển sang đúng Wi-Fi của máy in để in"
-  static const printerSetting_agentSwitchNetworkHint =
-      'printerSetting_agentSwitchNetworkHint';
+  static const printerSetting_agentSwitchNetworkHint = 'printerSetting_agentSwitchNetworkHint';
 
-  /// "Agent"
+  /// "Trạm in"
   static const printerSetting_agentTag = 'printerSetting_agentTag';
 
   /// "Máy này"
-  static const printerSetting_agentThisDevice =
-      'printerSetting_agentThisDevice';
+  static const printerSetting_agentThisDevice = 'printerSetting_agentThisDevice';
 
   /// "Hoàn tác"
   static const printerSetting_agentUndo = 'printerSetting_agentUndo';
 
   /// "Kết nối"
-  static const printerSetting_agentWifiConnect =
-      'printerSetting_agentWifiConnect';
+  static const printerSetting_agentWifiConnect = 'printerSetting_agentWifiConnect';
 
   /// "Không thấy sóng ở đây"
   static const printerSetting_agentWifiFar = 'printerSetting_agentWifiFar';
 
   /// "Có sóng"
-  static const printerSetting_agentWifiNearby =
-      'printerSetting_agentWifiNearby';
+  static const printerSetting_agentWifiNearby = 'printerSetting_agentWifiNearby';
 
   /// "Mở cài đặt Wi-Fi"
-  static const printerSetting_agentWifiOpenSettings =
-      'printerSetting_agentWifiOpenSettings';
+  static const printerSetting_agentWifiOpenSettings = 'printerSetting_agentWifiOpenSettings';
 
   /// "Chọn "@wifi" trong bảng Wi-Fi vừa mở rồi quay lại"
-  static const printerSetting_agentWifiPickInPanel =
-      'printerSetting_agentWifiPickInPanel';
-  static String printerSetting_agentWifiPickInPanelTr({required Object wifi}) =>
-      printerSetting_agentWifiPickInPanel.trParams({'wifi': '$wifi'});
+  static const printerSetting_agentWifiPickInPanel = 'printerSetting_agentWifiPickInPanel';
+  static String printerSetting_agentWifiPickInPanelTr({required Object wifi}) => printerSetting_agentWifiPickInPanel.trParams({'wifi': '$wifi'});
 
   /// "Máy này đang ở Wi-Fi này — máy in có thể đang tắt hoặc mất mạng"
-  static const printerSetting_agentWifiPrinterOff =
-      'printerSetting_agentWifiPrinterOff';
+  static const printerSetting_agentWifiPrinterOff = 'printerSetting_agentWifiPrinterOff';
 
   /// "Chưa rõ Wi-Fi"
-  static const printerSetting_agentWifiUnknown =
-      'printerSetting_agentWifiUnknown';
+  static const printerSetting_agentWifiUnknown = 'printerSetting_agentWifiUnknown';
 
   /// "Chưa in được lần nào trên máy này nên chưa biết máy in ở Wi-Fi nào"
-  static const printerSetting_agentWifiUnknownHint =
-      'printerSetting_agentWifiUnknownHint';
+  static const printerSetting_agentWifiUnknownHint = 'printerSetting_agentWifiUnknownHint';
 
-  /// "Máy Agent của công ty (@count)"
-  static const printerSetting_agentZoneCompanyAgents =
-      'printerSetting_agentZoneCompanyAgents';
-  static String printerSetting_agentZoneCompanyAgentsTr({
-    required Object count,
-  }) => printerSetting_agentZoneCompanyAgents.trParams({'count': '$count'});
+  /// "Trạm in của cửa hàng (@count)"
+  static const printerSetting_agentZoneCompanyAgents = 'printerSetting_agentZoneCompanyAgents';
+  static String printerSetting_agentZoneCompanyAgentsTr({required Object count}) => printerSetting_agentZoneCompanyAgents.trParams({'count': '$count'});
 
   /// "Máy in của máy này"
-  static const printerSetting_agentZoneMyPrinters =
-      'printerSetting_agentZoneMyPrinters';
+  static const printerSetting_agentZoneMyPrinters = 'printerSetting_agentZoneMyPrinters';
 
-  /// "Máy Agent"
-  static const printerSetting_printStationChannel =
-      'printerSetting_printStationChannel';
+  /// "Trạm in"
+  static const printerSetting_printStationChannel = 'printerSetting_printStationChannel';
 
-  /// "Thiết bị khác wifi hoặc dùng 4G sẽ in qua máy này. Máy này cần cùng mạng với máy in (hoặc cắm USB vào máy in) và đang mở app"
-  static const printerSetting_printStationHint =
-      'printerSetting_printStationHint';
+  /// "Máy khác Wi-Fi hoặc dùng 4G sẽ gửi phiếu sang, máy này in ra máy in ở quầy. Máy này cần cùng mạng với máy in (hoặc cắm USB vào máy in) và đang mở app"
+  static const printerSetting_printStationHint = 'printerSetting_printStationHint';
 
-  /// "Đã in @count lệnh từ máy khác"
-  static const printerSetting_printStationPrinted =
-      'printerSetting_printStationPrinted';
-  static String printerSetting_printStationPrintedTr({required Object count}) =>
-      printerSetting_printStationPrinted.trParams({'count': '$count'});
+  /// "Đã in giúp @count phiếu từ máy khác"
+  static const printerSetting_printStationPrinted = 'printerSetting_printStationPrinted';
+  static String printerSetting_printStationPrintedTr({required Object count}) => printerSetting_printStationPrinted.trParams({'count': '$count'});
 
-  /// "Máy Agent đang chạy"
-  static const printerSetting_printStationRunning =
-      'printerSetting_printStationRunning';
+  /// "Trạm in đang chạy"
+  static const printerSetting_printStationRunning = 'printerSetting_printStationRunning';
 
   /// "Dừng"
-  static const printerSetting_printStationStop =
-      'printerSetting_printStationStop';
+  static const printerSetting_printStationStop = 'printerSetting_printStationStop';
 
-  /// "Dùng máy này làm máy Agent"
-  static const printerSetting_printStationToggle =
-      'printerSetting_printStationToggle';
+  /// "Dùng máy này làm trạm in"
+  static const printerSetting_printStationToggle = 'printerSetting_printStationToggle';
 
-  /// "Chưa bật được máy Agent, hãy kiểm tra kết nối internet rồi thử lại"
-  static const printerSetting_printStationUnavailable =
-      'printerSetting_printStationUnavailable';
+  /// "Chưa bật được trạm in, hãy kiểm tra kết nối internet rồi thử lại"
+  static const printerSetting_printStationUnavailable = 'printerSetting_printStationUnavailable';
 
-  /// "Đang chờ lệnh in từ máy khác"
-  static const printerSetting_printStationWaiting =
-      'printerSetting_printStationWaiting';
+  /// "Đang chờ phiếu in từ máy khác"
+  static const printerSetting_printStationWaiting = 'printerSetting_printStationWaiting';
 
-  /// "@printerName đang hết giấy / mở nắp. Máy Agent đã giữ phiếu và sẽ tự in khi máy in sẵn sàng — không cần in lại."
+  /// "@printerName hết giấy / đang mở nắp. Trạm in đang giữ phiếu, lắp giấy (đóng nắp) xong sẽ tự in — không cần in lại."
   static const printerSetting_relayHeld = 'printerSetting_relayHeld';
-  static String printerSetting_relayHeldTr({required Object printerName}) =>
-      printerSetting_relayHeld.trParams({'printerName': '$printerName'});
+  static String printerSetting_relayHeldTr({required Object printerName}) => printerSetting_relayHeld.trParams({'printerName': '$printerName'});
 
-  /// "Công ty chưa có máy Agent nào đang bật. Hãy bật "Dùng máy này làm máy Agent" trên máy cùng mạng với máy in trước"
+  /// "Cửa hàng chưa có trạm in nào đang bật. Hãy bật "Dùng máy này làm trạm in" trên máy cùng mạng với máy in trước"
   static const printerSetting_relayNoStation = 'printerSetting_relayNoStation';
 
-  /// "Máy Agent không in được tới @printerName"
-  static const printerSetting_remotePrintFailed =
-      'printerSetting_remotePrintFailed';
-  static String printerSetting_remotePrintFailedTr({
-    required Object printerName,
-  }) => printerSetting_remotePrintFailed.trParams({
-    'printerName': '$printerName',
-  });
+  /// "Trạm in không in được tới @printerName"
+  static const printerSetting_remotePrintFailed = 'printerSetting_remotePrintFailed';
+  static String printerSetting_remotePrintFailedTr({required Object printerName}) => printerSetting_remotePrintFailed.trParams({'printerName': '$printerName'});
 
-  /// "Máy Agent không phản hồi, hãy kiểm tra máy Agent đang mở app và có internet"
-  static const printerSetting_remotePrintTimeout =
-      'printerSetting_remotePrintTimeout';
+  /// "Trạm in đang tắt hoặc mất mạng, hãy kiểm tra máy trạm in đang mở app và có internet"
+  static const printerSetting_remotePrintTimeout = 'printerSetting_remotePrintTimeout';
 
-  /// "Máy in tích hợp (@stationName)"
-  static const printerSetting_stationBuiltInNameNamed =
-      'printerSetting_stationBuiltInNameNamed';
-  static String printerSetting_stationBuiltInNameNamedTr({
-    required Object stationName,
-  }) => printerSetting_stationBuiltInNameNamed.trParams({
-    'stationName': '$stationName',
-  });
+  /// "Máy in của @stationName"
+  static const printerSetting_stationBuiltInNameNamed = 'printerSetting_stationBuiltInNameNamed';
+  static String printerSetting_stationBuiltInNameNamedTr({required Object stationName}) => printerSetting_stationBuiltInNameNamed.trParams({'stationName': '$stationName'});
 
-  /// "Ngoại tuyến"
-  static const printerSetting_stationBuiltInOfflineState =
-      'printerSetting_stationBuiltInOfflineState';
+  /// "Đang tắt"
+  static const printerSetting_stationBuiltInOfflineState = 'printerSetting_stationBuiltInOfflineState';
 
-  /// "Trực tuyến"
-  static const printerSetting_stationBuiltInOnline =
-      'printerSetting_stationBuiltInOnline';
+  /// "Đang bật"
+  static const printerSetting_stationBuiltInOnline = 'printerSetting_stationBuiltInOnline';
 
-  /// "Máy in tích hợp của máy Agent"
-  static const printerSetting_stationBuiltInSection =
-      'printerSetting_stationBuiltInSection';
+  /// "Máy in có sẵn trên trạm in"
+  static const printerSetting_stationBuiltInSection = 'printerSetting_stationBuiltInSection';
 
-  /// "@printer đang ngoại tuyến (máy Agent đã tắt) — tạm bỏ qua máy in này, các máy in khác vẫn in bình thường"
-  static const printerSetting_stationBuiltInSkipped =
-      'printerSetting_stationBuiltInSkipped';
-  static String printerSetting_stationBuiltInSkippedTr({
-    required Object printer,
-  }) => printerSetting_stationBuiltInSkipped.trParams({'printer': '$printer'});
+  /// "@printer đang tắt (trạm in đã tắt) — tạm bỏ qua máy in này, các máy in khác vẫn in bình thường"
+  static const printerSetting_stationBuiltInSkipped = 'printerSetting_stationBuiltInSkipped';
+  static String printerSetting_stationBuiltInSkippedTr({required Object printer}) => printerSetting_stationBuiltInSkipped.trParams({'printer': '$printer'});
 
   /// "Chuyển Wi-Fi"
   static const printerSetting_switchWifi = 'printerSetting_switchWifi';
@@ -696,8 +490,7 @@ abstract final class LocaleKeys {
   static const printerSetting_wifiPassword = 'printerSetting_wifiPassword';
 
   /// "Không chuyển được sang Wi-Fi "@wifi". Kiểm tra mật khẩu và máy có trong vùng sóng Wi-Fi này"
-  static const printerSetting_wifiSwitchFailed =
-      'printerSetting_wifiSwitchFailed';
-  static String printerSetting_wifiSwitchFailedTr({required Object wifi}) =>
-      printerSetting_wifiSwitchFailed.trParams({'wifi': '$wifi'});
+  static const printerSetting_wifiSwitchFailed = 'printerSetting_wifiSwitchFailed';
+  static String printerSetting_wifiSwitchFailedTr({required Object wifi}) => printerSetting_wifiSwitchFailed.trParams({'wifi': '$wifi'});
+
 }

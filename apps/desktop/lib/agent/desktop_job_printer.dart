@@ -47,7 +47,7 @@ class DesktopJobPrinter implements AgentJobPrinter<DesktopPrinter> {
     if (job.isLabel) {
       return const AgentPrintFailure(
         AgentJobError.sendFailed,
-        detail: 'Agent máy tính chưa in được tem',
+        detail: 'Trạm in trên máy tính chưa in được tem',
       );
     }
     return AgentPrinter.printJob(job, printer.address);

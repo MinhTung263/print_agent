@@ -62,11 +62,11 @@ class AgentSettingsCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const AppText('Máy in của Agent'),
+                    const AppText('Máy in của trạm in'),
                     AppText(
                       config.hasPrinter
                           ? '${UsbPrinters.label(config.printer)}${agent.printerOk == false ? ' · không kết nối được' : ''}'
-                          : 'Chưa chọn — máy bán hàng chọn "máy in tích hợp" của Agent sẽ in ra đây',
+                          : 'Chưa chọn — máy bán hàng chọn máy in của trạm in này sẽ in ra đây',
                       variant: .caption,
                       tone: .secondary,
                       textColor: agent.printerOk == false
@@ -118,7 +118,7 @@ class AgentSettingsCard extends StatelessWidget {
                     AppText(
                       config.acceptAll
                           ? 'Nhận cả hoá đơn gửi tới máy in LAN mà máy này kết nối được'
-                          : 'Chỉ in lệnh gửi tới máy in của Agent này',
+                          : 'Chỉ in phiếu gửi tới máy in của trạm in này',
                       variant: .caption,
                       tone: .secondary,
                       maxLines: 2,

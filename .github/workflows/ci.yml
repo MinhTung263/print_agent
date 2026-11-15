@@ -59,15 +59,24 @@ jobs:
 
       - name: Test lõi (không cần broker MQTT)
         working-directory: packages/print_agent_core
-        run: flutter test --reporter github test/relay_ack_test.dart
+        shell: bash
+        run: |
+          flutter test --reporter json test/relay_ack_test.dart > test-report.json || true
+          $(command -v python || command -v python3) ../../.github/scripts/test_failures.py test-report.json
 
       - name: Test module
         working-directory: packages/print_agent
-        run: flutter test --reporter github
+        shell: bash
+        run: |
+          flutter test --reporter json > test-report.json || true
+          $(command -v python || command -v python3) ../../.github/scripts/test_failures.py test-report.json
 
       - name: Test Agent máy tính (kèm máy in giả, spooler Windows)
         working-directory: apps/desktop
-        run: flutter test --reporter github
+        shell: bash
+        run: |
+          flutter test --reporter json > test-report.json || true
+          $(command -v python || command -v python3) ../../.github/scripts/test_failures.py test-report.json
 
   build-windows:
     name: Build Windows

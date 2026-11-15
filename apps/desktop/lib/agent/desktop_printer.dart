@@ -12,7 +12,7 @@ class DesktopPrinter implements AgentPrinterRef {
   });
 
   /// Tên máy in của Agent trên sơ đồ.
-  static const String builtInName = 'Máy in của Agent';
+  static const String builtInName = 'Máy in của trạm in';
 
   final AgentPrinterKind kind;
 

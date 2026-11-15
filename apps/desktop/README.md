@@ -1,4 +1,4 @@
-# EasyPOS Print Agent (Windows / Linux / macOS)
+# Trạm in EasyPOS (Windows / Linux / macOS)
 
 Máy Agent chạy trên máy tính: nhận lệnh in hoá đơn của công ty (cùng hàng đợi
 MQTT với app EasyPOS) rồi gửi lệnh **ESC/POS thẳng tới máy in LAN** (cổng RAW

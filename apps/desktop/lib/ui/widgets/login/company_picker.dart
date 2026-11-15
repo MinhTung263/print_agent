@@ -60,7 +60,7 @@ class _CompanyPickerState extends State<CompanyPicker> {
         Padding(
           padding: const EdgeInsets.fromLTRB(4, 4, 4, 16),
           child: Text(
-            'Xin chào ${widget.result.fullName}. Máy Agent sẽ in hộ cho cửa '
+            'Xin chào ${widget.result.fullName}. Máy này sẽ làm trạm in giúp cho cửa '
             'hàng bạn chọn.',
             style: const TextStyle(
               fontSize: 13,

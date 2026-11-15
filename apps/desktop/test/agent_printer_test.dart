@@ -33,12 +33,12 @@ void main() {
     expect(p.id, 3);
   });
 
-  test('lệnh tem: Agent máy tính báo chưa in được', () async {
+  test('lệnh tem: trạm in máy tính báo chưa in được', () async {
     final failure = await printer.printJob(
       gateway.builtInPrinter(),
       job({'kind': 'label', 'printerType': 'builtin'}),
     );
-    expect(failure?.detail, 'Agent máy tính chưa in được tem');
+    expect(failure?.detail, 'Trạm in trên máy tính chưa in được tem');
   });
 
   test('máy in tích hợp báo cho máy khác theo khổ giấy đã chọn', () {

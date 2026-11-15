@@ -71,7 +71,7 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
   Widget build(BuildContext context) {
     final found = _found ?? const <LanPrinterFound>[];
     return AlertDialog(
-      title: const Text('Máy in của Agent'),
+      title: const Text('Máy in của trạm in'),
       content: SizedBox(
         width: 380,
         child: SingleChildScrollView(

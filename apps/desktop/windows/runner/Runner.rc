@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "vn.softdreams.easypos" "\0"
-            VALUE "FileDescription", "easypos_print_agent" "\0"
+            VALUE "FileDescription", "Trạm in EasyPOS" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "easypos_print_agent" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 vn.softdreams.easypos. All rights reserved." "\0"
             VALUE "OriginalFilename", "easypos_print_agent.exe" "\0"
-            VALUE "ProductName", "easypos_print_agent" "\0"
+            VALUE "ProductName", "Trạm in EasyPOS" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

@@ -24,7 +24,7 @@ class BrandPanel extends StatelessWidget {
           _Logo(size: 64, light: true),
           SizedBox(height: 28),
           Text(
-            'EasyPOS\nPrint Agent',
+            'Trạm in\nEasyPOS',
             style: TextStyle(
               color: Colors.white,
               fontSize: 40,
@@ -34,7 +34,7 @@ class BrandPanel extends StatelessWidget {
           ),
           SizedBox(height: 12),
           Text(
-            'Biến máy tính này thành máy Agent in hộ cho cả cửa hàng.',
+            'Biến máy tính này thành trạm in giúp cho cả cửa hàng.',
             style: TextStyle(color: Color(0xE6FFFFFF), fontSize: 16),
           ),
           SizedBox(height: 36),
@@ -70,12 +70,12 @@ class BrandHeader extends StatelessWidget {
         _Logo(size: 56),
         SizedBox(height: 12),
         Text(
-          'EasyPOS Print Agent',
+          'Trạm in EasyPOS',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
         ),
         SizedBox(height: 4),
         Text(
-          'Biến máy tính này thành máy Agent in hộ',
+          'Biến máy tính này thành trạm in giúp',
           style: TextStyle(fontSize: 13, color: AgentColors.textSecondary),
         ),
       ],
