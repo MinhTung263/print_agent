@@ -86,16 +86,20 @@ class _ManualIpFieldState extends State<ManualIpField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: 6),
+          child: Text(
+            'Địa chỉ IP máy in',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+        ),
         Row(
           children: [
             Expanded(
               child: TextField(
                 controller: _input,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: '192.168.1.100',
-                  prefixIcon: Icon(Icons.lan_outlined, size: 20),
-                ),
+                decoration: const InputDecoration(hintText: 'VD 192.168.1.100'),
                 onChanged: (_) {
                   if (_check != _Check.idle) {
                     setState(() => _check = _Check.idle);

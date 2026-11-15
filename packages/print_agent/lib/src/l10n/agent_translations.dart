@@ -104,7 +104,7 @@ const Map<String, Map<String, String>> agentTranslations = {
         "Máy này đang là trạm in — các máy in đang quản lý",
     'printerSetting_agentMapSender': "Trạm in của cửa hàng",
     'printerSetting_agentNameCancel': "Huỷ",
-    'printerSetting_agentNameCode': "Mã máy #@code · không đổi",
+    'printerSetting_agentNameCode': "Mã máy @code · không đổi",
     'printerSetting_agentNameSave': "Lưu",
     'printerSetting_agentNameSheetHint':
         "Đặt tên để máy bán hàng nhận ra trạm in này",
@@ -364,7 +364,7 @@ const Map<String, Map<String, String>> agentTranslations = {
         "This device is a print station — printers it manages",
     'printerSetting_agentMapSender': "Company backup print stations",
     'printerSetting_agentNameCancel': "Cancel",
-    'printerSetting_agentNameCode': "Device code #@code · fixed",
+    'printerSetting_agentNameCode': "Device code @code · fixed",
     'printerSetting_agentNameSave': "Save",
     'printerSetting_agentNameSheetHint':
         "Name this print station so sales devices can recognise it",

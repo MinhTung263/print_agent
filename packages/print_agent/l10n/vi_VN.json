@@ -189,7 +189,7 @@
     "agentPrinterDetailStationOff": "Trạm in đang tắt",
     "agentPrinterDetailReceive": "Nhận lệnh in",
     "agentPrinterDetailReceiveHint": "Tắt để tạm ngưng gửi phiếu tới máy in này",
-    "agentNameCode": "Mã máy #@code · không đổi",
+    "agentNameCode": "Mã máy @code · không đổi",
     "agentNameSuggest": "Gợi ý nhanh",
     "agentNameSuggestCashier": "Quầy thu ngân",
     "agentNameSuggestKitchen": "Bếp",

@@ -153,7 +153,7 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
     final all = _all;
     return Dialog(
       backgroundColor: AgentColors.bg,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520, maxHeight: 640),
         child: Padding(

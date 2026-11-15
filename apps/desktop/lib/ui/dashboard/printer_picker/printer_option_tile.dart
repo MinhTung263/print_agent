@@ -27,15 +27,15 @@ class PrinterOptionTile extends StatelessWidget {
       color: selected
           ? AgentColors.primary.withValues(alpha: 0.06)
           : AgentColors.card,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(8),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: selected ? AgentColors.primary : AgentColors.border,
               width: selected ? 1.6 : 1,

@@ -76,7 +76,7 @@ class PrinterPickerEmpty extends StatelessWidget {
     padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
     decoration: BoxDecoration(
       color: AgentColors.card,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(8),
       border: Border.all(color: AgentColors.border),
     ),
     child: Column(

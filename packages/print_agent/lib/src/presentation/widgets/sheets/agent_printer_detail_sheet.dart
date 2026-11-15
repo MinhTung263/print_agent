@@ -239,7 +239,7 @@ class _Popup extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Dialog(
     backgroundColor: AppColors.backgroundPrimary,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     child: ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 440),
       child: AppColumn(

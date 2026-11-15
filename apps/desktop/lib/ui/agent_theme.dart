@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Màu + kiểu dùng chung — theo nhận diện EasyPOS (xanh chủ đạo, máy Agent tím).
+/// Màu + kiểu dùng chung — CÙNG design system app EasyPOS (xanh #0074BD, nút /
+/// ô nhập bo 8, nút cao 44) để màn máy tính đồng bộ với app.
 abstract final class AgentColors {
-  static const primary = Color(0xFF1F6FEB);
+  static const primary = Color(0xFF0074BD);
   static const agent = Color(0xFF8443F7);
   static const success = Color(0xFF16A34A);
   static const warning = Color(0xFFF59E0B);
@@ -36,15 +37,45 @@ ThemeData agentTheme() {
     inputDecorationTheme: InputDecorationTheme(
       isDense: true,
       filled: true,
-      fillColor: AgentColors.bg,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide.none,
+      fillColor: Colors.white,
+      hintStyle: const TextStyle(color: AgentColors.muted),
+      border: _inputBorder(AgentColors.border),
+      enabledBorder: _inputBorder(AgentColors.border),
+      focusedBorder: _inputBorder(AgentColors.primary, 1.4),
+      errorBorder: _inputBorder(AgentColors.error),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        minimumSize: const Size(0, 44),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        shape: _buttonShape,
+        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        minimumSize: const Size(0, 44),
+        shape: _buttonShape,
+        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+      ),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: AgentColors.bg,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
   );
 }
+
+final _buttonShape = RoundedRectangleBorder(
+  borderRadius: BorderRadius.circular(8),
+);
+
+OutlineInputBorder _inputBorder(Color color, [double width = 1]) =>
+    OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide(color: color, width: width),
+    );
 
 /// Thẻ trắng bo góc, viền mảnh.
 class AgentCard extends StatelessWidget {

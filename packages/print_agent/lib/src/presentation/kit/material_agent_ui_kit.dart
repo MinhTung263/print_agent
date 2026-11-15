@@ -134,14 +134,47 @@ class MaterialAgentUiKit implements AgentUiKit {
     required TextEditingController controller,
     required String label,
     bool obscureText = false,
-  }) => TextField(
-    controller: controller,
-    obscureText: obscureText,
-    decoration: InputDecoration(
-      labelText: label.tr,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      isDense: true,
-    ),
+  }) => Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      // Nhãn phía trên ô (như ô nhập của app EasyPOS), không nhãn nổi.
+      Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Text(
+          label.tr,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ),
+      TextField(
+        controller: controller,
+        obscureText: obscureText,
+        decoration: InputDecoration(
+          isDense: true,
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.md,
+            vertical: 13,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.dsGray4),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(
+              color: AppColors.primaryBlueBase,
+              width: 1.4,
+            ),
+          ),
+        ),
+      ),
+    ],
   );
 
   @override
@@ -237,7 +270,7 @@ class MaterialAgentUiKit implements AgentUiKit {
           clipBehavior: Clip.antiAlias,
           backgroundColor: AppColors.backgroundPrimary,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480, maxHeight: 680),

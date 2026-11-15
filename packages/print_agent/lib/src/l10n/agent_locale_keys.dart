@@ -341,7 +341,7 @@ abstract final class LocaleKeys {
   static const printerSetting_agentNameCancel =
       'printerSetting_agentNameCancel';
 
-  /// "Mã máy #@code · không đổi"
+  /// "Mã máy @code · không đổi"
   static const printerSetting_agentNameCode = 'printerSetting_agentNameCode';
   static String printerSetting_agentNameCodeTr({required Object code}) =>
       printerSetting_agentNameCode.trParams({'code': '$code'});

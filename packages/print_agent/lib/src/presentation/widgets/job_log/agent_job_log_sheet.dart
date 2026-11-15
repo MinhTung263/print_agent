@@ -141,7 +141,7 @@ class _JobLogDialog extends StatelessWidget {
     final height = MediaQuery.sizeOf(context).height * 0.8;
     return Dialog(
       backgroundColor: AppColors.backgroundPrimary,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: 640, maxHeight: height),
         child: AppColumn(

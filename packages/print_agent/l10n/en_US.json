@@ -189,7 +189,7 @@
     "agentPrinterDetailStationOff": "Print station is off",
     "agentPrinterDetailReceive": "Receive print jobs",
     "agentPrinterDetailReceiveHint": "Turn off to pause sending jobs to this printer",
-    "agentNameCode": "Device code #@code · fixed",
+    "agentNameCode": "Device code @code · fixed",
     "agentNameSuggest": "Quick picks",
     "agentNameSuggestCashier": "Cashier",
     "agentNameSuggestKitchen": "Kitchen",
