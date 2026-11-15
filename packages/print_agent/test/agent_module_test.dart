@@ -17,7 +17,7 @@ void main() {
         AgentIdentity.label('Quầy bar', 'abcdef12a3f9'),
         'Quầy bar · #A3F9',
       );
-      expect(AgentIdentity.label(' ', 'abcdef12a3f9'), 'Máy Agent · #A3F9');
+      expect(AgentIdentity.label(' ', 'abcdef12a3f9'), 'Trạm in · #A3F9');
       expect(AgentIdentity.label('Quầy', null), 'Quầy');
     });
   });

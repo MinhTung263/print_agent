@@ -136,7 +136,7 @@ void main() {
         'name': 'Bếp',
       });
       expect(AgentPrinterSwitches.off, contains('id:3'));
-      expect(host.notices.single, 'Quầy 1 đã tắt nhận lệnh cho Bếp từ xa');
+      expect(host.notices.single, 'Quầy 1 đã tạm ngưng in Bếp từ máy khác');
       await AgentPrinterSwitches.setKeyOn('id:3', true);
     });
 
