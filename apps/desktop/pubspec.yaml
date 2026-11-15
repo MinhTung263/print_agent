@@ -16,6 +16,8 @@ dependencies:
   launch_at_startup: ^0.5.1
   mqtt_client: ^10.14.0
   get: ^4.7.3
+  # Chuẩn hoá ảnh phiếu trang web gửi (lib/web/web_receipt_image.dart).
+  image: ^4.5.0
   print_agent:
     path: ../../packages/print_agent
   print_agent_core:
@@ -30,8 +32,6 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  # tool/gen_tray_icon.dart, tool/gen_app_icon.dart (biểu tượng khay / app).
-  image: ^4.5.0
   flutter_lints: ^6.0.0
 
 flutter:

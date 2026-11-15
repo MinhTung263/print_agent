@@ -39,6 +39,8 @@ Future<void> main(List<String> args) async {
   instance.showRequests.listen((_) => unawaited(shell.showWindow()));
   unawaited(Autostart.instance.init());
   unawaited(agent.start());
+  // Mở cả khi chưa đăng nhập: trang web báo được "Trạm in chưa đăng nhập".
+  unawaited(agent.web.start());
 
   runApp(
     GetMaterialApp(

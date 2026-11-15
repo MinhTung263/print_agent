@@ -5,6 +5,8 @@ import 'package:print_agent/print_agent.dart';
 import 'package:printer_label/desktop.dart';
 
 import '../desktop/keep_awake.dart';
+import '../web/web_bridge_server.dart';
+import '../web/web_origin_policy.dart';
 
 import 'agent_config.dart';
 import 'agent_printer.dart';
@@ -13,6 +15,7 @@ import 'desktop_agent_host.dart';
 import 'desktop_job_printer.dart';
 import 'desktop_printer.dart';
 import 'desktop_printer_gateway.dart';
+import 'desktop_web_print.dart';
 import 'desktop_wifi.dart';
 
 /// Agent máy tính (Windows / Linux / macOS): dùng chung [AgentService] + màn
@@ -51,6 +54,14 @@ class DesktopAgent extends ChangeNotifier {
   }
 
   late final WakeDetector _wake;
+
+  /// Cổng web: trang EasyPOS trên trình duyệt của máy này in qua trạm in
+  /// (không cần driver). Thêm trang được phép ở cấu hình `webOrigins`.
+  late final WebBridgeServer web = WebBridgeServer(
+    DesktopWebPrint(this),
+    policy: () => WebOriginPolicy.parse(AgentStore.get('webOrigins')),
+    log: PrintAgentModule.host.log,
+  );
 
   /// Đang làm Agent: chặn máy ngủ (máy ngủ = không nhận lệnh in).
   void _onStationChanged() {
@@ -145,6 +156,7 @@ class DesktopAgent extends ChangeNotifier {
   /// Thoát ứng dụng: rút khỏi danh sách Agent, thôi chặn máy ngủ.
   Future<void> shutdown() async {
     _wake.stop();
+    await web.stop();
     await KeepAwake.set(false);
     // Tạm dừng (GIỮ ghim công ty): bật lại máy / mở lại app thì Agent tự bật.
     // KHÔNG `setStation(false)` — đó là người dùng tắt Agent (bỏ ghim).
