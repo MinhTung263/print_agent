@@ -185,22 +185,18 @@ class _AgentMapArrangeSheetState extends State<AgentMapArrangeSheet> {
           child: AppRow(
             spacing: AppSpace.md,
             children: [
-              // Phụ: chữ, không khối xám ngang hàng nút chính.
-              BaseTap(
-                onTap: () => unawaited(_reset()),
-                child: const AppPadding.symmetric(
-                  horizontal: AppSpace.sm,
-                  vertical: AppSpace.sm,
-                  child: AppText(
-                    LocaleKeys.printerSetting_agentArrangeReset,
-                    variant: .title,
-                    tone: .secondary,
+              // Hai nút cùng cỡ (44) chia đều hàng: phụ nền xanh nhạt, chính xanh đặc.
+              Expanded(
+                child: BaseButton(
+                  onPressed: () => unawaited(_reset()),
+                  title: LocaleKeys.printerSetting_agentArrangeReset,
+                  backgroundColor: AppColors.primaryBlueBase.withValues(
+                    alpha: 0.1,
                   ),
+                  titleColor: AppColors.primaryBlueBase,
                 ),
               ),
-              const Spacer(),
-              SizedBox(
-                width: 160,
+              Expanded(
                 child: BaseButton(
                   onPressed: () => unawaited(_save()),
                   title: LocaleKeys.printerSetting_agentArrangeSave,
