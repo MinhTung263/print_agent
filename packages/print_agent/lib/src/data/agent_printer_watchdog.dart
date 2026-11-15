@@ -299,7 +299,9 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
         _setStatus(target, AgentPrinterState.connected);
         return target;
       }
-      if (!relocated && target.refKind == AgentPrinterKind.lan) {
+      // Máy in LAN — hoặc máy in có MAC (VD máy in LAN đóng vai "máy in tích
+      // hợp" của Agent máy tính): thử tìm lại theo MAC một lần.
+      if (!relocated && _relocatable(target)) {
         relocated = true;
         final moved = await _gateway.relocate(target);
         if (moved != null) {
@@ -415,6 +417,12 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
     }
     _setStatus(printer, AgentPrinterState.disconnected);
   }
+
+  static bool _relocatable(AgentPrinterRef p) =>
+      p.refKind == AgentPrinterKind.lan ||
+      (p.refKind != AgentPrinterKind.usb &&
+          p.refKind != AgentPrinterKind.bluetooth &&
+          (p.refMac?.isNotEmpty ?? false));
 
   /// Cổng in (9100) của [ip] có mở không — thử nhanh, không gửi gì.
   static Future<bool> tcpOpen(String ip) => _tcpOpen(ip);

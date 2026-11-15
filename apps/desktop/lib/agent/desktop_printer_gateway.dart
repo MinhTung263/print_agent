@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:print_agent/print_agent.dart';
+import 'package:printer_label/desktop.dart';
 
 import 'agent_config.dart';
 import 'agent_printer.dart';
@@ -9,9 +10,21 @@ import 'desktop_printer.dart';
 /// Cổng máy in của Agent máy tính: "máy in tích hợp" = máy in đã chọn ở cài
 /// đặt (LAN / USB); không có danh sách máy in đã lưu như app bán hàng.
 class DesktopPrinterGateway implements AgentPrinterGateway<DesktopPrinter> {
-  DesktopPrinterGateway(this._config);
+  DesktopPrinterGateway(
+    this._config, {
+    Future<void> Function(String address)? onRelocated,
+    Future<String?> Function(String mac, int port)? findByMac,
+  }) : _onRelocated = onRelocated,
+       _findByMac = findByMac ?? _scanByMac;
 
   final AgentConfig Function() _config;
+
+  /// Máy in của Agent vừa được tìm thấy ở địa chỉ mới (lưu lại cấu hình).
+  final Future<void> Function(String address)? _onRelocated;
+  final Future<String?> Function(String mac, int port) _findByMac;
+
+  static Future<String?> _scanByMac(String mac, int port) =>
+      LanPrinterScanner.findByMac(mac, port: port);
 
   bool _connected = false;
   final _builtIn = StreamController<bool>.broadcast();
@@ -54,12 +67,18 @@ class DesktopPrinterGateway implements AgentPrinterGateway<DesktopPrinter> {
     address: _config().printer.trim(),
     name: DesktopPrinter.builtInName,
     id: -1,
+    mac: _config().printerMac.isEmpty ? null : _config().printerMac,
   );
 
+  /// Kiểm tra máy in của Agent; không tới được mà biết MAC thì tìm lại (máy
+  /// in bật lại nhận IP mới) — chạy trong lượt canh định kỳ / khi máy thức.
   @override
   Future<void> reconnectBuiltIn() async {
     if (!hasBuiltIn) return _setConnected(false);
-    _setConnected(await AgentPrinter.reachable(_config().printer));
+    if (await AgentPrinter.reachable(_config().printer)) {
+      return _setConnected(true);
+    }
+    _setConnected(await relocate(builtInPrinter()) != null);
   }
 
   @override
@@ -77,12 +96,31 @@ class DesktopPrinterGateway implements AgentPrinterGateway<DesktopPrinter> {
     return ok;
   }
 
-  /// Máy tính không tìm lại máy in theo MAC (chưa hỗ trợ).
+  /// Máy in LAN không trả lời: có thể bật lại được router cấp IP mới — tìm
+  /// theo MAC (quét dải mạng + bảng ARP). Thấy ở địa chỉ khác thì trả máy in
+  /// với địa chỉ mới; máy in của Agent thì lưu lại cấu hình luôn.
   @override
   Future<DesktopPrinter?> relocate(
     DesktopPrinter printer, {
     Duration? timeout,
-  }) async => null;
+  }) async {
+    final mac = printer.mac;
+    if (mac == null || mac.isEmpty || UsbPrinters.isLocal(printer.address)) {
+      return null;
+    }
+    final parsed = parsePrinterAddress(printer.address);
+    if (parsed == null) return null;
+    final found = await _findByMac(mac, parsed.$2);
+    if (found == null || found == printer.address) return null;
+    PrintAgentModule.host.log(
+      '[AGENT] ${printer.refName}: đổi IP ${printer.address} → $found (theo MAC)',
+    );
+    if (printer.kind == AgentPrinterKind.builtIn) {
+      await _onRelocated?.call(found);
+      _setConnected(true);
+    }
+    return printer.withAddress(found);
+  }
 
   @override
   String? wifiSsidOf(DesktopPrinter printer) => null;

@@ -14,6 +14,7 @@ class AgentConfig {
     this.acceptAll = false,
     this.autoStart = true,
     this.printer = '',
+    this.printerMac = '',
     this.companyName = '',
     this.userName = '',
   });
@@ -33,6 +34,10 @@ class AgentConfig {
   /// LAN `ip` hoặc `ip:cổng`. Rỗng = chưa chọn.
   final String printer;
 
+  /// MAC máy in LAN của Agent (đọc từ bảng ARP lúc chọn) — máy in bật lại nhận
+  /// IP mới thì Agent tự tìm lại theo MAC.
+  final String printerMac;
+
   /// Tên công ty + người đăng nhập (hiện trên màn Agent).
   final String companyName;
   final String userName;
@@ -50,6 +55,7 @@ class AgentConfig {
     bool? acceptAll,
     bool? autoStart,
     String? printer,
+    String? printerMac,
     String? companyName,
     String? userName,
   }) => AgentConfig(
@@ -61,6 +67,10 @@ class AgentConfig {
     acceptAll: acceptAll ?? this.acceptAll,
     autoStart: autoStart ?? this.autoStart,
     printer: printer ?? this.printer,
+    // Đổi máy in: bỏ MAC cũ (đọc lại MAC máy mới).
+    printerMac:
+        printerMac ??
+        (printer != null && printer != this.printer ? '' : this.printerMac),
     companyName: companyName ?? this.companyName,
     userName: userName ?? this.userName,
   );
@@ -74,6 +84,7 @@ class AgentConfig {
     acceptAll: AgentStore.get('acceptAll') == '1',
     autoStart: AgentStore.get('autoStart') != '0',
     printer: AgentStore.get('printer') ?? '',
+    printerMac: AgentStore.get('printerMac') ?? '',
     companyName: AgentStore.get('companyName') ?? '',
     userName: AgentStore.get('userName') ?? '',
   );
@@ -87,6 +98,7 @@ class AgentConfig {
     AgentStore.set('acceptAll', acceptAll ? '1' : '0');
     AgentStore.set('autoStart', autoStart ? '1' : '0');
     AgentStore.set('printer', printer);
+    AgentStore.set('printerMac', printerMac);
     AgentStore.set('companyName', companyName);
     AgentStore.set('userName', userName);
   }
@@ -106,6 +118,7 @@ class AgentConfig {
     acceptAll: acceptAll,
     autoStart: autoStart,
     printer: printer,
+    printerMac: printerMac,
   );
 
   /// Mã Agent của máy này — cố định (lưu lại), để máy bán hàng nhớ đúng "máy in

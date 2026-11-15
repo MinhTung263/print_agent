@@ -39,6 +39,7 @@ void main() {
     expect(find.byType(AgentPage), findsOneWidget);
     expect(t.takeException(), isNull);
     await t.pumpWidget(const SizedBox());
+    agent.dispose();
     await t.binding.setSurfaceSize(null);
   });
 }

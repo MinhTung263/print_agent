@@ -28,7 +28,8 @@ abstract final class AgentPrinter {
       }
       final parsed = parsePrinterAddress(address);
       if (parsed == null) return false;
-      return await LanPrinterScanner.probe(parsed.$1, port: parsed.$2);
+      // Máy in đang phục vụ máy khác (từ chối kết nối) vẫn là đang bật.
+      return await LanPrinterScanner.isAlive(parsed.$1, port: parsed.$2);
     } catch (_) {
       return false;
     }

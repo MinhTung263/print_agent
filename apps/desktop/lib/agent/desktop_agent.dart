@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:print_agent/print_agent.dart';
+import 'package:printer_label/desktop.dart';
+
+import '../desktop/keep_awake.dart';
 
 import 'agent_config.dart';
 import 'agent_printer.dart';
@@ -22,7 +25,11 @@ class DesktopAgent extends ChangeNotifier {
   DesktopAgent(this._config) {
     _migrate();
     PrintAgentModule.init(DesktopAgentHost(() => _config));
-    gateway = DesktopPrinterGateway(() => _config);
+    gateway = DesktopPrinterGateway(
+      () => _config,
+      // Máy in của Agent đổi IP (tìm lại theo MAC): lưu địa chỉ mới.
+      onRelocated: (address) => update(_config.copyWith(printer: address)),
+    );
     service = AgentService<DesktopPrinter>(
       gateway: gateway,
       printer: DesktopJobPrinter(() => _config, gateway),
@@ -38,8 +45,45 @@ class DesktopAgent extends ChangeNotifier {
         networkChanges: gateway.networkChanges,
       ),
     );
-    service.relay.isStation.addListener(notifyListeners);
+    service.relay.isStation.addListener(_onStationChanged);
     gateway.builtInChanges.listen((_) => notifyListeners());
+    _wake = WakeDetector(_onWake)..start();
+  }
+
+  late final WakeDetector _wake;
+
+  /// Đang làm Agent: chặn máy ngủ (máy ngủ = không nhận lệnh in).
+  void _onStationChanged() {
+    unawaited(KeepAwake.set(isOn));
+    notifyListeners();
+  }
+
+  /// Máy vừa ngủ dậy: kiểm tra lại máy in + báo lại thông tin trạm ngay, không
+  /// chờ nhịp canh định kỳ (MQTT tự nối lại).
+  void _onWake() {
+    PrintAgentModule.host.log('[AGENT] Máy vừa thức dậy — kiểm tra lại máy in');
+    unawaited(gateway.reconnectBuiltIn());
+    if (isOn) {
+      unawaited(service.watchdog.checkNow());
+      unawaited(service.relay.refreshStationInfo());
+    }
+  }
+
+  /// Máy in LAN của Agent chưa biết MAC: đọc từ bảng ARP (sau khi vừa mở kết
+  /// nối tới máy in) để sau này tìm lại được khi máy in đổi IP.
+  Future<void> _learnPrinterMac() async {
+    final address = _config.printer.trim();
+    if (address.isEmpty ||
+        _config.printerMac.isNotEmpty ||
+        UsbPrinters.isLocal(address)) {
+      return;
+    }
+    final parsed = parsePrinterAddress(address);
+    if (parsed == null || !await AgentPrinter.reachable(address)) return;
+    final mac = await ArpTable.macOf(parsed.$1);
+    if (mac == null || _config.printer.trim() != address) return;
+    PrintAgentModule.host.log('[AGENT] MAC máy in $address: $mac');
+    _config = _config.copyWith(printerMac: mac)..save();
   }
 
   AgentConfig _config;
@@ -93,12 +137,19 @@ class DesktopAgent extends ChangeNotifier {
     if (!_config.ready) return;
     await service.init();
     unawaited(gateway.reconnectBuiltIn());
+    unawaited(_learnPrinterMac());
   }
 
   Future<void> setOn(bool on) => service.setEnabled(on);
 
-  /// Thoát ứng dụng: rút khỏi danh sách Agent.
-  Future<void> shutdown() => service.relay.setStation(false);
+  /// Thoát ứng dụng: rút khỏi danh sách Agent, thôi chặn máy ngủ.
+  Future<void> shutdown() async {
+    _wake.stop();
+    await KeepAwake.set(false);
+    // Tạm dừng (GIỮ ghim công ty): bật lại máy / mở lại app thì Agent tự bật.
+    // KHÔNG `setStation(false)` — đó là người dùng tắt Agent (bỏ ghim).
+    await service.suspend();
+  }
 
   /// Đăng xuất: tạm dừng Agent (giữ ghim công ty — đăng nhập lại cửa hàng
   /// này thì tự bật lại), bỏ công ty đã lưu.
@@ -115,7 +166,10 @@ class DesktopAgent extends ChangeNotifier {
         next.printer != _config.printer || next.paper != _config.paper;
     _config = next..save();
     notifyListeners();
-    if (printerChanged) await gateway.printerChanged();
+    if (printerChanged) {
+      await gateway.printerChanged();
+      unawaited(_learnPrinterMac());
+    }
   }
 
   /// In thử ra máy in của Agent; `null` = in được, ngược lại là lý do lỗi.
@@ -127,5 +181,11 @@ class DesktopAgent extends ChangeNotifier {
     );
     unawaited(gateway.reconnectBuiltIn());
     return failure == null ? null : (failure.detail ?? failure.error.name);
+  }
+
+  @override
+  void dispose() {
+    _wake.stop();
+    super.dispose();
   }
 }

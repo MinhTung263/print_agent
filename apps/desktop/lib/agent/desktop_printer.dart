@@ -8,6 +8,7 @@ class DesktopPrinter implements AgentPrinterRef {
     required this.address,
     this.name = '',
     this.id,
+    this.mac,
   });
 
   /// Tên máy in của Agent trên sơ đồ.
@@ -19,6 +20,17 @@ class DesktopPrinter implements AgentPrinterRef {
   final String address;
   final String name;
   final Object? id;
+
+  /// MAC máy in LAN (nếu biết) — để tìm lại khi máy in đổi IP.
+  final String? mac;
+
+  DesktopPrinter withAddress(String address) => DesktopPrinter(
+    kind: kind,
+    address: address,
+    name: name,
+    id: id,
+    mac: mac,
+  );
 
   @override
   Object? get refId => id;
@@ -33,5 +45,5 @@ class DesktopPrinter implements AgentPrinterRef {
   String get refName => name;
 
   @override
-  String? get refMac => null;
+  String? get refMac => mac;
 }

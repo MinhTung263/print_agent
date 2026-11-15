@@ -34,10 +34,10 @@ class AgentJobHandler<P extends AgentPrinterRef> {
 
   static const Duration dedupeWindow = Duration(minutes: 15);
   static const int dedupeMax = 500;
-  static const Duration breakerWindow = Duration(seconds: 10);
+  static Duration breakerWindow = const Duration(seconds: 10);
   static const Duration holdMax = Duration(minutes: 10);
   static Duration holdRetry = const Duration(seconds: 5);
-  static const Duration readyTimeout = Duration(seconds: 30);
+  static Duration readyTimeout = const Duration(seconds: 30);
   static const Duration printTimeout = Duration(seconds: 90);
 
   final AgentPrinterWatchdog<P> _watchdog;

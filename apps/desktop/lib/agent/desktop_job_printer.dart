@@ -35,6 +35,7 @@ class DesktopJobPrinter implements AgentJobPrinter<DesktopPrinter> {
       address: t.address.trim(),
       name: t.name ?? '',
       id: t.id,
+      mac: t.mac,
     );
   }
 

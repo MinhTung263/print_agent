@@ -2,6 +2,7 @@
 //
 //   cd apps/desktop && fvm dart run tool/fake_printer.dart [--port 9100] \
 //       [--out <thư mục>] [--paper-out] [--cover-open] [--delay <ms>]
+//       [--start-after <ms>]   (từ chối kết nối trong khoảng đầu)
 //
 // - Nghe cổng 9100 như máy in LAN: Agent máy tính (hoặc app EasyPOS trên điện
 //   thoại — thêm máy in LAN với IP của máy chạy công cụ này) in vào đây.
@@ -22,6 +23,8 @@ bool paperOut = false;
 bool coverOpen = false;
 bool busy = false;
 int delayMs = 0;
+late int port;
+ServerSocket? server;
 int ticketNo = 0;
 late Directory outDir;
 
@@ -31,33 +34,39 @@ Future<void> main(List<String> args) async {
     return i >= 0 && i + 1 < args.length ? args[i + 1] : null;
   }
 
-  final port = int.tryParse(arg('--port') ?? '') ?? 9100;
+  port = int.tryParse(arg('--port') ?? '') ?? 9100;
   outDir = Directory(
     arg('--out') ?? '${Directory.systemTemp.path}/fake_printer',
   )..createSync(recursive: true);
   paperOut = args.contains('--paper-out');
   coverOpen = args.contains('--cover-open');
   delayMs = int.tryParse(arg('--delay') ?? '') ?? 0;
+  final startAfter = int.tryParse(arg('--start-after') ?? '') ?? 0;
 
-  final server = await ServerSocket.bind(InternetAddress.anyIPv4, port);
   final ips = [
     for (final n in await NetworkInterface.list(type: InternetAddressType.IPv4))
       for (final a in n.addresses)
         if (!a.isLoopback) a.address,
   ];
+  if (startAfter > 0) {
+    // Cổng chưa mở: kết nối bị TỪ CHỐI như máy in đang phục vụ máy khác.
+    busy = true;
+    _log('⛔ Từ chối kết nối trong ${startAfter}ms đầu (máy in bận)');
+    Timer(Duration(milliseconds: startAfter), () async {
+      busy = false;
+      await _listen();
+      _log('Máy in hết bận — nhận kết nối');
+    });
+  } else {
+    await _listen();
+  }
+
+  // Dòng này báo đã sẵn sàng (test chờ dòng này) — cổng đã mở (hoặc đang
+  // cố tình từ chối với --start-after).
   _log('Máy in giả nghe cổng $port — IP: ${ips.join(', ')}');
   _log('Phiếu lưu ở: ${outDir.path}');
   _printState();
   _log('Lệnh: p (hết giấy) · c (mở nắp) · b (bận) · d <ms> · s · q');
-
-  server.listen((socket) {
-    if (busy) {
-      _log('⛔ Từ chối kết nối từ ${socket.remoteAddress.address} (đang bận)');
-      socket.destroy();
-      return;
-    }
-    _Session(socket);
-  });
 
   await for (final line
       in stdin.transform(utf8.decoder).transform(const LineSplitter())) {
@@ -69,14 +78,27 @@ Future<void> main(List<String> args) async {
         coverOpen = !coverOpen;
       case 'b':
         busy = !busy;
+        // Máy in thật đang bận TỪ CHỐI kết nối (ECONNREFUSED): đóng cổng nghe.
+        if (busy) {
+          await server?.close();
+          server = null;
+        } else {
+          await _listen();
+        }
       case 'd':
         delayMs = cmd.length > 1 ? int.tryParse(cmd[1]) ?? 0 : 0;
       case 'q':
-        await server.close();
+        await server?.close();
         exit(0);
     }
     _printState();
   }
+}
+
+Future<void> _listen() async {
+  if (server != null) return;
+  final s = server = await ServerSocket.bind(InternetAddress.anyIPv4, port);
+  s.listen(_Session.new);
 }
 
 void _printState() => _log(

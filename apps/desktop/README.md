@@ -61,3 +61,25 @@ Build Linux cần: `sudo apt install clang cmake ninja-build pkg-config libgtk-3
 Khoá hàng đợi suy ra từ `env/companyId/ownerId` (giống app). Trước khi phát hành
 rộng nên để backend cấp khoá / token theo công ty, và chuyển khỏi broker công
 khai `broker.emqx.io`.
+
+## Thử không cần máy in / không cần Windows
+
+**Máy in giả** (chạy được trên Mac / Linux / Windows):
+
+```bash
+cd apps/desktop
+fvm dart run tool/fake_printer.dart            # nghe cổng 9100
+fvm dart run tool/fake_printer.dart --port 9101 --out ~/Desktop/phieu
+```
+
+- Chọn máy in của Agent là `127.0.0.1` (hoặc IP máy chạy công cụ) — mỗi phiếu
+  lưu thành PNG, màn hình báo số bản / mở két / còi báo bếp.
+- App EasyPOS trên điện thoại cũng in vào được: thêm máy in LAN với IP của máy
+  chạy công cụ (in thẳng, hoặc qua Agent khi khác mạng).
+- Gõ `p` (hết giấy), `c` (mở nắp), `b` (bận — từ chối kết nối), `d 500` (chậm),
+  `s`, `q` rồi Enter. Máy in giả CẢNH BÁO nếu Agent gửi dữ liệu lúc máy in đang
+  hết giấy (đúng ra phải giữ phiếu).
+
+**Windows / Linux thật**: GitHub Actions (`.github/workflows/ci.yml`) chạy test
+trên máy Windows + Linux (Windows có test in RAW qua spooler thật) và build bản
+chạy được — tải ở mục **Artifacts** của lần chạy (Actions → CI).
