@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Đóng gói "Trạm in EasyPOS" thành file .deb (Ubuntu/Debian amd64).
+# Đóng gói "Agent" thành file .deb (Ubuntu/Debian amd64).
 #
 # Chạy sau `flutter build linux --release` (từ đâu cũng được):
 #   bash apps/desktop/installer/linux/build_deb.sh
@@ -25,7 +25,7 @@ PKG_NAME="easypos-print-agent"
 BINARY_NAME="easypos_print_agent"
 # Khớp APPLICATION_ID trong linux/CMakeLists.txt (g_set_prgname → WM_CLASS).
 APP_ID="vn.softdreams.easypos.easypos_print_agent"
-DISPLAY_NAME="Trạm in EasyPOS"
+DISPLAY_NAME="Agent"
 INSTALL_DIR="/opt/$PKG_NAME"
 ICON_SRC="$APP_DIR/assets/app/app_icon.png"
 
@@ -97,7 +97,7 @@ chmod 0644 "$ROOT/usr/share/applications/$APP_ID.desktop"
 # 73-seat-late.rules nên đặt số 60.
 install -d "$ROOT/etc/udev/rules.d"
 cat > "$ROOT/etc/udev/rules.d/60-easypos-printer.rules" <<'EOF'
-# Trạm in EasyPOS: cho người dùng đang đăng nhập ghi máy in USB (/dev/usb/lp*).
+# Agent: cho người dùng đang đăng nhập ghi máy in USB (/dev/usb/lp*).
 SUBSYSTEM=="usbmisc", KERNEL=="lp[0-9]*", TAG+="uaccess"
 EOF
 chmod 0644 "$ROOT/etc/udev/rules.d/60-easypos-printer.rules"
@@ -105,7 +105,7 @@ chmod 0644 "$ROOT/etc/udev/rules.d/60-easypos-printer.rules"
 # Nạp usblp khi khởi động (một số bản phân phối không tự nạp khi cắm máy in).
 install -d "$ROOT/etc/modules-load.d"
 cat > "$ROOT/etc/modules-load.d/$PKG_NAME.conf" <<'EOF'
-# Trạm in EasyPOS: máy in USB qua /dev/usb/lp*
+# Agent: máy in USB qua /dev/usb/lp*
 usblp
 EOF
 chmod 0644 "$ROOT/etc/modules-load.d/$PKG_NAME.conf"
@@ -132,7 +132,7 @@ Maintainer: $MAINTAINER
 Installed-Size: $INSTALLED_SIZE
 Depends: $DEPENDS
 Recommends: gnome-shell-extension-appindicator
-Description: Trạm in EasyPOS
+Description: Agent
  Nhận phiếu in từ app EasyPOS (qua Internet hoặc mạng LAN cổng 9101) và in
  thẳng ra máy in hoá đơn LAN/USB bằng lệnh ESC/POS, không cần driver.
 EOF

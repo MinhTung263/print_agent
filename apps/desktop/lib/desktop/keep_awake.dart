@@ -28,7 +28,7 @@ abstract final class KeepAwake {
               ? ['-i', '-w', '$pid']
               : [
                   '--what=sleep:idle',
-                  '--who=Trạm in EasyPOS',
+                  '--who=Agent',
                   '--why=Đang nhận lệnh in',
                   'sleep',
                   'infinity',

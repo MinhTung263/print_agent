@@ -44,7 +44,7 @@ Future<void> main(List<String> args) async {
 
   runApp(
     GetMaterialApp(
-      title: 'Trạm in EasyPOS',
+      title: 'Agent',
       debugShowCheckedModeBanner: false,
       theme: agentTheme(),
       locale: const Locale('vi', 'VN'),

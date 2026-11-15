@@ -1,4 +1,4 @@
-# Bộ cài Trạm in EasyPOS
+# Bộ cài Agent
 
 CI (`.github/workflows/ci.yml`) tự build cả hai bộ cài, tải ở mục **Artifacts**
 của lần chạy: `easypos-print-agent-windows-setup` (Setup .exe) và

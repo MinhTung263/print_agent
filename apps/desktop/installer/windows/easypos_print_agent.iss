@@ -1,4 +1,4 @@
-﻿; Bộ cài Windows cho "Trạm in EasyPOS" (Inno Setup 6.3+).
+﻿; Bộ cài Windows cho "Agent" (Inno Setup 6.3+).
 ;
 ; File phải giữ mã UTF-8 có BOM (Inno đọc tiếng Việt đúng nhờ BOM).
 ;
@@ -27,7 +27,7 @@
 #define OutputDir "..\..\build\installer"
 #endif
 
-#define MyAppName "Trạm in EasyPOS"
+#define MyAppName "Agent"
 #define MyAppExeName "easypos_print_agent.exe"
 #define MyAppPublisher "EasyPOS"
 ; Tên rule tường lửa (không dấu cho netsh dễ xử lý).

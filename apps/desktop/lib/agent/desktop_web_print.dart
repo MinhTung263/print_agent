@@ -53,7 +53,7 @@ class DesktopWebPrint implements WebPrintPort {
     if (!c.ready || !_agent.isOn) {
       return const WebPrintResult(
         WebPrintStatus.off,
-        message: 'Trạm in đang tắt — mở Trạm in EasyPOS và bật nhận lệnh in',
+        message: 'Trạm in đang tắt — mở app Agent và bật nhận lệnh in',
       );
     }
     if (request.companyId != null && request.companyId != c.companyId) {

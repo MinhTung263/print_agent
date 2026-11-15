@@ -24,7 +24,7 @@ class DesktopShell with TrayListener, WindowListener {
   static Future<void> initWindow({required bool startHidden}) async {
     await windowManager.ensureInitialized();
     const options = WindowOptions(
-      title: 'Trạm in EasyPOS',
+      title: 'Agent',
       size: Size(1100, 760),
       minimumSize: Size(420, 560),
       center: true,
@@ -86,12 +86,12 @@ class DesktopShell with TrayListener, WindowListener {
     if (signature == _lastTray) return;
     _lastTray = signature;
     if (!Platform.isLinux) {
-      await trayManager.setToolTip('Trạm in EasyPOS — $status');
+      await trayManager.setToolTip('Agent — $status');
     }
     await trayManager.setContextMenu(
       Menu(
         items: [
-          MenuItem(label: 'Trạm in EasyPOS · $status', disabled: true),
+          MenuItem(label: 'Trạm in · $status', disabled: true),
           MenuItem.separator(),
           MenuItem(key: _keyOpen, label: 'Mở cửa sổ'),
           if (agent.config.ready)

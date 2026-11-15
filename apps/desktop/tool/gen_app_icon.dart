@@ -1,4 +1,4 @@
-// Sinh biểu tượng app "Trạm in EasyPOS" từ logo EasyPOS:
+// Sinh biểu tượng app "Agent" từ logo EasyPOS:
 //
 //   cd apps/desktop && fvm dart run tool/gen_app_icon.dart
 //

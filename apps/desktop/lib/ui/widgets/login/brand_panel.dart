@@ -70,7 +70,7 @@ class BrandHeader extends StatelessWidget {
         _Logo(size: 56),
         SizedBox(height: 12),
         Text(
-          'Trạm in EasyPOS',
+          'Trạm in',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
         ),
         SizedBox(height: 4),
