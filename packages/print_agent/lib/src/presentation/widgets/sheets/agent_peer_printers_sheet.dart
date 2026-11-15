@@ -211,14 +211,6 @@ class _Header extends StatelessWidget {
                   const AgentTag(),
                 ],
               ),
-              if (AgentIdentity.deviceLine(info) case final device
-                  when device.isNotEmpty)
-                AppText.raw(
-                  device,
-                  variant: .caption,
-                  tone: .secondary,
-                  maxLines: 1,
-                ),
               AppText.raw(
                 offlineText ??
                     [

@@ -99,7 +99,6 @@ AgentMapNode _peerPrinterNode(
   VoidCallback? onTap,
 }) {
   final kind = p['kind'];
-  final addr = p['addr']?.toString() ?? '';
   final off = p['on'] == false;
   return AgentMapNode(
     icon: switch (kind) {
@@ -124,7 +123,8 @@ AgentMapNode _peerPrinterNode(
                     : LocaleKeys.printerSetting_agentBuiltInNotUsed.tr),
           icon: Icons.point_of_sale_rounded,
         ),
-        _ => AgentMapLine(addr, icon: Icons.lan_outlined),
+        // IP xem ở bảng máy in của trạm in (bấm vào trạm in).
+        _ => const AgentMapLine('LAN', icon: Icons.lan_outlined),
       },
     ],
     state: offline || off

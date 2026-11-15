@@ -54,7 +54,12 @@ class _AgentReconnectSheetState extends State<AgentReconnectSheet> {
       result = await PrintAgentUi.station.reconnect.run(
         _printer,
         onStep: (step) {
-          if (mounted) setState(() => _steps.add(step));
+          if (!mounted) return;
+          // Bước kỹ thuật cùng chữ (thử IP, tìm theo MAC): chỉ hiện một dòng.
+          if (_steps.isNotEmpty && _stepText(_steps.last) == _stepText(step)) {
+            return;
+          }
+          setState(() => _steps.add(step));
         },
       );
     } catch (e) {
@@ -80,11 +85,9 @@ class _AgentReconnectSheetState extends State<AgentReconnectSheet> {
   String _stepText(ReconnectStep step) => switch (step) {
     ReconnectStep.checkNetwork =>
       LocaleKeys.printerSetting_agentReconnectStepNetwork.tr,
-    ReconnectStep.tryIp => LocaleKeys.printerSetting_agentReconnectStepIpTr(
-      ip: widget.printer.refAddress ?? '',
-    ),
+    ReconnectStep.tryIp => LocaleKeys.printerSetting_agentReconnectStepFind.tr,
     ReconnectStep.searchMac =>
-      LocaleKeys.printerSetting_agentReconnectStepMac.tr,
+      LocaleKeys.printerSetting_agentReconnectStepFind.tr,
     ReconnectStep.restartBuiltIn =>
       LocaleKeys.printerSetting_agentReconnectStepBuiltIn.tr,
     ReconnectStep.checkUsb =>

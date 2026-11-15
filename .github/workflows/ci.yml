@@ -12,6 +12,7 @@ on:
 
 env:
   FLUTTER_VERSION: 3.41.2
+  PYTHONIOENCODING: utf-8
 
 jobs:
   test:

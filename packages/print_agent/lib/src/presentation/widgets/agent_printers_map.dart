@@ -34,19 +34,11 @@ class AgentPrintersMap extends StatelessWidget {
         final service = PrintAgentUi.station;
         // Các Agent KHÁC (đang bật / đã tắt) + máy in của từng Agent — vùng riêng.
         final peers = agentPeerEntries(online);
-        // Chưa nhận trạng thái kênh nào: hiện tên kênh đang nghe (chờ kết nối).
-        final cloudLines = cloud.channels.isEmpty
-            ? [
-                for (final name
-                    in relay.stationTransports.map(agentChannelName).toSet())
-                  AgentMapLine(name, icon: Icons.cloud_sync_outlined),
-              ]
-            : cloud.lines;
         return AgentNetworkMap(
           cloud: AgentMapNode(
             icon: Icons.cloud_outlined,
             title: LocaleKeys.printerSetting_agentCloud.tr,
-            lines: cloudLines,
+            lines: cloud.lines,
             state: cloud.state(empty: AgentLinkState.disconnected),
           ),
           // Máy này: tên + mã Agent (máy khác thấy đúng tên này); bấm để đổi tên.
@@ -211,9 +203,7 @@ class AgentPrintersMap extends StatelessWidget {
           'USB',
           icon: Icons.usb_rounded,
         ),
-        _ => AgentMapLine(
-          s.note ?? s.printer.refAddress ?? '',
-          icon: Icons.lan_outlined,
-        ),
+        // Khách chỉ cần biết là máy in LAN — IP xem ở thẻ máy in chưa kết nối.
+        _ => const AgentMapLine('LAN', icon: Icons.lan_outlined),
       };
 }

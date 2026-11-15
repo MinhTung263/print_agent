@@ -4,6 +4,9 @@ check-runs/annotations mà không cần quyền tải log. Thoát mã 1 nếu c�
 import json
 import sys
 
+# Console Windows mặc định không phải UTF-8 — in chữ tiếng Việt sẽ lỗi.
+sys.stdout.reconfigure(encoding='utf-8')
+
 names, errors, failed = {}, {}, []
 for line in open(sys.argv[1], encoding='utf-8', errors='replace'):
     try:

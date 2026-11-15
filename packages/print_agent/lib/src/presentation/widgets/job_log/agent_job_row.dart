@@ -45,18 +45,11 @@ class AgentJobRow extends StatelessWidget {
     final sender = log.sender?.isNotEmpty ?? false
         ? log.sender!
         : LocaleKeys.printerSetting_agentJobUnknownSender.tr;
-    final printer = [
-      if (log.printerName.isNotEmpty) log.printerName,
-      if (log.printerAddress?.isNotEmpty ?? false) log.printerAddress!,
-    ].join(' · ');
-    final meta = [
-      formatAgentTime(log.at),
-      log.viaLan
-          ? LocaleKeys.printerSetting_agentJobViaLan.tr
-          : LocaleKeys.printerSetting_agentJobViaCloud.tr,
-      '${(log.durationMs / 1000).toStringAsFixed(1)}s',
-    ].join(' · ');
-    final detail = log.detail?.trim() ?? '';
+    // Chỉ thông tin khách cần: máy in nào, máy nào gửi, lúc nào, lý do lỗi dễ
+    // hiểu (IP, đường đi, thời gian in, câu lỗi gốc của máy in vẫn lưu trong
+    // nhật ký để hỗ trợ kỹ thuật).
+    final printer = log.printerName;
+    final meta = formatAgentTime(log.at);
     return AppRow(
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: AppSpace.sm,
@@ -103,10 +96,7 @@ class AgentJobRow extends StatelessWidget {
               if (!log.ok)
                 _IconLine(
                   icon: Icons.error_outline_rounded,
-                  text: [
-                    _errorText(log.error),
-                    if (detail.isNotEmpty) '($detail)',
-                  ].join(' '),
+                  text: _errorText(log.error),
                   color: AppColors.errorRed,
                 ),
             ],

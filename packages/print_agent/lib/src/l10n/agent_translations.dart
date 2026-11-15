@@ -9,25 +9,35 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentActivityPrintingLabel': "Đang in tem",
     'printerSetting_agentActivityPrintingReceipt': "Đang in hoá đơn",
     'printerSetting_agentArrange': "Sắp xếp sơ đồ",
-    'printerSetting_agentArrangeEmpty': "Chưa có trạm in hay máy in nào để sắp xếp",
-    'printerSetting_agentArrangeHint': "Kéo biểu tượng ⋮⋮ để đổi thứ tự các trạm in; kéo từng máy in để đổi thứ tự trong trạm in đó. Chỉ đổi cách hiển thị trên máy này, không đổi trạm in nào in máy in nào",
+    'printerSetting_agentArrangeEmpty':
+        "Chưa có trạm in hay máy in nào để sắp xếp",
+    'printerSetting_agentArrangeHint':
+        "Kéo biểu tượng ⋮⋮ để đổi thứ tự các trạm in; kéo từng máy in để đổi thứ tự trong trạm in đó. Chỉ đổi cách hiển thị trên máy này, không đổi trạm in nào in máy in nào",
     'printerSetting_agentArrangeReset': "Về mặc định",
     'printerSetting_agentArrangeSave': "Lưu",
-    'printerSetting_agentAutoRestartOff': "Tự khởi động lại khi bật máy: Chưa cấp quyền (bấm để cấp)",
+    'printerSetting_agentAutoRestartOff':
+        "Tự khởi động lại khi bật máy: Chưa cấp quyền (bấm để cấp)",
     'printerSetting_agentAutoRestartOn': "Tự khởi động lại khi bật máy: Đã bật",
-    'printerSetting_agentAutoRestartPermission': "Để trạm in tự chạy lại khi bật máy hoặc bị tắt, hãy cấp quyền \"Hiển thị trên ứng dụng khác\" cho app",
-    'printerSetting_agentBoundElsewhere': "Máy này đang là trạm in của cửa hàng khác. Bật ở đây để chuyển trạm in sang cửa hàng này.",
+    'printerSetting_agentAutoRestartPermission':
+        "Để trạm in tự chạy lại khi bật máy hoặc bị tắt, hãy cấp quyền \"Hiển thị trên ứng dụng khác\" cho app",
+    'printerSetting_agentBoundElsewhere':
+        "Máy này đang là trạm in của cửa hàng khác. Bật ở đây để chuyển trạm in sang cửa hàng này.",
     'printerSetting_agentBuiltIn': "Có sẵn trên máy",
     'printerSetting_agentBuiltInInUse': "Đang dùng để in",
     'printerSetting_agentBuiltInNotUsed': "Chưa bật dùng",
     'printerSetting_agentBuiltInPrinter': "Máy in có sẵn trên máy",
     'printerSetting_agentCloud': "Internet",
+    'printerSetting_agentCloudConnecting': "Đang kết nối…",
+    'printerSetting_agentCloudDown': "Mất kết nối",
+    'printerSetting_agentCloudOk': "Đã kết nối",
     'printerSetting_agentDashboard': "Trạm in",
-    'printerSetting_agentEntryOff': "Tự in qua trạm in khi máy in không in được · bấm để xem",
+    'printerSetting_agentEntryOff':
+        "Tự in qua trạm in khi máy in không in được · bấm để xem",
     'printerSetting_agentEntryOn': "Máy này đang là trạm in · bấm để xem sơ đồ",
     'printerSetting_agentEntryTitle': "Trạm in",
     'printerSetting_agentForget': "Bỏ trạm in này khỏi danh sách",
-    'printerSetting_agentForgetHint': "Chỉ bỏ khỏi danh sách trên máy này (kèm máy in có sẵn trên trạm in đó). Trạm in bật lại sẽ tự hiện lại",
+    'printerSetting_agentForgetHint':
+        "Chỉ bỏ khỏi danh sách trên máy này (kèm máy in có sẵn trên trạm in đó). Trạm in bật lại sẽ tự hiện lại",
     'printerSetting_agentForgot': "Đã quên @agent",
     'printerSetting_agentGrantPermission': "Cấp quyền",
     'printerSetting_agentHasBuiltIn': "Có máy in có sẵn trên máy",
@@ -36,16 +46,20 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentJobErrBusy': "Máy in đang bận (máy khác đang in)",
     'printerSetting_agentJobErrCoverOpen': "Máy in đang mở nắp",
     'printerSetting_agentJobErrNoContent': "Phiếu in không có nội dung",
-    'printerSetting_agentJobErrNotReady': "Máy in không phản hồi (tắt nguồn, mất mạng hoặc hết giấy)",
-    'printerSetting_agentJobErrOtherNetwork': "Máy in ở mạng khác, trạm in không kết nối tới được",
+    'printerSetting_agentJobErrNotReady':
+        "Máy in không phản hồi (tắt nguồn, mất mạng hoặc hết giấy)",
+    'printerSetting_agentJobErrOtherNetwork':
+        "Máy in ở mạng khác, trạm in không kết nối tới được",
     'printerSetting_agentJobErrOutOfPaper': "Máy in hết giấy",
     'printerSetting_agentJobErrOverheated': "Máy in quá nóng",
     'printerSetting_agentJobErrSend': "Gửi phiếu tới máy in bị lỗi",
-    'printerSetting_agentJobErrUnreachable': "Không kết nối được máy in lúc gửi phiếu (tắt nguồn, mất mạng hoặc sai IP)",
+    'printerSetting_agentJobErrUnreachable':
+        "Không kết nối được máy in lúc gửi phiếu (tắt nguồn, mất mạng hoặc sai IP)",
     'printerSetting_agentJobFrom': "Từ @sender",
     'printerSetting_agentJobLabel': "Tem",
     'printerSetting_agentJobLog': "Phiếu in gần đây",
-    'printerSetting_agentJobLogEmpty': "Chưa có phiếu in nào được gửi tới máy này",
+    'printerSetting_agentJobLogEmpty':
+        "Chưa có phiếu in nào được gửi tới máy này",
     'printerSetting_agentJobLogFilterAll': "Tất cả (@count)",
     'printerSetting_agentJobLogFilterFailed': "Lỗi (@count)",
     'printerSetting_agentJobLogNoFailed': "Không có phiếu in lỗi",
@@ -56,24 +70,33 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentJobViaCloud': "Internet",
     'printerSetting_agentJobViaLan': "mạng nội bộ",
     'printerSetting_agentLastJob': "Phiếu gần nhất lúc @time",
-    'printerSetting_agentLeaveChangeCompany': "Đổi công ty sẽ tạm dừng trạm in của cửa hàng hiện tại. Khi quay lại cửa hàng này, trạm in tự bật lại.",
+    'printerSetting_agentLeaveChangeCompany':
+        "Đổi công ty sẽ tạm dừng trạm in của cửa hàng hiện tại. Khi quay lại cửa hàng này, trạm in tự bật lại.",
     'printerSetting_agentLeaveContinue': "Vẫn tiếp tục",
-    'printerSetting_agentLeaveLogout': "Đăng xuất sẽ tạm dừng trạm in của cửa hàng. Khi đăng nhập lại cửa hàng này, trạm in tự bật lại.",
+    'printerSetting_agentLeaveLogout':
+        "Đăng xuất sẽ tạm dừng trạm in của cửa hàng. Khi đăng nhập lại cửa hàng này, trạm in tự bật lại.",
     'printerSetting_agentLeaveTitle': "Máy này đang là trạm in",
-    'printerSetting_agentMapAgent': "Máy này đang là trạm in — các máy in đang quản lý",
+    'printerSetting_agentMapAgent':
+        "Máy này đang là trạm in — các máy in đang quản lý",
     'printerSetting_agentMapSender': "Trạm in của cửa hàng",
     'printerSetting_agentNameSave': "Lưu",
-    'printerSetting_agentNameSheetHint': "Đặt tên dễ nhớ (VD \"Quầy bar\", \"Bếp\") để các máy khác phân biệt trạm in này. Mã sau dấu # là mã riêng của máy, không đổi",
+    'printerSetting_agentNameSheetHint':
+        "Đặt tên dễ nhớ (VD \"Quầy bar\", \"Bếp\") để các máy khác phân biệt trạm in này. Mã sau dấu # là mã riêng của máy, không đổi",
     'printerSetting_agentNameTitle': "Tên trạm in",
-    'printerSetting_agentNoAgentHint': "Chưa có trạm in nào đang bật. Khi máy in không in được, app sẽ tự in qua trạm in nếu cửa hàng có",
+    'printerSetting_agentNoAgentHint':
+        "Chưa có trạm in nào đang bật. Khi máy in không in được, app sẽ tự in qua trạm in nếu cửa hàng có",
     'printerSetting_agentNoPrinters': "Chưa có máy in nào",
     'printerSetting_agentOfflineSince': "Đang tắt · lần cuối @time",
-    'printerSetting_agentOtherAppIsAgent': "Máy này đang làm trạm in ở bản app khác (@app). Tắt trạm in ở bản đó trước rồi bật lại ở đây",
+    'printerSetting_agentOtherAppIsAgent':
+        "Máy này đang làm trạm in ở bản app khác (@app). Tắt trạm in ở bản đó trước rồi bật lại ở đây",
     'printerSetting_agentOthersTitle': "Trạm in khác của cửa hàng (@count)",
-    'printerSetting_agentPeerMore': "Còn @count máy in khác (trạm in dùng bản app cũ chỉ báo một phần)",
+    'printerSetting_agentPeerMore':
+        "Còn @count máy in khác (trạm in dùng bản app cũ chỉ báo một phần)",
     'printerSetting_agentPeerNoPrinters': "Trạm in này chưa báo máy in nào",
-    'printerSetting_agentPeerOfflineHint': "Trạm in đang tắt — trạng thái máy in dưới đây là lần cuối lúc @time",
-    'printerSetting_agentPeerOldVersion': "@agent đang dùng bản app cũ nên chưa tạm ngưng / bật lại máy in từ xa được. Cập nhật EasyPOS trên máy đó (hoặc bấm máy in ngay trên trạm in).",
+    'printerSetting_agentPeerOfflineHint':
+        "Trạm in đang tắt — trạng thái máy in dưới đây là lần cuối lúc @time",
+    'printerSetting_agentPeerOldVersion':
+        "@agent đang dùng bản app cũ nên chưa tạm ngưng / bật lại máy in từ xa được. Cập nhật EasyPOS trên máy đó (hoặc bấm máy in ngay trên trạm in).",
     'printerSetting_agentPeerOnline': "Đang bật",
     'printerSetting_agentPeerPrinterFail': "Mất kết nối",
     'printerSetting_agentPeerPrinterOff': "Tạm ngưng",
@@ -82,43 +105,63 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentPeerPrintersTitle': "Máy in của trạm in",
     'printerSetting_agentPrinterIssues': "@count máy in chưa kết nối",
     'printerSetting_agentPrinterOffState': "Đang tạm ngưng in",
-    'printerSetting_agentPrinterRemoteOff': "Đã gửi yêu cầu tạm ngưng in @printer trên @agent",
-    'printerSetting_agentPrinterRemoteOn': "Đã gửi yêu cầu in lại @printer trên @agent",
+    'printerSetting_agentPrinterRemoteOff':
+        "Đã gửi yêu cầu tạm ngưng in @printer trên @agent",
+    'printerSetting_agentPrinterRemoteOn':
+        "Đã gửi yêu cầu in lại @printer trên @agent",
     'printerSetting_agentPrinterTurnedOff': "Đã tạm ngưng in @printer",
-    'printerSetting_agentPrinterTurnedOffBy': "@by đã tạm ngưng in @printer từ máy khác",
+    'printerSetting_agentPrinterTurnedOffBy':
+        "@by đã tạm ngưng in @printer từ máy khác",
     'printerSetting_agentPrinterTurnedOn': "@printer đã in lại bình thường",
-    'printerSetting_agentPrinterTurnedOnBy': "@by đã cho @printer in lại từ máy khác",
+    'printerSetting_agentPrinterTurnedOnBy':
+        "@by đã cho @printer in lại từ máy khác",
     'printerSetting_agentPrintersConnected': "@ok/@total máy in đang hoạt động",
     'printerSetting_agentReconnect': "Kết nối lại",
-    'printerSetting_agentReconnectBuiltIn': "Không kết nối được máy in có sẵn trên máy. Thử tắt mở lại máy",
-    'printerSetting_agentReconnectBusy': "Máy in đang bận hoặc đang được máy khác giữ kết nối. Đợi máy kia in xong rồi thử lại",
+    'printerSetting_agentReconnectBuiltIn':
+        "Không kết nối được máy in có sẵn trên máy. Thử tắt mở lại máy",
+    'printerSetting_agentReconnectBusy':
+        "Máy in đang bận hoặc đang được máy khác giữ kết nối. Đợi máy kia in xong rồi thử lại",
     'printerSetting_agentReconnectDone': "Xong",
-    'printerSetting_agentReconnectMoved': "Máy in đã đổi IP @oldIp → @newIp. Đã cập nhật và kết nối lại",
-    'printerSetting_agentReconnectNotFound': "Không thấy máy in trong mạng. Kiểm tra máy in đã bật và cắm cáp mạng / Wi-Fi",
-    'printerSetting_agentReconnectNotFoundNoMac': "Không kết nối được máy in. Kiểm tra máy in đã bật, cắm cáp mạng và IP trên máy in còn đúng",
+    'printerSetting_agentReconnectMoved':
+        "Máy in đã đổi IP @oldIp → @newIp. Đã cập nhật và kết nối lại",
+    'printerSetting_agentReconnectNotFound':
+        "Không thấy máy in trong mạng. Kiểm tra máy in đã bật và cắm cáp mạng / Wi-Fi",
+    'printerSetting_agentReconnectNotFoundNoMac':
+        "Không kết nối được máy in. Kiểm tra máy in đã bật, cắm cáp mạng và IP trên máy in còn đúng",
     'printerSetting_agentReconnectOk': "Đã kết nối lại @printer",
-    'printerSetting_agentReconnectOtherNet': "Máy in ở mạng khác, máy này không tới được. Chuyển máy này sang Wi-Fi của máy in",
-    'printerSetting_agentReconnectOtherWifi': "Máy in ở Wi-Fi \"@wifi\", máy này đang ở mạng khác nên không tới được",
+    'printerSetting_agentReconnectOtherNet':
+        "Máy in ở mạng khác, máy này không tới được. Chuyển máy này sang Wi-Fi của máy in",
+    'printerSetting_agentReconnectOtherWifi':
+        "Máy in ở Wi-Fi \"@wifi\", máy này đang ở mạng khác nên không tới được",
     'printerSetting_agentReconnectRetry': "Thử lại",
-    'printerSetting_agentReconnectStepBuiltIn': "Khởi động lại máy in có sẵn trên máy",
+    'printerSetting_agentReconnectStepBuiltIn':
+        "Khởi động lại máy in có sẵn trên máy",
+    'printerSetting_agentReconnectStepFind': "Đang tìm máy in…",
     'printerSetting_agentReconnectStepIp': "Thử kết nối @ip",
-    'printerSetting_agentReconnectStepMac': "Tìm máy in theo địa chỉ MAC (máy in có thể đã đổi IP)",
+    'printerSetting_agentReconnectStepMac':
+        "Tìm máy in theo địa chỉ MAC (máy in có thể đã đổi IP)",
     'printerSetting_agentReconnectStepNetwork': "Kiểm tra mạng của máy này",
     'printerSetting_agentReconnectStepUsb': "Kiểm tra cáp và quyền USB",
     'printerSetting_agentReconnectTitle': "Kết nối lại máy in",
-    'printerSetting_agentReconnectUsb': "Không thấy máy in USB. Cắm lại cáp USB rồi thử lại",
+    'printerSetting_agentReconnectUsb':
+        "Không thấy máy in USB. Cắm lại cáp USB rồi thử lại",
     'printerSetting_agentRemove': "Tắt trạm in này",
-    'printerSetting_agentRemoveConfirm': "Tắt trạm in trên @agent? Máy đó sẽ không in giúp nữa",
-    'printerSetting_agentRemoveFailed': "Không gửi được yêu cầu — kiểm tra kết nối mạng",
-    'printerSetting_agentRemoveHint': "Trạm in này không có máy in nào. Tắt sẽ tắt chế độ trạm in trên máy đó (máy đó tự kiểm tra lại, có máy in thì không tắt)",
+    'printerSetting_agentRemoveConfirm':
+        "Tắt trạm in trên @agent? Máy đó sẽ không in giúp nữa",
+    'printerSetting_agentRemoveFailed':
+        "Không gửi được yêu cầu — kiểm tra kết nối mạng",
+    'printerSetting_agentRemoveHint':
+        "Trạm in này không có máy in nào. Tắt sẽ tắt chế độ trạm in trên máy đó (máy đó tự kiểm tra lại, có máy in thì không tắt)",
     'printerSetting_agentRemoved': "Đã gửi yêu cầu tắt @agent",
     'printerSetting_agentStandby': "Sẵn sàng in giúp",
     'printerSetting_agentStateDisconnected': "Mất kết nối",
     'printerSetting_agentStateOtherNetwork': "Khác mạng",
     'printerSetting_agentStats': "Đã in giúp @printed phiếu · lỗi @failed",
-    'printerSetting_agentStoppedRemotely': "Máy này đã được tắt chế độ trạm in từ máy khác (@by) vì không có máy in nào",
+    'printerSetting_agentStoppedRemotely':
+        "Máy này đã được tắt chế độ trạm in từ máy khác (@by) vì không có máy in nào",
     'printerSetting_agentSwitchNetwork': "Đổi mạng",
-    'printerSetting_agentSwitchNetworkHint': "Máy này chưa kết nối được các máy in dưới đây. Chuyển sang đúng Wi-Fi của máy in để in",
+    'printerSetting_agentSwitchNetworkHint':
+        "Máy này chưa kết nối được các máy in dưới đây. Chuyển sang đúng Wi-Fi của máy in để in",
     'printerSetting_agentTag': "Trạm in",
     'printerSetting_agentThisDevice': "Máy này",
     'printerSetting_agentUndo': "Hoàn tác",
@@ -126,33 +169,44 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentWifiFar': "Không thấy sóng ở đây",
     'printerSetting_agentWifiNearby': "Có sóng",
     'printerSetting_agentWifiOpenSettings': "Mở cài đặt Wi-Fi",
-    'printerSetting_agentWifiPickInPanel': "Chọn \"@wifi\" trong bảng Wi-Fi vừa mở rồi quay lại",
-    'printerSetting_agentWifiPrinterOff': "Máy này đang ở Wi-Fi này — máy in có thể đang tắt hoặc mất mạng",
+    'printerSetting_agentWifiPickInPanel':
+        "Chọn \"@wifi\" trong bảng Wi-Fi vừa mở rồi quay lại",
+    'printerSetting_agentWifiPrinterOff':
+        "Máy này đang ở Wi-Fi này — máy in có thể đang tắt hoặc mất mạng",
     'printerSetting_agentWifiUnknown': "Chưa rõ Wi-Fi",
-    'printerSetting_agentWifiUnknownHint': "Chưa in được lần nào trên máy này nên chưa biết máy in ở Wi-Fi nào",
+    'printerSetting_agentWifiUnknownHint':
+        "Chưa in được lần nào trên máy này nên chưa biết máy in ở Wi-Fi nào",
     'printerSetting_agentZoneCompanyAgents': "Trạm in của cửa hàng (@count)",
     'printerSetting_agentZoneMyPrinters': "Máy in của máy này",
     'printerSetting_printStationChannel': "Trạm in",
-    'printerSetting_printStationHint': "Máy khác Wi-Fi hoặc dùng 4G sẽ gửi phiếu sang, máy này in ra máy in ở quầy. Máy này cần cùng mạng với máy in (hoặc cắm USB vào máy in) và đang mở app",
+    'printerSetting_printStationHint':
+        "Máy khác Wi-Fi hoặc dùng mạng di động sẽ gửi phiếu sang, máy này in ra máy in ở quầy. Máy này cần cùng mạng với máy in (hoặc cắm USB vào máy in) và đang mở app",
     'printerSetting_printStationPrinted': "Đã in giúp @count phiếu từ máy khác",
     'printerSetting_printStationRunning': "Trạm in đang chạy",
     'printerSetting_printStationStop': "Dừng",
     'printerSetting_printStationToggle': "Dùng máy này làm trạm in",
-    'printerSetting_printStationUnavailable': "Chưa bật được trạm in, hãy kiểm tra kết nối internet rồi thử lại",
+    'printerSetting_printStationUnavailable':
+        "Chưa bật được trạm in, hãy kiểm tra kết nối internet rồi thử lại",
     'printerSetting_printStationWaiting': "Đang chờ phiếu in từ máy khác",
-    'printerSetting_relayHeld': "@printerName hết giấy / đang mở nắp. Trạm in đang giữ phiếu, lắp giấy (đóng nắp) xong sẽ tự in — không cần in lại.",
-    'printerSetting_relayNoStation': "Cửa hàng chưa có trạm in nào đang bật. Hãy bật \"Dùng máy này làm trạm in\" trên máy cùng mạng với máy in trước",
-    'printerSetting_remotePrintFailed': "Trạm in không in được tới @printerName",
-    'printerSetting_remotePrintTimeout': "Trạm in đang tắt hoặc mất mạng, hãy kiểm tra máy trạm in đang mở app và có internet",
+    'printerSetting_relayHeld':
+        "@printerName hết giấy / đang mở nắp. Trạm in đang giữ phiếu, lắp giấy (đóng nắp) xong sẽ tự in — không cần in lại.",
+    'printerSetting_relayNoStation':
+        "Cửa hàng chưa có trạm in nào đang bật. Hãy bật \"Dùng máy này làm trạm in\" trên máy cùng mạng với máy in trước",
+    'printerSetting_remotePrintFailed':
+        "Trạm in không in được tới @printerName",
+    'printerSetting_remotePrintTimeout':
+        "Trạm in đang tắt hoặc mất mạng, hãy kiểm tra máy trạm in đang mở app và có internet",
     'printerSetting_stationBuiltInNameNamed': "Máy in của @stationName",
     'printerSetting_stationBuiltInOfflineState': "Đang tắt",
     'printerSetting_stationBuiltInOnline': "Đang bật",
     'printerSetting_stationBuiltInSection': "Máy in có sẵn trên trạm in",
-    'printerSetting_stationBuiltInSkipped': "@printer đang tắt (trạm in đã tắt) — tạm bỏ qua máy in này, các máy in khác vẫn in bình thường",
+    'printerSetting_stationBuiltInSkipped':
+        "@printer đang tắt (trạm in đã tắt) — tạm bỏ qua máy in này, các máy in khác vẫn in bình thường",
     'printerSetting_switchWifi': "Chuyển Wi-Fi",
     'printerSetting_wifiChecking': "Đang thử kết nối...",
     'printerSetting_wifiPassword': "Mật khẩu Wi-Fi (để trống nếu không có)",
-    'printerSetting_wifiSwitchFailed': "Không chuyển được sang Wi-Fi \"@wifi\". Kiểm tra mật khẩu và máy có trong vùng sóng Wi-Fi này",
+    'printerSetting_wifiSwitchFailed':
+        "Không chuyển được sang Wi-Fi \"@wifi\". Kiểm tra mật khẩu và máy có trong vùng sóng Wi-Fi này",
   },
   'en_US': {
     'bills_rePrint': "Reprint",
@@ -161,43 +215,59 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentActivityPrintingLabel': "Printing label",
     'printerSetting_agentActivityPrintingReceipt': "Printing receipt",
     'printerSetting_agentArrange': "Arrange map",
-    'printerSetting_agentArrangeEmpty': "No print stations or printers to arrange yet",
-    'printerSetting_agentArrangeHint': "Drag ⋮⋮ to reorder print stations; drag a printer to reorder it within its print station. Only changes how the map looks on this device",
+    'printerSetting_agentArrangeEmpty':
+        "No print stations or printers to arrange yet",
+    'printerSetting_agentArrangeHint':
+        "Drag ⋮⋮ to reorder print stations; drag a printer to reorder it within its print station. Only changes how the map looks on this device",
     'printerSetting_agentArrangeReset': "Reset",
     'printerSetting_agentArrangeSave': "Save",
-    'printerSetting_agentAutoRestartOff': "Auto restart after reboot: Permission needed (tap to allow)",
+    'printerSetting_agentAutoRestartOff':
+        "Auto restart after reboot: Permission needed (tap to allow)",
     'printerSetting_agentAutoRestartOn': "Auto restart after reboot: On",
-    'printerSetting_agentAutoRestartPermission': "To let the print station restart by itself after a reboot or being closed, allow \"Display over other apps\" for this app",
-    'printerSetting_agentBoundElsewhere': "This device is the print station of another store. Turn on here to move the print station to this store.",
+    'printerSetting_agentAutoRestartPermission':
+        "To let the print station restart by itself after a reboot or being closed, allow \"Display over other apps\" for this app",
+    'printerSetting_agentBoundElsewhere':
+        "This device is the print station of another store. Turn on here to move the print station to this store.",
     'printerSetting_agentBuiltIn': "Built-in",
     'printerSetting_agentBuiltInInUse': "In use",
     'printerSetting_agentBuiltInNotUsed': "Not enabled",
     'printerSetting_agentBuiltInPrinter': "Built-in printer",
     'printerSetting_agentCloud': "Internet",
+    'printerSetting_agentCloudConnecting': "Connecting…",
+    'printerSetting_agentCloudDown': "Disconnected",
+    'printerSetting_agentCloudOk': "Connected",
     'printerSetting_agentDashboard': "Print station",
-    'printerSetting_agentEntryOff': "Automatically prints through a print station when direct printing fails · tap to view",
-    'printerSetting_agentEntryOn': "This device is a print station · tap to view the connection map",
+    'printerSetting_agentEntryOff':
+        "Automatically prints through a print station when direct printing fails · tap to view",
+    'printerSetting_agentEntryOn':
+        "This device is a print station · tap to view the connection map",
     'printerSetting_agentEntryTitle': "Print station",
     'printerSetting_agentForget': "Forget this print station",
-    'printerSetting_agentForgetHint': "Removes it from the list on this device only (with its built-in printer). It shows up again when the print station comes back online",
+    'printerSetting_agentForgetHint':
+        "Removes it from the list on this device only (with its built-in printer). It shows up again when the print station comes back online",
     'printerSetting_agentForgot': "Forgot @agent",
     'printerSetting_agentGrantPermission': "Allow",
     'printerSetting_agentHasBuiltIn': "Has built-in printer",
     'printerSetting_agentJobCopies': "@count copies",
     'printerSetting_agentJobErrBuiltIn': "Built-in printer is not ready",
-    'printerSetting_agentJobErrBusy': "Printer is busy (another device is printing)",
+    'printerSetting_agentJobErrBusy':
+        "Printer is busy (another device is printing)",
     'printerSetting_agentJobErrCoverOpen': "Printer cover is open",
     'printerSetting_agentJobErrNoContent': "The print job has no content",
-    'printerSetting_agentJobErrNotReady': "Printer not responding (powered off, offline or out of paper)",
-    'printerSetting_agentJobErrOtherNetwork': "Printer is on another network, the print station cannot reach it",
+    'printerSetting_agentJobErrNotReady':
+        "Printer not responding (powered off, offline or out of paper)",
+    'printerSetting_agentJobErrOtherNetwork':
+        "Printer is on another network, the print station cannot reach it",
     'printerSetting_agentJobErrOutOfPaper': "Printer is out of paper",
     'printerSetting_agentJobErrOverheated': "Printer is overheated",
     'printerSetting_agentJobErrSend': "Failed to send the job to the printer",
-    'printerSetting_agentJobErrUnreachable': "Could not reach the printer when sending (powered off, offline or wrong IP)",
+    'printerSetting_agentJobErrUnreachable':
+        "Could not reach the printer when sending (powered off, offline or wrong IP)",
     'printerSetting_agentJobFrom': "From @sender",
     'printerSetting_agentJobLabel': "Label",
     'printerSetting_agentJobLog': "Recent print jobs",
-    'printerSetting_agentJobLogEmpty': "No print jobs have been sent to this device yet",
+    'printerSetting_agentJobLogEmpty':
+        "No print jobs have been sent to this device yet",
     'printerSetting_agentJobLogFilterAll': "All (@count)",
     'printerSetting_agentJobLogFilterFailed': "Failed (@count)",
     'printerSetting_agentJobLogNoFailed': "No failed print jobs",
@@ -208,24 +278,35 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentJobViaCloud': "internet",
     'printerSetting_agentJobViaLan': "local network",
     'printerSetting_agentLastJob': "Last job at @time",
-    'printerSetting_agentLeaveChangeCompany': "Switching company pauses printing for the current store. The print station turns back on when you return to this store.",
+    'printerSetting_agentLeaveChangeCompany':
+        "Switching company pauses printing for the current store. The print station turns back on when you return to this store.",
     'printerSetting_agentLeaveContinue': "Continue anyway",
-    'printerSetting_agentLeaveLogout': "Logging out pauses printing for the store. The print station turns back on when you log in to this store again.",
+    'printerSetting_agentLeaveLogout':
+        "Logging out pauses printing for the store. The print station turns back on when you log in to this store again.",
     'printerSetting_agentLeaveTitle': "This device is a print station",
-    'printerSetting_agentMapAgent': "This device is a print station — printers it manages",
+    'printerSetting_agentMapAgent':
+        "This device is a print station — printers it manages",
     'printerSetting_agentMapSender': "Company backup print stations",
     'printerSetting_agentNameSave': "Save",
-    'printerSetting_agentNameSheetHint': "Pick an easy name (e.g. \"Bar\", \"Kitchen\") so other devices can tell this print station apart. The code after # is this device's own fixed code",
+    'printerSetting_agentNameSheetHint':
+        "Pick an easy name (e.g. \"Bar\", \"Kitchen\") so other devices can tell this print station apart. The code after # is this device's own fixed code",
     'printerSetting_agentNameTitle': "Print station name",
-    'printerSetting_agentNoAgentHint': "No print station is online. When a printer fails, the app prints through a print station if the company has one",
+    'printerSetting_agentNoAgentHint':
+        "No print station is online. When a printer fails, the app prints through a print station if the company has one",
     'printerSetting_agentNoPrinters': "No printers yet",
     'printerSetting_agentOfflineSince': "Offline · last seen @time",
-    'printerSetting_agentOtherAppIsAgent': "Another app build on this device (@app) is already the print station. Turn it off there first, then turn it on here",
-    'printerSetting_agentOthersTitle': "Other print stations in the company (@count)",
-    'printerSetting_agentPeerMore': "@count more printers (older print station version reports only some)",
-    'printerSetting_agentPeerNoPrinters': "This print station has not reported any printer",
-    'printerSetting_agentPeerOfflineHint': "This print station is off — printer status below is as of @time",
-    'printerSetting_agentPeerOldVersion': "@agent runs an older app version, so its printers cannot be turned on / off remotely. Update EasyPOS on that print station (or tap the printer on the print station itself).",
+    'printerSetting_agentOtherAppIsAgent':
+        "Another app build on this device (@app) is already the print station. Turn it off there first, then turn it on here",
+    'printerSetting_agentOthersTitle':
+        "Other print stations in the company (@count)",
+    'printerSetting_agentPeerMore':
+        "@count more printers (older print station version reports only some)",
+    'printerSetting_agentPeerNoPrinters':
+        "This print station has not reported any printer",
+    'printerSetting_agentPeerOfflineHint':
+        "This print station is off — printer status below is as of @time",
+    'printerSetting_agentPeerOldVersion':
+        "@agent runs an older app version, so its printers cannot be turned on / off remotely. Update EasyPOS on that print station (or tap the printer on the print station itself).",
     'printerSetting_agentPeerOnline': "Online",
     'printerSetting_agentPeerPrinterFail': "Disconnected",
     'printerSetting_agentPeerPrinterOff': "Off",
@@ -234,43 +315,64 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentPeerPrintersTitle': "Print station printers",
     'printerSetting_agentPrinterIssues': "@count printers not connected",
     'printerSetting_agentPrinterOffState': "Not accepting jobs",
-    'printerSetting_agentPrinterRemoteOff': "Sent: stop jobs for @printer on @agent",
-    'printerSetting_agentPrinterRemoteOn': "Sent: resume jobs for @printer on @agent",
+    'printerSetting_agentPrinterRemoteOff':
+        "Sent: stop jobs for @printer on @agent",
+    'printerSetting_agentPrinterRemoteOn':
+        "Sent: resume jobs for @printer on @agent",
     'printerSetting_agentPrinterTurnedOff': "Stopped taking jobs for @printer",
-    'printerSetting_agentPrinterTurnedOffBy': "@by remotely stopped jobs for @printer",
+    'printerSetting_agentPrinterTurnedOffBy':
+        "@by remotely stopped jobs for @printer",
     'printerSetting_agentPrinterTurnedOn': "Taking jobs for @printer again",
-    'printerSetting_agentPrinterTurnedOnBy': "@by remotely resumed jobs for @printer",
+    'printerSetting_agentPrinterTurnedOnBy':
+        "@by remotely resumed jobs for @printer",
     'printerSetting_agentPrintersConnected': "@ok/@total printers connected",
     'printerSetting_agentReconnect': "Reconnect",
-    'printerSetting_agentReconnectBuiltIn': "Could not connect the built-in printer. Try restarting the device",
-    'printerSetting_agentReconnectBusy': "The printer is busy or held by another device. Wait for it to finish, then retry",
+    'printerSetting_agentReconnectBuiltIn':
+        "Could not connect the built-in printer. Try restarting the device",
+    'printerSetting_agentReconnectBusy':
+        "The printer is busy or held by another device. Wait for it to finish, then retry",
     'printerSetting_agentReconnectDone': "Done",
-    'printerSetting_agentReconnectMoved': "The printer's IP changed @oldIp → @newIp. Updated and reconnected",
-    'printerSetting_agentReconnectNotFound': "Printer not found on the network. Check it is on and its network cable / Wi-Fi is connected",
-    'printerSetting_agentReconnectNotFoundNoMac': "Could not reach the printer. Check it is on, cabled, and its IP is still correct",
+    'printerSetting_agentReconnectMoved':
+        "The printer's IP changed @oldIp → @newIp. Updated and reconnected",
+    'printerSetting_agentReconnectNotFound':
+        "Printer not found on the network. Check it is on and its network cable / Wi-Fi is connected",
+    'printerSetting_agentReconnectNotFoundNoMac':
+        "Could not reach the printer. Check it is on, cabled, and its IP is still correct",
     'printerSetting_agentReconnectOk': "Reconnected @printer",
-    'printerSetting_agentReconnectOtherNet': "The printer is on another network. Switch this device to the printer's Wi-Fi",
-    'printerSetting_agentReconnectOtherWifi': "The printer is on Wi-Fi \"@wifi\"; this device is on another network",
+    'printerSetting_agentReconnectOtherNet':
+        "The printer is on another network. Switch this device to the printer's Wi-Fi",
+    'printerSetting_agentReconnectOtherWifi':
+        "The printer is on Wi-Fi \"@wifi\"; this device is on another network",
     'printerSetting_agentReconnectRetry': "Retry",
-    'printerSetting_agentReconnectStepBuiltIn': "Restarting the built-in printer",
+    'printerSetting_agentReconnectStepBuiltIn':
+        "Restarting the built-in printer",
+    'printerSetting_agentReconnectStepFind': "Looking for the printer…",
     'printerSetting_agentReconnectStepIp': "Trying @ip",
-    'printerSetting_agentReconnectStepMac': "Searching the printer by MAC address (its IP may have changed)",
-    'printerSetting_agentReconnectStepNetwork': "Checking this device's network",
+    'printerSetting_agentReconnectStepMac':
+        "Searching the printer by MAC address (its IP may have changed)",
+    'printerSetting_agentReconnectStepNetwork':
+        "Checking this device's network",
     'printerSetting_agentReconnectStepUsb': "Checking USB cable and permission",
     'printerSetting_agentReconnectTitle': "Reconnect printer",
-    'printerSetting_agentReconnectUsb': "USB printer not found. Re-plug the USB cable and retry",
+    'printerSetting_agentReconnectUsb':
+        "USB printer not found. Re-plug the USB cable and retry",
     'printerSetting_agentRemove': "Remove this print station",
-    'printerSetting_agentRemoveConfirm': "Turn off print station mode on @agent? It will stop printing for other devices",
-    'printerSetting_agentRemoveFailed': "Could not send the request — check the network",
-    'printerSetting_agentRemoveHint': "This print station has no printers. Removing turns off print station mode on that device (it double-checks and ignores the request if it has printers)",
+    'printerSetting_agentRemoveConfirm':
+        "Turn off print station mode on @agent? It will stop printing for other devices",
+    'printerSetting_agentRemoveFailed':
+        "Could not send the request — check the network",
+    'printerSetting_agentRemoveHint':
+        "This print station has no printers. Removing turns off print station mode on that device (it double-checks and ignores the request if it has printers)",
     'printerSetting_agentRemoved': "Sent the turn-off request to @agent",
     'printerSetting_agentStandby': "Standby backup",
     'printerSetting_agentStateDisconnected': "Disconnected",
     'printerSetting_agentStateOtherNetwork': "Other network",
     'printerSetting_agentStats': "Printed @printed jobs · failed @failed",
-    'printerSetting_agentStoppedRemotely': "Print station mode on this device was turned off remotely (@by) because it has no printers",
+    'printerSetting_agentStoppedRemotely':
+        "Print station mode on this device was turned off remotely (@by) because it has no printers",
     'printerSetting_agentSwitchNetwork': "Switch network",
-    'printerSetting_agentSwitchNetworkHint': "This device cannot reach the printers below. Switch to the printer's Wi-Fi to print",
+    'printerSetting_agentSwitchNetworkHint':
+        "This device cannot reach the printers below. Switch to the printer's Wi-Fi to print",
     'printerSetting_agentTag': "Print station",
     'printerSetting_agentThisDevice': "This device",
     'printerSetting_agentUndo': "Undo",
@@ -278,32 +380,45 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentWifiFar': "Not in range here",
     'printerSetting_agentWifiNearby': "In range",
     'printerSetting_agentWifiOpenSettings': "Open Wi-Fi settings",
-    'printerSetting_agentWifiPickInPanel': "Pick \"@wifi\" in the Wi-Fi panel, then come back",
-    'printerSetting_agentWifiPrinterOff': "This device is already on this Wi-Fi — the printer may be off or offline",
+    'printerSetting_agentWifiPickInPanel':
+        "Pick \"@wifi\" in the Wi-Fi panel, then come back",
+    'printerSetting_agentWifiPrinterOff':
+        "This device is already on this Wi-Fi — the printer may be off or offline",
     'printerSetting_agentWifiUnknown': "Unknown Wi-Fi",
-    'printerSetting_agentWifiUnknownHint': "Never printed from this device, so the printer's Wi-Fi is unknown",
+    'printerSetting_agentWifiUnknownHint':
+        "Never printed from this device, so the printer's Wi-Fi is unknown",
     'printerSetting_agentZoneCompanyAgents': "Company print stations (@count)",
     'printerSetting_agentZoneMyPrinters': "Printers of this device",
     'printerSetting_printStationChannel': "Print station",
-    'printerSetting_printStationHint': "Devices on another Wi-Fi or on mobile data print through this print station. It must be on the printer's network (or connected to the printer by USB) with the app open",
-    'printerSetting_printStationPrinted': "Printed @count jobs from other devices",
+    'printerSetting_printStationHint':
+        "Devices on another Wi-Fi or on mobile data print through this print station. It must be on the printer's network (or connected to the printer by USB) with the app open",
+    'printerSetting_printStationPrinted':
+        "Printed @count jobs from other devices",
     'printerSetting_printStationRunning': "Print station is running",
     'printerSetting_printStationStop': "Stop",
     'printerSetting_printStationToggle': "Use this device as a print station",
-    'printerSetting_printStationUnavailable': "Could not turn on the print station, check the internet connection and try again",
-    'printerSetting_printStationWaiting': "Waiting for print jobs from other devices",
-    'printerSetting_relayHeld': "@printerName is out of paper / cover open. The print station is holding the ticket and will print it when the printer is ready — no need to print again.",
-    'printerSetting_relayNoStation': "No print station is online for this company. Turn on \"Use this device as a print station\" on a device on the printer network first",
-    'printerSetting_remotePrintFailed': "The print station could not print to @printerName",
-    'printerSetting_remotePrintTimeout': "The print station did not respond, check that it has the app open and internet access",
+    'printerSetting_printStationUnavailable':
+        "Could not turn on the print station, check the internet connection and try again",
+    'printerSetting_printStationWaiting':
+        "Waiting for print jobs from other devices",
+    'printerSetting_relayHeld':
+        "@printerName is out of paper / cover open. The print station is holding the ticket and will print it when the printer is ready — no need to print again.",
+    'printerSetting_relayNoStation':
+        "No print station is online for this company. Turn on \"Use this device as a print station\" on a device on the printer network first",
+    'printerSetting_remotePrintFailed':
+        "The print station could not print to @printerName",
+    'printerSetting_remotePrintTimeout':
+        "The print station did not respond, check that it has the app open and internet access",
     'printerSetting_stationBuiltInNameNamed': "Built-in printer (@stationName)",
     'printerSetting_stationBuiltInOfflineState': "Offline",
     'printerSetting_stationBuiltInOnline': "Online",
     'printerSetting_stationBuiltInSection': "Print stations’ built-in printers",
-    'printerSetting_stationBuiltInSkipped': "@printer is offline (its print station is off) — skipped for now, other printers still print",
+    'printerSetting_stationBuiltInSkipped':
+        "@printer is offline (its print station is off) — skipped for now, other printers still print",
     'printerSetting_switchWifi': "Switch Wi-Fi",
     'printerSetting_wifiChecking': "Testing connection...",
     'printerSetting_wifiPassword': "Wi-Fi password (leave empty if none)",
-    'printerSetting_wifiSwitchFailed': "Could not switch to Wi-Fi \"@wifi\". Check the password and that the Wi-Fi is in range",
+    'printerSetting_wifiSwitchFailed':
+        "Could not switch to Wi-Fi \"@wifi\". Check the password and that the Wi-Fi is in range",
   },
 };
