@@ -5,8 +5,6 @@ import 'package:print_agent/print_agent.dart';
 // ignore: implementation_imports
 import 'package:print_agent/src/l10n/agent_locale_keys.dart';
 // ignore: implementation_imports
-import 'package:print_agent/src/presentation/models/agent_cloud_info.dart';
-// ignore: implementation_imports
 import 'package:print_agent/src/presentation/widgets/agent_doctor_card.dart';
 
 import 'support/fake_host.dart';
