@@ -398,6 +398,8 @@ class AgentService<P extends AgentPrinterRef> {
     void sync() {
       if (relay.isStation.value) {
         watchdog.start();
+        // Lệnh đang giữ (hết giấy) lần chạy trước: in tiếp.
+        unawaited(jobs.restoreHeld());
       } else {
         watchdog.stop();
         // Thôi làm Agent (kể cả bấm "Dừng" trên thông báo): nhả khoá máy.

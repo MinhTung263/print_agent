@@ -6,6 +6,7 @@ export 'package:print_agent_core/print_agent_core.dart';
 
 export 'src/data/agent_device_identity.dart';
 export 'src/data/agent_device_name.dart';
+export 'src/data/agent_held_job_store.dart';
 export 'src/data/agent_job_handler.dart';
 export 'src/data/agent_job_log_store.dart';
 export 'src/data/agent_map_layout.dart';

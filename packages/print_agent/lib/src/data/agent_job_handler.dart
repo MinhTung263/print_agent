@@ -8,6 +8,7 @@ import '../domain/entities/agent_job_log.dart';
 import '../domain/entities/agent_printer_ref.dart';
 import '../domain/ports/agent_job_printer.dart';
 import '../print_agent_module.dart';
+import 'agent_held_job_store.dart';
 import 'agent_job_log_store.dart';
 import 'agent_print_activity_store.dart';
 import 'agent_printer_watchdog.dart';
@@ -23,14 +24,20 @@ import 'agent_printer_watchdog.dart';
 ///   ngay, không bắt mỗi lệnh chờ dò lại 10–15 giây.
 /// - **Giữ lệnh khi hết giấy / mở nắp / quá nhiệt** (máy in báo TRƯỚC khi nhận
 ///   dữ liệu — chưa in gì): báo máy gửi [PrintRelayStatus.held], thử lại mỗi
-///   [holdRetry] tới [holdMax] rồi tự in khi máy in sẵn sàng.
+///   [holdRetry] tới [holdMax] rồi tự in khi máy in sẵn sàng. Lệnh đang giữ
+///   lưu xuống máy ([AgentHeldJobStore]): app tắt / máy khởi động lại thì
+///   [restoreHeld] in tiếp.
 /// - Mọi lời gọi xuống app chủ có giới hạn thời gian.
 class AgentJobHandler<P extends AgentPrinterRef> {
   AgentJobHandler({
     required AgentPrinterWatchdog<P> watchdog,
     required AgentJobPrinter<P> printer,
+    AgentHeldJobStore? heldStore,
   }) : _watchdog = watchdog,
-       _printer = printer;
+       _printer = printer,
+       _heldStore = heldStore ?? AgentHeldJobStore();
+
+  final AgentHeldJobStore _heldStore;
 
   static const Duration dedupeWindow = Duration(minutes: 15);
   static const int dedupeMax = 500;
@@ -64,6 +71,20 @@ class AgentJobHandler<P extends AgentPrinterRef> {
 
   /// Máy in đang giữ lệnh (hết giấy / mở nắp).
   final Set<String> _holding = {};
+
+  /// Bật làm Agent (mở app / máy khởi động lại / quay về công ty gốc): in tiếp
+  /// các lệnh đang giữ dở lần trước, theo đúng thứ tự. Trả số lệnh in lại.
+  Future<int> restoreHeld() async {
+    final pending = await _heldStore.takePending();
+    if (pending.isEmpty) return 0;
+    PrintAgentModule.host.log(
+      '[AGENT] In tiếp ${pending.length} lệnh đang giữ từ lần chạy trước',
+    );
+    for (final job in pending) {
+      unawaited(handle(job));
+    }
+    return pending.length;
+  }
 
   /// Đổi công ty: đếm lại từ đầu.
   void reset() {
@@ -103,7 +124,10 @@ class AgentJobHandler<P extends AgentPrinterRef> {
     final waiting = _waiting.putIfAbsent(key, () => []);
     waiting.add(job);
     // Máy in đang giữ lệnh: lệnh mới xếp sau, báo máy gửi ngay.
-    if (_holding.contains(key)) job.onHeld?.call();
+    if (_holding.contains(key)) {
+      job.onHeld?.call();
+      unawaited(_heldStore.save(job));
+    }
     final result = Completer<bool>();
     final tail = (_tails[key] ?? Future<void>.value()).then((_) async {
       waiting.remove(job);
@@ -112,6 +136,8 @@ class AgentJobHandler<P extends AgentPrinterRef> {
       } catch (e) {
         PrintAgentModule.host.log('[AGENT] In lệnh lỗi: $e');
         result.complete(false);
+      } finally {
+        await _heldStore.remove(job);
       }
     });
     _tails[key] = tail;
@@ -225,8 +251,10 @@ class AgentJobHandler<P extends AgentPrinterRef> {
       'máy in sẵn sàng',
     );
     job.onHeld?.call();
+    await _heldStore.save(job);
     for (final waiting in List.of(_waiting[key] ?? const <PrintRelayJob>[])) {
       waiting.onHeld?.call();
+      await _heldStore.save(waiting);
     }
     final until = DateTime.now().add(holdMax);
     AgentPrintFailure? failure = first;
