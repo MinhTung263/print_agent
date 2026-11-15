@@ -27,6 +27,7 @@ import 'agent_printer_remote.dart';
 import 'agent_printer_switches.dart';
 import 'agent_printer_watchdog.dart';
 import 'agent_sender.dart';
+import 'agent_test_print.dart';
 import 'agent_station_info.dart';
 import 'known_agents.dart';
 import 'peer_built_in_printers.dart';
@@ -57,6 +58,13 @@ class AgentService<P extends AgentPrinterRef> {
     );
     jobs = AgentJobHandler<P>(watchdog: watchdog, printer: printer);
     sender = AgentSender<P>(relay: () => relay, printer: printer);
+    testPrint = AgentTestPrint<P>(
+      jobs: jobs,
+      printer: printer,
+      relay: () => relay,
+      stationId: () => stationId,
+      stationName: () => displayName,
+    );
   }
 
   /// Công ty GỐC mà máy này làm Agent (ghim lúc bật). Đổi sang công ty khác:
@@ -90,6 +98,9 @@ class AgentService<P extends AgentPrinterRef> {
   late final AgentPrinterReconnect<P> reconnect;
   late final AgentPrinterRemote<P> remote;
   late final AgentJobHandler<P> jobs;
+
+  /// "In thử" từng máy in (máy in của máy này và của Agent khác).
+  late final AgentTestPrint<P> testPrint;
   late final AgentSender<P> sender;
 
   AgentStorage get _storage => PrintAgentModule.host.storage;

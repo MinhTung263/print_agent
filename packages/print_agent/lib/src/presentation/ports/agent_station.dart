@@ -5,6 +5,7 @@ import '../../data/agent_printer_reconnect.dart';
 import '../../data/agent_printer_remote.dart';
 import '../../data/agent_printer_watchdog.dart';
 import '../../domain/entities/agent_printer_ref.dart';
+import '../../domain/entities/agent_test_print_result.dart';
 
 /// Wi-Fi của máy in (app chủ nhớ Wi-Fi từng máy in + mật khẩu đã dùng).
 abstract interface class AgentWifi {
@@ -76,6 +77,15 @@ abstract interface class AgentStation {
   AgentPrinterReconnect<AgentPrinterRef> get reconnect;
   AgentPrinterRemote<AgentPrinterRef> get remote;
   AgentWifi get wifi;
+
+  /// In thử máy in [printer] của máy này.
+  Future<AgentTestPrintResult> testPrint(AgentPrinterRef printer);
+
+  /// In thử máy in [printer] (một mục `printers.names`) của Agent [station].
+  Future<AgentTestPrintResult> testPrintPeer(
+    Map<Object?, Object?> station,
+    Map<Object?, Object?> printer,
+  );
 
   /// Hỏi các Agent đang trực tuyến, cập nhật máy in tích hợp của Agent khác.
   Future<void> refreshPeerBuiltIns();

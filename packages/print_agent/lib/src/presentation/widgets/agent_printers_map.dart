@@ -139,6 +139,7 @@ class AgentPrintersMap extends StatelessWidget {
       id: p.refId,
       station: PrintAgentUi.station.displayName,
       onToggle: () => unawaited(_toggle(p)),
+      onTestPrint: () => PrintAgentUi.station.testPrint(p),
     );
   }
 

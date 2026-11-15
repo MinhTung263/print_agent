@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:print_agent/src/domain/entities/agent_test_print_result.dart';
 import 'package:print_agent/src/presentation/kit/kit.dart';
+
+import 'agent_test_print_button.dart';
 
 /// Trạng thái máy in trong bảng chi tiết.
 enum AgentPrinterDetailState { ready, notReady, paused, stationOff }
@@ -20,6 +23,7 @@ class AgentPrinterDetail {
     this.paper,
     this.station,
     this.onToggle,
+    this.onTestPrint,
   });
 
   final String name;
@@ -42,6 +46,10 @@ class AgentPrinterDetail {
 
   /// Bật / tắt nhận lệnh; `null` = không đổi được (trạm in đang tắt).
   final VoidCallback? onToggle;
+
+  /// In một phiếu thử ra máy in này; `null` = không in thử được (trạm in
+  /// quản lý máy in đang tắt).
+  final Future<AgentTestPrintResult> Function()? onTestPrint;
 }
 
 /// "Chi tiết máy in" khi bấm máy in trên sơ đồ: điện thoại mở bảng trượt,
@@ -190,6 +198,8 @@ class AgentPrinterDetailSheet extends StatelessWidget {
               ],
             ),
           ),
+          if (d.onTestPrint != null)
+            AgentTestPrintButton(name: d.name, onTestPrint: d.onTestPrint!),
           if (d.onToggle != null)
             BaseCard.section(
               child: AppRow(

@@ -24,6 +24,7 @@ export 'src/domain/entities/agent_job_log.dart';
 export 'src/domain/entities/agent_print_activity.dart';
 export 'src/domain/entities/agent_printer_ref.dart';
 export 'src/domain/entities/agent_printer_status.dart';
+export 'src/domain/entities/agent_test_print_result.dart';
 export 'src/domain/entities/known_agent.dart';
 export 'src/domain/entities/peer_built_in_printer.dart';
 export 'src/domain/ports/agent_host.dart';

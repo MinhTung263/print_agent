@@ -79,6 +79,9 @@ List<AgentMapNode> agentPeerPrinterNodes(
               : null,
           station: AgentIdentity.ofStation(info),
           onToggle: offline ? null : agentPeerPrinterToggle(info, p),
+          onTestPrint: offline
+              ? null
+              : () => PrintAgentUi.station.testPrintPeer(info, p),
         ),
       ),
     ),

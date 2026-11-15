@@ -80,4 +80,43 @@ void main() {
       findsNothing,
     );
   });
+
+  testWidgets('nút In thử: có khi in thử được, bấm thì gọi in', (t) async {
+    final calls = <int>[];
+    await pump(
+      t,
+      AgentPrinterDetail(
+        name: 'Bếp',
+        kind: 'lan',
+        state: AgentPrinterDetailState.ready,
+        on: true,
+        onTestPrint: () async {
+          calls.add(1);
+          return AgentTestPrintResult.done;
+        },
+      ),
+    );
+    final label = LocaleKeys.printerSetting_agentTestPrint.tr;
+    // Tiêu đề thẻ + nút cùng chữ "In thử".
+    expect(find.text(label), findsNWidgets(2));
+    await t.tap(find.text(label).last);
+    await t.pump();
+    expect(calls, [1]);
+  });
+
+  testWidgets('trạm in đang tắt: không có nút In thử', (t) async {
+    await pump(
+      t,
+      const AgentPrinterDetail(
+        name: 'Bếp',
+        kind: 'lan',
+        state: AgentPrinterDetailState.stationOff,
+        on: true,
+      ),
+    );
+    expect(
+      find.text(LocaleKeys.printerSetting_agentTestPrint.tr),
+      findsNothing,
+    );
+  });
 }

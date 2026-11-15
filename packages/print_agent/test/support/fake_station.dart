@@ -84,6 +84,26 @@ class FakeStation implements AgentStation {
   late final AgentPrinterRemote<AgentPrinterRef> remote;
   @override
   final AgentWifi wifi = FakeWifi();
+
+  /// Máy in đã được bấm "In thử" (tên) và kết quả giả.
+  final List<String> testPrinted = [];
+  AgentTestPrintResult testResult = AgentTestPrintResult.done;
+
+  @override
+  Future<AgentTestPrintResult> testPrint(AgentPrinterRef printer) async {
+    testPrinted.add(printer.refName);
+    return testResult;
+  }
+
+  @override
+  Future<AgentTestPrintResult> testPrintPeer(
+    Map<Object?, Object?> station,
+    Map<Object?, Object?> printer,
+  ) async {
+    testPrinted.add('${printer['name']}');
+    return testResult;
+  }
+
   @override
   Future<void> refreshPeerBuiltIns() async {}
 }

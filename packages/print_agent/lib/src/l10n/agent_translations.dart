@@ -215,6 +215,18 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentSwitchNetworkHint':
         "Máy này chưa kết nối được các máy in dưới đây. Chuyển sang đúng Wi-Fi của máy in để in",
     'printerSetting_agentTag': "Trạm in",
+    'printerSetting_agentTestPrint': "In thử",
+    'printerSetting_agentTestPrintDone': "Đã in thử ra @printer",
+    'printerSetting_agentTestPrintFailed':
+        "@printer chưa in được. Kiểm tra máy in đã bật và còn kết nối",
+    'printerSetting_agentTestPrintHeld':
+        "@printer hết giấy hoặc đang mở nắp — phiếu thử sẽ tự in khi máy in sẵn sàng",
+    'printerSetting_agentTestPrintHint': "In một phiếu thử để kiểm tra máy in",
+    'printerSetting_agentTestPrintOffline':
+        "Trạm in của @printer đang tắt hoặc mất kết nối",
+    'printerSetting_agentTestPrinting': "Đang in thử…",
+    'printerSetting_agentTestSlipOk': "Máy in hoạt động tốt",
+    'printerSetting_agentTestSlipTitle': "PHIẾU IN THỬ",
     'printerSetting_agentThisDevice': "Máy này",
     'printerSetting_agentUndo': "Hoàn tác",
     'printerSetting_agentWifiConnect': "Kết nối",
@@ -478,6 +490,19 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentSwitchNetworkHint':
         "This device cannot reach the printers below. Switch to the printer's Wi-Fi to print",
     'printerSetting_agentTag': "Print station",
+    'printerSetting_agentTestPrint': "Test print",
+    'printerSetting_agentTestPrintDone': "Test slip printed on @printer",
+    'printerSetting_agentTestPrintFailed':
+        "@printer could not print. Check it is on and connected",
+    'printerSetting_agentTestPrintHeld':
+        "@printer is out of paper or open — the test slip will print when it is ready",
+    'printerSetting_agentTestPrintHint':
+        "Print a test slip to check the printer",
+    'printerSetting_agentTestPrintOffline':
+        "The print station of @printer is off or offline",
+    'printerSetting_agentTestPrinting': "Printing test…",
+    'printerSetting_agentTestSlipOk': "The printer works fine",
+    'printerSetting_agentTestSlipTitle': "TEST SLIP",
     'printerSetting_agentThisDevice': "This device",
     'printerSetting_agentUndo': "Undo",
     'printerSetting_agentWifiConnect': "Connect",

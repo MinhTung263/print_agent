@@ -749,6 +749,53 @@ abstract final class LocaleKeys {
   /// "Trạm in"
   static const printerSetting_agentTag = 'printerSetting_agentTag';
 
+  /// "In thử"
+  static const printerSetting_agentTestPrint = 'printerSetting_agentTestPrint';
+
+  /// "Đã in thử ra @printer"
+  static const printerSetting_agentTestPrintDone =
+      'printerSetting_agentTestPrintDone';
+  static String printerSetting_agentTestPrintDoneTr({
+    required Object printer,
+  }) => printerSetting_agentTestPrintDone.trParams({'printer': '$printer'});
+
+  /// "@printer chưa in được. Kiểm tra máy in đã bật và còn kết nối"
+  static const printerSetting_agentTestPrintFailed =
+      'printerSetting_agentTestPrintFailed';
+  static String printerSetting_agentTestPrintFailedTr({
+    required Object printer,
+  }) => printerSetting_agentTestPrintFailed.trParams({'printer': '$printer'});
+
+  /// "@printer hết giấy hoặc đang mở nắp — phiếu thử sẽ tự in khi máy in sẵn sàng"
+  static const printerSetting_agentTestPrintHeld =
+      'printerSetting_agentTestPrintHeld';
+  static String printerSetting_agentTestPrintHeldTr({
+    required Object printer,
+  }) => printerSetting_agentTestPrintHeld.trParams({'printer': '$printer'});
+
+  /// "In một phiếu thử để kiểm tra máy in"
+  static const printerSetting_agentTestPrintHint =
+      'printerSetting_agentTestPrintHint';
+
+  /// "Trạm in của @printer đang tắt hoặc mất kết nối"
+  static const printerSetting_agentTestPrintOffline =
+      'printerSetting_agentTestPrintOffline';
+  static String printerSetting_agentTestPrintOfflineTr({
+    required Object printer,
+  }) => printerSetting_agentTestPrintOffline.trParams({'printer': '$printer'});
+
+  /// "Đang in thử…"
+  static const printerSetting_agentTestPrinting =
+      'printerSetting_agentTestPrinting';
+
+  /// "Máy in hoạt động tốt"
+  static const printerSetting_agentTestSlipOk =
+      'printerSetting_agentTestSlipOk';
+
+  /// "PHIẾU IN THỬ"
+  static const printerSetting_agentTestSlipTitle =
+      'printerSetting_agentTestSlipTitle';
+
   /// "Máy này"
   static const printerSetting_agentThisDevice =
       'printerSetting_agentThisDevice';

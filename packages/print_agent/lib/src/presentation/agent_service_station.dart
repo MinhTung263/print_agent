@@ -6,6 +6,7 @@ import '../data/agent_printer_remote.dart';
 import '../data/agent_printer_watchdog.dart';
 import '../data/agent_service.dart';
 import '../domain/entities/agent_printer_ref.dart';
+import '../domain/entities/agent_test_print_result.dart';
 import 'ports/agent_station.dart';
 
 /// [AgentStation] dựng từ [AgentService] — app chủ chỉ cần thêm [AgentWifi]
@@ -77,6 +78,16 @@ class AgentServiceStation implements AgentStation {
 
   @override
   AgentPrinterRemote<AgentPrinterRef> get remote => _service.remote;
+
+  @override
+  Future<AgentTestPrintResult> testPrint(AgentPrinterRef printer) =>
+      _service.testPrint.local(printer);
+
+  @override
+  Future<AgentTestPrintResult> testPrintPeer(
+    Map<Object?, Object?> station,
+    Map<Object?, Object?> printer,
+  ) => _service.testPrint.peer(station, printer);
 
   @override
   Future<void> refreshPeerBuiltIns() => _service.refreshPeerBuiltIns();

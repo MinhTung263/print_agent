@@ -135,10 +135,9 @@ class _AgentNameSheetState extends State<AgentNameSheet> {
           if (addPrinter != null) ...[
             const AppDivider(),
             BaseTap(
-              onTap: () {
-                Get.back<void>();
-                unawaited(addPrinter());
-              },
+              // Mở chồng lên bảng này (như hộp thoại trên máy tính), KHÔNG đóng
+              // bảng trước: đóng rồi mở ngay làm bảng mới bị đóng theo.
+              onTap: () => unawaited(addPrinter()),
               child: AppRow(
                 spacing: AppSpace.md,
                 children: [
