@@ -7,14 +7,6 @@
       "type": "dart",
       "cwd": "apps/desktop",
       "program": "lib/main.dart"
-    },
-    {
-      "name": "Agent máy tính (xem trước giao diện)",
-      "request": "launch",
-      "type": "dart",
-      "cwd": "apps/desktop",
-      "program": "lib/main.dart",
-      "args": ["--dart-entrypoint-args", "--preview"]
     }
   ]
 }

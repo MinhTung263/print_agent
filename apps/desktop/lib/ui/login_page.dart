@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../agent/print_agent.dart';
+import '../agent/desktop_agent.dart';
 import '../auth/auth_service.dart';
 import 'agent_theme.dart';
 import 'widgets/login/brand_panel.dart';
@@ -16,7 +16,7 @@ import 'widgets/login/login_form.dart';
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key, required this.agent});
 
-  final PrintAgent agent;
+  final DesktopAgent agent;
 
   @override
   State<LoginPage> createState() => _LoginPageState();

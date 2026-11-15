@@ -14,7 +14,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:print_agent_desktop/relay/relay_crypto.dart';
+import 'relay_crypto.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 
@@ -66,8 +66,9 @@ Future<void> main(List<String> args) async {
         case 'stations':
           if (data is Map) {
             stations[id] = data;
-            if (watch)
+            if (watch) {
               stdout.writeln('$at  🟢 Agent trực tuyến  ${_agent(data)}');
+            }
           } else {
             final old = stations.remove(id);
             if (watch) {
@@ -85,8 +86,9 @@ Future<void> main(List<String> args) async {
             );
           }
         case 'claims':
-          if (data is Map)
+          if (data is Map) {
             stdout.writeln('$at     ↳ giành lệnh $id bởi phiên ${data['by']}');
+          }
         case 'status':
           stdout.writeln('$at     ↳ lệnh $id: $data');
       }

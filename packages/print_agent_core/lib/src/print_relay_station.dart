@@ -80,6 +80,21 @@ class PrintRelayStation {
 
   StreamSubscription<PrintRelayQueuedJob>? _jobsSub;
 
+  /// Mã lệnh đã xử lý gần đây — MQTT QoS 1 có thể giao một lệnh hai lần (nối lại
+  /// broker), lệnh nhắm thẳng trạm không qua bước giành nên phải tự bỏ trùng.
+  final Set<String> _seen = <String>{};
+  static const int _seenLimit = 500;
+
+  /// `true` khi lệnh [id] chưa từng xử lý (và ghi nhận lại).
+  bool _markSeen(String id) {
+    if (!_seen.add(id)) return false;
+    if (_seen.length > _seenLimit) _seen.remove(_seen.first);
+    return true;
+  }
+
+  /// Thông tin đường nội bộ đang báo (giữ lại khi [refreshInfo]).
+  Map<String, Object?>? _lan;
+
   /// Số lệnh đã in hộ thành công từ lúc bật.
   int printedCount = 0;
 
@@ -88,12 +103,10 @@ class PrintRelayStation {
   Future<bool> start() async {
     if (isRunning) return true;
     try {
-      final lan = lanServer == null ? null : await lanServer!.start(_handleLan);
-      await transport.goOnline({
-        ...info,
-        'id': ?stationId,
-        'lan': ?lan,
-      });
+      final lan = _lan = lanServer == null
+          ? null
+          : await lanServer!.start(_handleLan);
+      await transport.goOnline({...info, 'id': ?stationId, 'lan': ?lan});
       _jobsSub = transport.watchJobs().listen(
         (queued) => unawaited(_handle(queued)),
         onError: (Object e) => _log('[PRINT-RELAY] Nghe hàng đợi lỗi: $e'),
@@ -110,10 +123,7 @@ class PrintRelayStation {
   Future<void> refreshInfo(Map<String, Object?> newInfo) async {
     if (!isRunning) return;
     try {
-      await transport.goOnline({
-        ...newInfo,
-        'id': ?stationId,
-      });
+      await transport.goOnline({'lan': ?_lan, ...newInfo, 'id': ?stationId});
     } catch (e) {
       _log('[PRINT-RELAY] Báo lại thông tin trạm lỗi: $e');
     }
@@ -122,6 +132,7 @@ class PrintRelayStation {
   Future<void> stop() async {
     await _jobsSub?.cancel();
     _jobsSub = null;
+    _lan = null;
     await lanServer?.stop();
     try {
       await transport.goOffline();
@@ -143,6 +154,7 @@ class PrintRelayStation {
       }
       if (job.status != PrintRelayStatus.pending) return;
       if (isForOtherStation(job)) return;
+      if (!_markSeen(id)) return;
       if (!await (canHandle ?? defaultCanHandle)(job)) {
         _log('[PRINT-RELAY] Lệnh $id: trạm này không in được, bỏ qua');
         // Lệnh nhắm thẳng trạm này (không trạm nào khác nhận): báo lỗi ngay để
@@ -167,7 +179,12 @@ class PrintRelayStation {
         '[PRINT-RELAY] Lệnh $id: nhận sau '
         '${DateTime.now().millisecondsSinceEpoch - createdAt}ms',
       );
-      final ok = await _print(job);
+      // Máy in hết giấy / mở nắp: trạm giữ lệnh (báo `held`) rồi tự in sau.
+      final ok = await _print(
+        job.withOnHeld(
+          () => unawaited(transport.holdJob(id).catchError((Object _) {})),
+        ),
+      );
       await transport.completeJob(id, success: ok);
     } catch (e, s) {
       _log('[PRINT-RELAY] Xử lý lệnh $id lỗi: $e\n$s');
@@ -176,10 +193,25 @@ class PrintRelayStation {
 
   /// Lệnh tới thẳng qua mạng nội bộ: không cần giành lệnh (chỉ một trạm nhận).
   /// `null` khi trạm này không in được — máy gửi chuyển sang hàng đợi.
-  Future<bool?> _handleLan(PrintRelayJob job) async {
+  Future<String?> _handleLan(PrintRelayJob job) async {
     if (isForOtherStation(job)) return null;
     if (!await (canHandle ?? defaultCanHandle)(job)) return null;
-    return _print(job);
+    return lanStatus(job, _print);
+  }
+
+  /// Trả lời lệnh qua mạng nội bộ: kết quả in, hoặc `held` NGAY khi trạm bắt
+  /// đầu giữ lệnh (máy gửi khỏi chờ; lệnh vẫn được in sau trên trạm).
+  static Future<String> lanStatus(
+    PrintRelayJob job,
+    Future<bool> Function(PrintRelayJob job) run,
+  ) {
+    final held = Completer<String>();
+    final printed = run(
+      job.withOnHeld(() {
+        if (!held.isCompleted) held.complete(PrintRelayStatus.held);
+      }),
+    ).then((ok) => ok ? PrintRelayStatus.done : PrintRelayStatus.failed);
+    return Future.any([held.future, printed]);
   }
 
   Future<bool> _print(PrintRelayJob job) async {

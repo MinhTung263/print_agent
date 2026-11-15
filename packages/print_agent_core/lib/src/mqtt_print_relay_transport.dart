@@ -23,6 +23,17 @@ class MqttRelayConfig {
     this.topicPrefix = 'easypos/print_relay',
   });
 
+  /// Broker công khai qua WebSocket bảo mật (cổng 8084) — đi qua được tường lửa
+  /// chỉ mở cổng web (máy tính ở cửa hàng / văn phòng).
+  const MqttRelayConfig.secureWebSocket({
+    this.host = 'wss://broker.emqx.io/mqtt',
+    this.port = 8084,
+    this.username,
+    this.password,
+    this.topicPrefix = 'easypos/print_relay',
+  }) : useWebSocket = true,
+       secure = false;
+
   /// Tên máy chủ; với WebSocket có thể kèm scheme (`wss://...`).
   final String host;
   final int port;
@@ -64,6 +75,21 @@ class MqttPrintRelayTransport implements PrintRelayTransport {
        _key = enc.Key(
          Uint8List.fromList(sha256.convert(utf8.encode('key|$secret')).bytes),
        );
+
+  /// Bí mật hàng đợi của một công ty — PHẢI giống hệt app EasyPOS để máy bán
+  /// hàng và máy Agent (điện thoại / máy tính) cùng một hàng đợi: môi trường
+  /// (chữ thường, ký tự lạ → `_`) + `c{companyId}_{ownerId}`.
+  static String shopSecret({
+    required String env,
+    required int companyId,
+    required int ownerId,
+  }) {
+    final e = env.replaceAll(RegExp('[^A-Za-z0-9]+'), '_').toLowerCase();
+    return 'easypos-print-relay-v1|$e/c${companyId}_$ownerId';
+  }
+
+  /// Mã ngẫu nhiên 16 ký tự hex (mã trạm / mã Agent).
+  static String randomId() => _randomId();
 
   final MqttRelayConfig config;
   final void Function(String message) _log;
@@ -353,6 +379,10 @@ class MqttPrintRelayTransport implements PrintRelayTransport {
     await _publish('$_topic/status/$id', PrintRelayStatus.printing);
     return true;
   }
+
+  @override
+  Future<void> holdJob(String id) =>
+      _publish('$_topic/status/$id', PrintRelayStatus.held);
 
   @override
   Future<void> ackJob(String id) =>

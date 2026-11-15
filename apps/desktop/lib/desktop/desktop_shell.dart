@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../agent/print_agent.dart';
+import '../agent/desktop_agent.dart';
 import 'autostart.dart';
 
 /// Chạy nền như app Android: biểu tượng ở khay hệ thống, đóng cửa sổ chỉ ẩn
@@ -13,7 +13,7 @@ import 'autostart.dart';
 class DesktopShell with TrayListener, WindowListener {
   DesktopShell(this.agent);
 
-  final PrintAgent agent;
+  final DesktopAgent agent;
 
   static const _keyOpen = 'open';
   static const _keyToggle = 'toggle';
@@ -76,13 +76,10 @@ class DesktopShell with TrayListener, WindowListener {
   void _refreshTray() => unawaited(_refreshTrayNow());
 
   Future<void> _refreshTrayNow() async {
-    final on = agent.state != AgentState.off;
-    final status = switch (agent.state) {
-      AgentState.off => 'Đang tắt',
-      AgentState.connecting => 'Đang kết nối…',
-      AgentState.online => 'Đang nhận lệnh in',
-      AgentState.offline => 'Mất kết nối — đang thử lại',
-    };
+    final on = agent.isOn;
+    final status = !agent.config.ready
+        ? 'Chưa đăng nhập'
+        : (on ? 'Đang nhận lệnh in' : 'Đang tắt');
     final auto = Autostart.instance.enabled.value;
     // Menu chỉ dựng lại khi nội dung đổi (agent báo thay đổi rất thường xuyên).
     final signature = '$status|$on|$auto|${agent.config.ready}';
@@ -127,7 +124,7 @@ class DesktopShell with TrayListener, WindowListener {
       case _keyOpen:
         unawaited(showWindow());
       case _keyToggle:
-        unawaited(agent.state == AgentState.off ? agent.start() : agent.stop());
+        unawaited(agent.setOn(!agent.isOn));
       case _keyAutostart:
         unawaited(Autostart.instance.set(!Autostart.instance.enabled.value));
       case _keyQuit:

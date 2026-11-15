@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../../agent/print_agent.dart';
+import '../../agent/desktop_agent.dart';
 import '../../agent/agent_config.dart';
 import '../../desktop/autostart.dart';
 import 'package:printer_label/desktop.dart';
@@ -14,7 +14,7 @@ import 'printer_picker_dialog.dart';
 class AgentSettingsCard extends StatelessWidget {
   const AgentSettingsCard({super.key, required this.agent});
 
-  final PrintAgent agent;
+  final DesktopAgent agent;
 
   Future<void> _pickPrinter(BuildContext context) async {
     final picked = await showPrinterPickerDialog(
@@ -26,8 +26,26 @@ class AgentSettingsCard extends StatelessWidget {
     }
   }
 
+  Future<void> _printTest(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final error = await agent.printTest();
+    messenger.showSnackBar(
+      SnackBar(
+        backgroundColor: error == null
+            ? AppColors.successGreen
+            : AppColors.errorRed,
+        content: Text(error ?? 'Đã gửi phiếu in thử'),
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: agent,
+    builder: (context, _) => _card(context),
+  );
+
+  Widget _card(BuildContext context) {
     final config = agent.config;
     return BaseCard.section(
       child: AppColumn(
@@ -59,6 +77,11 @@ class AgentSettingsCard extends StatelessWidget {
                   ],
                 ),
               ),
+              if (config.hasPrinter)
+                TextButton(
+                  onPressed: () => unawaited(_printTest(context)),
+                  child: const Text('In thử'),
+                ),
               TextButton(
                 onPressed: () => unawaited(_pickPrinter(context)),
                 child: Text(config.hasPrinter ? 'Đổi' : 'Chọn'),
@@ -162,6 +185,11 @@ class AgentSettingsCard extends StatelessWidget {
                   tone: .secondary,
                   maxLines: 2,
                 ),
+              ),
+              TextButton.icon(
+                onPressed: () => unawaited(agent.logout()),
+                icon: const Icon(Icons.logout_rounded, size: 18),
+                label: const Text('Đăng xuất'),
               ),
             ],
           ),

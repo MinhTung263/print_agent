@@ -1,43 +1,83 @@
-import 'package:print_agent_desktop/agent/agent_config.dart';
-import 'package:print_agent_desktop/agent/agent_printer.dart';
-import 'package:printer_label/desktop.dart';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:print_agent/print_agent.dart';
+import 'package:print_agent_desktop/agent/agent_config.dart';
+import 'package:print_agent_desktop/agent/agent_store.dart';
+import 'package:print_agent_desktop/agent/desktop_agent_host.dart';
+import 'package:print_agent_desktop/agent/desktop_job_printer.dart';
+import 'package:print_agent_desktop/agent/desktop_printer_gateway.dart';
+import 'package:printer_label/desktop.dart';
+
+/// Lệnh như trạm nhận từ hàng đợi (cùng định dạng app gửi).
+PrintRelayJob job(Map<String, Object?> map) =>
+    PrintRelayJob.fromMap('j1', {'printerIp': 'builtin', ...map})!;
 
 void main() {
-  const withPrinter = AgentConfig(printer: '192.168.1.50');
-  const noPrinter = AgentConfig();
+  var config = const AgentConfig(printer: '192.168.1.50');
+  final gateway = DesktopPrinterGateway(() => config);
+  final printer = DesktopJobPrinter(() => config, gateway);
 
-  test('máy in tích hợp của Agent → máy in đã chọn', () {
-    final job = {'kind': 'receipt', 'printerType': 'builtin'};
-    expect(AgentPrinter.targetOf(job, withPrinter), '192.168.1.50');
-    expect(AgentPrinter.targetOf(job, noPrinter), isNull);
+  test('lệnh tới máy in tích hợp của Agent → máy in đã chọn', () {
+    final p = printer.resolve(job({'printerType': 'builtin'}));
+    expect(p.kind, AgentPrinterKind.builtIn);
+    expect(p.address, '192.168.1.50');
   });
 
-  test('máy in LAN → in thẳng tới printerIp của lệnh', () {
-    final job = {
-      'kind': 'receipt',
-      'printerType': 'lan',
-      'printerIp': ' 10.0.0.9 ',
-    };
-    expect(AgentPrinter.targetOf(job, noPrinter), '10.0.0.9');
-    expect(AgentPrinter.targetOf({...job, 'printerIp': ''}, noPrinter), isNull);
+  test('lệnh in hộ máy LAN → in thẳng tới IP của lệnh', () {
+    final p = printer.resolve(
+      job({'printerType': 'lan', 'printerIp': ' 10.0.0.9 ', 'printerId': 3}),
+    );
+    expect(p.kind, AgentPrinterKind.lan);
+    expect(p.address, '10.0.0.9');
+    expect(p.id, 3);
   });
 
-  test('tem và USB: Agent máy tính chưa in', () {
-    expect(
-      AgentPrinter.targetOf({
-        'kind': 'label',
-        'printerType': 'builtin',
-      }, withPrinter),
-      isNull,
+  test('lệnh tem: Agent máy tính báo chưa in được', () async {
+    final failure = await printer.printJob(
+      gateway.builtInPrinter(),
+      job({'kind': 'label', 'printerType': 'builtin'}),
     );
-    expect(
-      AgentPrinter.targetOf({
-        'kind': 'receipt',
-        'printerType': 'usb',
-      }, withPrinter),
-      isNull,
-    );
+    expect(failure?.detail, 'Agent máy tính chưa in được tem');
+  });
+
+  test('máy in tích hợp báo cho máy khác theo khổ giấy đã chọn', () {
+    config = const AgentConfig(printer: '10.0.0.5', paper: PaperSize.size58);
+    expect(gateway.hasBuiltIn, isTrue);
+    expect(printer.builtInSpec()?.paper, 'size58');
+    config = const AgentConfig();
+    expect(gateway.hasBuiltIn, isFalse);
+  });
+
+  group('DesktopAgentHost', () {
+    late Directory dir;
+    setUp(() {
+      dir = Directory.systemTemp.createTempSync('agent_host_');
+      AgentStore.debugDirectory = dir;
+    });
+    tearDown(() {
+      AgentStore.debugDirectory = null;
+      dir.deleteSync(recursive: true);
+    });
+
+    test('khoá hàng đợi giống app EasyPOS', () {
+      var c = const AgentConfig(env: 'Dev-Test', companyId: 7, ownerId: 9);
+      final host = DesktopAgentHost(() => c);
+      expect(host.shopKey, 'dev_test/c7_9');
+      c = const AgentConfig();
+      expect(host.shopKey, isNull);
+    });
+
+    test('lưu giá trị JSON của module vào file cấu hình', () async {
+      final host = DesktopAgentHost(() => const AgentConfig());
+      await host.storage.put('known_agents_1', [
+        {'id': 'a1'},
+      ]);
+      expect(host.storage.get('known_agents_1'), [
+        {'id': 'a1'},
+      ]);
+      expect(AgentStore.get('m.known_agents_1'), '[{"id":"a1"}]');
+    });
   });
 
   test('tách địa chỉ máy in', () {

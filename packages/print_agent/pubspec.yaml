@@ -1,0 +1,29 @@
+name: print_agent
+description: "Module máy Agent EasyPOS (domain / data / presentation) — app EasyPOS và Agent máy tính cùng dùng."
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.41.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Cùng repo: app lấy module qua git thì đường dẫn này vẫn đúng.
+  print_agent_core:
+    path: ../print_agent_core
+  printer_label:
+    git:
+      url: https://github.com/MinhTung263/printer_label.git
+      ref: feature/print-agent
+  get: ^4.7.3
+  collection: ^1.19.0
+  intl: '>=0.19.0 <1.0.0'
+  crypto: ^3.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

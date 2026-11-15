@@ -9,9 +9,13 @@ import 'package:print_agent_core/print_agent_core.dart';
 /// Kênh giả trong bộ nhớ: một trạm "sống" (nhận lệnh → báo nhận → in xong)
 /// hoặc "chết" (vẫn nằm trong danh sách nhưng không phản hồi).
 class _FakeTransport implements PrintRelayTransport {
-  _FakeTransport({required this.alive});
+  _FakeTransport({required this.alive, this.hold = false});
 
   final bool alive;
+
+  /// Trạm giữ lệnh (máy in hết giấy) thay vì in xong.
+  final bool hold;
+  final holds = <String>[];
   final _status = <String, StreamController<String?>>{};
   final submitted = <Map<String, Object?>>[];
   final deleted = <String>[];
@@ -36,7 +40,7 @@ class _FakeTransport implements PrintRelayTransport {
         c.add(PrintRelayStatus.printing);
         Timer(
           const Duration(milliseconds: 20),
-          () => c.add(PrintRelayStatus.done),
+          () => c.add(hold ? PrintRelayStatus.held : PrintRelayStatus.done),
         );
       });
     }
@@ -51,6 +55,8 @@ class _FakeTransport implements PrintRelayTransport {
 
   @override
   Future<void> ackJob(String id) async {}
+  @override
+  Future<void> holdJob(String id) async => holds.add(id);
   @override
   Future<bool> claimJob(String id) async => true;
   @override
@@ -225,5 +231,48 @@ void main() {
         expect(out[i], black ? 0 : 255, reason: 'điểm ${i ~/ 4}');
       }
     });
+  });
+
+  test(
+    'Agent giữ lệnh (máy in hết giấy): máy gửi nhận held, không báo lỗi',
+    () async {
+      final t = _FakeTransport(alive: true, hold: true);
+      final client = PrintRelayClient(
+        ackTimeout: const Duration(milliseconds: 300),
+      );
+      expect(await client.hasOnlineStation(t), isTrue);
+      expect(await client.send(t, _job()), PrintRelayResult.held);
+    },
+  );
+
+  test('mã lệnh + cờ còi giữ nguyên qua hàng đợi', () {
+    final job = PrintRelayJob.receipt(
+      printer: const PrintRelayPrinter(address: '10.0.0.9', mac: 'AA:BB'),
+      image: Uint8List.fromList([1]),
+      beep: true,
+    );
+    expect(job.key, hasLength(24));
+    final back = PrintRelayJob.fromMap('q1', job.toMap())!;
+    expect(back.key, job.key);
+    expect(back.dedupeKey, job.key);
+    expect(back.beep, isTrue);
+    expect(back.printer.mac, 'AA:BB');
+    // Máy gửi bản cũ (không có key): bỏ trùng theo mã trên hàng đợi.
+    final old = PrintRelayJob.fromMap('q2', {'printerIp': '10.0.0.9'})!;
+    expect(old.dedupeKey, 'q2');
+  });
+
+  test('đường LAN: trạm giữ lệnh → trả held ngay, lệnh vẫn in sau', () async {
+    final done = Completer<bool>();
+    final status = await PrintRelayStation.lanStatus(_job(), (job) {
+      job.onHeld?.call();
+      return done.future;
+    });
+    expect(status, PrintRelayStatus.held);
+    done.complete(true);
+    expect(
+      await PrintRelayStation.lanStatus(_job(), (_) async => true),
+      PrintRelayStatus.done,
+    );
   });
 }

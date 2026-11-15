@@ -1,0 +1,22 @@
+name: print_agent_firebase
+description: "Kênh hàng đợi lệnh in Agent qua Firebase Realtime Database (dùng kèm print_agent_core)."
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.41.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Cùng repo: app lấy package qua git thì đường dẫn này vẫn đúng.
+  print_agent_core:
+    path: ../print_agent_core
+  firebase_auth: ^6.1.2
+  firebase_core: ^4.11.0
+  firebase_database: ^12.1.0
+
+dev_dependencies:
+  flutter_lints: ^6.0.0

@@ -219,20 +219,22 @@ class PrintRelay {
     return true;
   }
 
-  Future<bool?> _handleLan(PrintRelayJob job) async {
+  Future<String?> _handleLan(PrintRelayJob job) async {
     final target = job.printer.stationId;
     if (target != null && target != stationId) return null;
     if (!await (canHandle ?? PrintRelayStation.defaultCanHandle)(job)) {
       return null;
     }
-    var ok = false;
-    try {
-      ok = await onJob(job);
-    } catch (e) {
-      _log('[PRINT-RELAY] In lệnh nội bộ lỗi: $e');
-    }
-    _onPrinted(ok);
-    return ok;
+    return PrintRelayStation.lanStatus(job, (j) async {
+      var ok = false;
+      try {
+        ok = await onJob(j);
+      } catch (e) {
+        _log('[PRINT-RELAY] In lệnh nội bộ lỗi: $e');
+      }
+      _onPrinted(ok);
+      return ok;
+    });
   }
 
   void _onPrinted(bool ok) {
@@ -270,10 +272,14 @@ class PrintRelay {
     }
     _watchOwnNetwork(lan);
     _listenControl(transports);
-    _stopSub ??= PrinterLabel.keepAliveStoppedByUser.listen((_) {
-      _log('[PRINT-RELAY] Người dùng dừng trạm in từ thông báo');
-      unawaited(setStation(false));
-    });
+    // Nút "Dừng" trên thông báo chạy nền chỉ có ở Android (máy tính không có
+    // kênh native này).
+    if (Platform.isAndroid) {
+      _stopSub ??= PrinterLabel.keepAliveStoppedByUser.listen((_) {
+        _log('[PRINT-RELAY] Người dùng dừng trạm in từ thông báo');
+        unawaited(setStation(false));
+      });
+    }
     await _updateNotification(requestPermission: requestPermission);
     return true;
   }

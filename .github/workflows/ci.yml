@@ -1,0 +1,115 @@
+# Kiểm thử + build Agent máy tính trên Windows / Linux thật (máy GitHub).
+# - test: analyze + test mọi package; Windows thêm test in RAW qua spooler thật
+#   (hàng in "Generic / Text Only" ghi ra file — so từng byte ESC/POS).
+# - build-windows / build-linux: bản chạy được, tải ở mục Artifacts của lần chạy.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: 3.41.2
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Lấy thư viện
+        run: flutter pub get
+
+      - name: Hàng in RAW thử (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $file = Join-Path $env:RUNNER_TEMP 'easypos_raw.prn'
+          $queue = 'EasyPOS RAW CI'
+          if (-not (Get-PrinterDriver -Name 'Generic / Text Only' -ErrorAction SilentlyContinue)) {
+            Add-PrinterDriver -Name 'Generic / Text Only'
+          }
+          Add-PrinterPort -Name $file
+          Add-Printer -Name $queue -DriverName 'Generic / Text Only' -PortName $file
+          Get-Printer -Name $queue | Format-List Name,DriverName,PortName
+          "EASYPOS_RAW_QUEUE=$queue" >> $env:GITHUB_ENV
+          "EASYPOS_RAW_FILE=$file" >> $env:GITHUB_ENV
+
+      - name: Analyze
+        shell: bash
+        run: |
+          for d in packages/print_agent_core packages/print_agent packages/print_agent_firebase apps/desktop; do
+            echo "::group::$d"
+            (cd "$d" && flutter analyze) || exit 1
+            echo "::endgroup::"
+          done
+
+      - name: Test lõi (không cần broker MQTT)
+        working-directory: packages/print_agent_core
+        run: flutter test test/relay_ack_test.dart
+
+      - name: Test module
+        working-directory: packages/print_agent
+        run: flutter test
+
+      - name: Test Agent máy tính (kèm máy in giả, spooler Windows)
+        working-directory: apps/desktop
+        run: flutter test
+
+  build-windows:
+    name: Build Windows
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Build
+        working-directory: apps/desktop
+        run: flutter build windows --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: easypos-print-agent-windows
+          path: apps/desktop/build/windows/x64/runner/Release/
+
+  build-linux:
+    name: Build Linux
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Thư viện hệ thống (GTK, khay hệ thống)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config \
+            libgtk-3-dev libayatana-appindicator3-dev
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Build
+        working-directory: apps/desktop
+        run: flutter build linux --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: easypos-print-agent-linux
+          path: apps/desktop/build/linux/x64/release/bundle/

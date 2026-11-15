@@ -6,4 +6,6 @@ environment:
 
 workspace:
   - packages/print_agent_core
+  - packages/print_agent
+  - packages/print_agent_firebase
   - apps/desktop

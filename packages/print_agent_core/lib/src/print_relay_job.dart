@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:printer_label/printer_label.dart';
@@ -19,6 +20,10 @@ abstract final class PrintRelayStatus {
   static const String printing = 'printing';
   static const String done = 'done';
   static const String failed = 'failed';
+
+  /// Máy in hết giấy / mở nắp: trạm GIỮ lệnh và tự in khi máy in sẵn sàng lại
+  /// (máy gửi báo "sẽ tự in", không bắt in lại — tránh in đúp).
+  static const String held = 'held';
 }
 
 /// Máy in đích của lệnh in qua trạm.
@@ -31,6 +36,7 @@ class PrintRelayPrinter {
     this.name,
     this.isBuiltIn = false,
     this.stationId,
+    this.mac,
   });
 
   /// Máy in tích hợp của trạm [stationId] (VD Sunmi / T1-G) — chỉ trạm đó in.
@@ -41,6 +47,7 @@ class PrintRelayPrinter {
        isUsb = false,
        usbDeviceId = null,
        id = null,
+       mac = null,
        isBuiltIn = true;
 
   /// Máy in tích hợp sẵn trong trạm (không phải LAN / USB).
@@ -58,6 +65,7 @@ class PrintRelayPrinter {
     name: name,
     isBuiltIn: isBuiltIn,
     stationId: id,
+    mac: mac,
   );
 
   /// IP máy in LAN, hoặc địa chỉ máy in USB.
@@ -71,6 +79,10 @@ class PrintRelayPrinter {
   /// Mã máy in đã lưu ở app (để trạm tìm cấu hình của chính máy in đó).
   final Object? id;
   final String? name;
+
+  /// MAC máy in LAN (nếu máy gửi biết): trạm thấy máy in ở IP đó có MAC KHÁC
+  /// thì không nhận — 2 chi nhánh trùng dải IP không in nhầm sang nhau.
+  final String? mac;
 
   String get usbId => (usbDeviceId ?? '').isNotEmpty ? usbDeviceId! : address;
 }
@@ -93,7 +105,19 @@ class PrintRelayJob {
     this.status = PrintRelayStatus.pending,
     this.createdAt,
     this.sender,
+    this.key,
+    this.beep = false,
+    this.onHeld,
   });
+
+  /// Mã ngẫu nhiên cho một lệnh mới (giữ nguyên khi gửi lại qua kênh khác).
+  static String newKey() {
+    final r = Random.secure();
+    return List.generate(
+      12,
+      (_) => r.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ).join();
+  }
 
   /// Lệnh in hoá đơn: [paperSize] là tên khổ giấy của app (VD `size80`).
   factory PrintRelayJob.receipt({
@@ -103,6 +127,7 @@ class PrintRelayJob {
     int quantity = 1,
     bool openDrawer = false,
     String? sender,
+    bool beep = false,
   }) => PrintRelayJob(
     kind: PrintRelayJobKind.receipt,
     printer: printer,
@@ -111,6 +136,8 @@ class PrintRelayJob {
     copies: quantity,
     openDrawer: openDrawer,
     sender: sender,
+    key: newKey(),
+    beep: beep,
   );
 
   /// Lệnh in tem. Mặc định thu ảnh về đúng độ phân giải máy in
@@ -137,6 +164,7 @@ class PrintRelayJob {
     labelSize: size,
     copies: copies,
     sender: sender,
+    key: newKey(),
   );
 
   /// Mã lệnh trên hàng đợi (có sau khi gửi / khi trạm nhận).
@@ -162,22 +190,47 @@ class PrintRelayJob {
   /// Tên máy gửi lệnh (hiện ở nhật ký máy Agent); `null` với máy bản cũ.
   final String? sender;
 
+  /// Mã của lệnh, GIỮ NGUYÊN khi máy gửi gửi lại qua kênh khác (LAN → MQTT →
+  /// Firebase): trạm in mỗi mã một lần — mất phản hồi rồi gửi lại không in đúp.
+  /// `null` với máy gửi bản cũ.
+  final String? key;
+
+  /// Kêu còi báo bếp sau khi in (phiếu chế biến / huỷ món).
+  final bool beep;
+
+  /// Trạm gắn khi nhận lệnh (KHÔNG gửi đi): gọi khi giữ lệnh chờ máy in sẵn
+  /// sàng lại ([PrintRelayStatus.held]).
+  final void Function()? onHeld;
+
+  /// Mã để bỏ lệnh trùng: [key], máy gửi bản cũ thì mã lệnh trên hàng đợi.
+  String get dedupeKey => key ?? id ?? '';
+
   bool get isLabel => kind == PrintRelayJobKind.label;
 
   /// Bản với máy in đích [printer] khác (VD đã chỉ định trạm).
-  PrintRelayJob withPrinter(PrintRelayPrinter printer) => PrintRelayJob(
-    id: id,
-    kind: kind,
-    printer: printer,
-    images: images,
-    paperSize: paperSize,
-    labelSize: labelSize,
-    copies: copies,
-    openDrawer: openDrawer,
-    status: status,
-    createdAt: createdAt,
-    sender: sender,
-  );
+  PrintRelayJob withPrinter(PrintRelayPrinter printer) =>
+      _copy(printer: printer);
+
+  /// Bản có [onHeld] (trạm gắn khi nhận lệnh).
+  PrintRelayJob withOnHeld(void Function() onHeld) => _copy(onHeld: onHeld);
+
+  PrintRelayJob _copy({PrintRelayPrinter? printer, void Function()? onHeld}) =>
+      PrintRelayJob(
+        id: id,
+        kind: kind,
+        printer: printer ?? this.printer,
+        images: images,
+        paperSize: paperSize,
+        labelSize: labelSize,
+        copies: copies,
+        openDrawer: openDrawer,
+        status: status,
+        createdAt: createdAt,
+        sender: sender,
+        key: key,
+        beep: beep,
+        onHeld: onHeld ?? this.onHeld,
+      );
 
   int get payloadBytes => images.fold(0, (sum, i) => sum + i.length);
 
@@ -193,7 +246,10 @@ class PrintRelayJob {
     if (printer.stationId != null) 'targetStation': printer.stationId,
     'printerName': printer.name,
     if (sender != null) 'sender': sender,
+    if (key != null) 'key': key,
+    if (beep) 'beep': true,
     if (printer.isUsb) 'usbDeviceId': printer.usbId,
+    if (printer.mac != null) 'printerMac': printer.mac,
     if (isLabel) ...{
       'labelSize': labelSize?.name,
       'copies': copies < 1 ? 1 : copies,
@@ -239,6 +295,7 @@ class PrintRelayJob {
         usbDeviceId: map['usbDeviceId']?.toString(),
         id: map['printerId'],
         name: map['printerName']?.toString(),
+        mac: map['printerMac']?.toString(),
       ),
       images: images,
       paperSize: map['size']?.toString(),
@@ -248,6 +305,8 @@ class PrintRelayJob {
       status: map['status']?.toString() ?? '',
       createdAt: map['createdAt'] is int ? map['createdAt'] as int : null,
       sender: map['sender']?.toString(),
+      key: map['key']?.toString(),
+      beep: map['beep'] == true,
     );
   }
 }

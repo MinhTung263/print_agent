@@ -38,7 +38,7 @@ class PrintRelayLanServer {
   /// `null` khi không mở được cổng. [handle] in lệnh: `true` / `false` là in được
   /// hay không, `null` khi trạm này không in được lệnh đó (máy gửi đi đường khác).
   Future<Map<String, Object?>?> start(
-    Future<bool?> Function(PrintRelayJob job) handle,
+    Future<String?> Function(PrintRelayJob job) handle,
   ) async {
     await stop();
     ServerSocket server;
@@ -75,7 +75,7 @@ class PrintRelayLanServer {
   Future<void> _serve(
     Socket client,
     String token,
-    Future<bool?> Function(PrintRelayJob job) handle,
+    Future<String?> Function(PrintRelayJob job) handle,
   ) async {
     try {
       final line = await _readLine(client).timeout(const Duration(seconds: 15));
@@ -84,10 +84,9 @@ class PrintRelayLanServer {
         return;
       }
       final job = PrintRelayJob.fromMap('lan', request['job']);
-      final ok = job == null ? false : await handle(job);
-      client.write(
-        '${jsonEncode({'status': ok == null ? 'skip' : (ok ? PrintRelayStatus.done : PrintRelayStatus.failed)})}\n',
-      );
+      // `null` = trạm không in được lệnh này (máy gửi đi đường khác).
+      final status = job == null ? PrintRelayStatus.failed : await handle(job);
+      client.write('${jsonEncode({'status': status ?? 'skip'})}\n');
       await client.flush();
     } catch (e) {
       _log('[PRINT-RELAY] Lệnh nội bộ lỗi: $e');
@@ -212,6 +211,7 @@ abstract final class PrintRelayLanClient {
         final status = reply is Map ? reply['status'] : null;
         if (status == PrintRelayStatus.done) return PrintRelayResult.done;
         if (status == PrintRelayStatus.failed) return PrintRelayResult.failed;
+        if (status == PrintRelayStatus.held) return PrintRelayResult.held;
         // `skip`: trạm chưa in (không in được lệnh này) → thử đường khác.
         if (status == 'skip') return null;
         return PrintRelayResult.timeout;
@@ -235,6 +235,10 @@ enum PrintRelayResult {
 
   /// Quá thời gian chờ trạm báo kết quả (lệnh có thể vẫn đang in).
   timeout,
+
+  /// Máy in hết giấy / mở nắp: trạm đang GIỮ lệnh và sẽ tự in khi máy in sẵn
+  /// sàng lại — KHÔNG in lại (sẽ in đúp).
+  held,
 
   /// Không gửi được lệnh lên hàng đợi — chưa chắc tới trạm, nơi gọi có thể thử
   /// in trực tiếp.

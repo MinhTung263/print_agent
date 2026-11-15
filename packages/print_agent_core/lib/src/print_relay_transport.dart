@@ -33,6 +33,10 @@ abstract class PrintRelayTransport {
   /// và đang in, không phải chờ hết thời gian mới biết trạm đã tắt.
   Future<void> ackJob(String id);
 
+  /// Báo đang GIỮ lệnh [id] (máy in hết giấy / mở nắp — trạm tự in khi máy in
+  /// sẵn sàng lại): trạng thái [PrintRelayStatus.held].
+  Future<void> holdJob(String id);
+
   /// Ghi kết quả lệnh [id] và xoá nội dung in khỏi hàng đợi (không giữ ảnh hoá
   /// đơn trên mây).
   Future<void> completeJob(String id, {required bool success});

@@ -2,7 +2,10 @@
 
 Máy Agent chạy trên máy tính: nhận lệnh in hoá đơn của công ty (cùng hàng đợi
 MQTT với app EasyPOS) rồi gửi lệnh **ESC/POS thẳng tới máy in LAN** (cổng RAW
-9100). Máy tính **không phải cài driver máy in**.
+9100) hoặc **máy in USB** (Linux `/dev/usb/lp*`, Windows hàng in RAW "Generic / Text
+Only"). Máy tính **không phải cài driver máy in**. Nhận lệnh bằng đúng lõi của
+Agent Android (`AgentService` của module `print_agent`): giành lệnh, đường LAN
+9101, bật / tắt máy in từ xa, màn Máy Agent giống app.
 
 - App bán hàng thấy Agent này như một máy Agent bình thường. Bật "Máy in tích
   hợp của máy Agent" ở app là lệnh in sẽ ra **máy in của Agent** (chọn ở Cài đặt →
@@ -13,7 +16,7 @@ MQTT với app EasyPOS) rồi gửi lệnh **ESC/POS thẳng tới máy in LAN**
 - Ảnh hoá đơn được chuyển sang raster `GS v 0` **khớp từng byte** với bản native
   Android (ngưỡng xám 200, dải 128 dòng), hỏi giấy bằng `DLE EOT` trước khi in
   (hết giấy / mở nắp thì báo lỗi, không gửi phiếu), có mở két và in nhiều bản.
-- Chưa hỗ trợ: máy in USB, in tem (TSPL).
+- Chưa hỗ trợ: in tem (TSPL), tìm lại máy in LAN theo MAC khi đổi IP.
 
 ## Chạy nền
 
@@ -32,9 +35,9 @@ MQTT với app EasyPOS) rồi gửi lệnh **ESC/POS thẳng tới máy in LAN**
 |---|---|
 | `lib/escpos/` | Lõi Dart thuần (không import Flutter): mã hoá raster, lệnh ESC/POS, cổng TCP 9100, quét LAN |
 | `lib/desktop/` | Khay hệ thống, ẩn cửa sổ, tự chạy khi bật máy, một bản duy nhất |
-| `lib/agent/` | Agent: cấu hình (file JSON), nhận lệnh, chọn máy in, nhật ký |
+| `lib/agent/` | Phần riêng máy tính: cấu hình (file JSON), in ESC/POS (`AgentPrinter`), cổng nối module (`DesktopAgentHost`, `DesktopPrinterGateway`, `DesktopJobPrinter`) và `DesktopAgent` |
 | `lib/relay/` | MQTT (WebSocket bảo mật) + mã hoá — cùng định dạng với app |
-| `lib/ui/` | Giao diện (giống màn Máy Agent của app) |
+| `lib/ui/` | Đăng nhập + thẻ cài đặt máy in. Màn Máy Agent (sơ đồ, nhật ký, công tắc) là `AgentPage` của module `print_agent` — dùng chung với app EasyPOS |
 
 Cấu hình lưu ở: Windows `%APPDATA%\EasyPOS\PrintAgent\config.json`, Linux
 `~/.config/easypos-print-agent/config.json`, macOS
@@ -47,7 +50,6 @@ một Agent (khoá `agent.lock` cùng thư mục).
 fvm dart analyze lib test
 fvm flutter test
 fvm flutter run -d macos                 # hoặc -d windows / -d linux
-fvm flutter run -d macos -a --preview    # xem trước giao diện bằng dữ liệu mẫu
 fvm flutter build windows --release      # build trên máy Windows; linux trên Ubuntu
 fvm dart run tool/gen_tray_icon.dart     # sinh lại biểu tượng khay (assets/tray/)
 ```

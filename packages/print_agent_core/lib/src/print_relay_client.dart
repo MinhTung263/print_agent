@@ -209,6 +209,10 @@ class PrintRelayClient {
       );
       final status = await _waitResult(transport, jobId);
       if (status == null) return PrintRelayResult.noResponse;
+      if (status == PrintRelayStatus.held) {
+        _log('[PRINT-RELAY] Lệnh $jobId: Agent giữ lệnh chờ máy in sẵn sàng');
+        return PrintRelayResult.held;
+      }
       final ok = status == PrintRelayStatus.done;
       _log(
         '[PRINT-RELAY] Lệnh $jobId: ${ok ? 'đã in' : 'lỗi'} sau '
@@ -243,8 +247,11 @@ class PrintRelayClient {
         .watchJobStatus(jobId)
         .listen(
           (s) {
+            // `held`: trạm giữ lệnh, sẽ tự in sau — coi như đã có kết quả.
             final done =
-                s == PrintRelayStatus.done || s == PrintRelayStatus.failed;
+                s == PrintRelayStatus.done ||
+                s == PrintRelayStatus.failed ||
+                s == PrintRelayStatus.held;
             if ((done || s == PrintRelayStatus.printing) &&
                 !acked.isCompleted) {
               acked.complete();

@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:print_agent_desktop/desktop/single_instance.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/dart_cmd.dart';
+
 void main() {
   test(
     'bản mở sau báo bản đang chạy hiện cửa sổ rồi nhường',
@@ -12,13 +14,11 @@ void main() {
       expect(first, isNotNull);
       final shown = first!.showRequests.first;
       // Khoá file là theo tiến trình — chạy bản thứ hai ở tiến trình riêng.
-      final root = Platform.environment['FLUTTER_ROOT'];
-      final dart = root == null ? 'dart' : '$root/bin/dart';
-      final second = await Process.run(dart, [
+      final second = await Process.run(dartExecutable, [
         'run',
         'test/support/second_instance.dart',
         dir.path,
-      ]);
+      ], runInShell: runInShell);
       expect(
         second.stdout.toString().trim(),
         'null',
