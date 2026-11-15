@@ -8,6 +8,13 @@ abstract final class LocaleKeys {
   /// "In lại"
   static const bills_rePrint = 'bills_rePrint';
 
+  /// "Từ @sender"
+  static const printerSetting_agentActivityBannerFrom =
+      'printerSetting_agentActivityBannerFrom';
+  static String printerSetting_agentActivityBannerFromTr({
+    required Object sender,
+  }) => printerSetting_agentActivityBannerFrom.trParams({'sender': '$sender'});
+
   /// "Đã in"
   static const printerSetting_agentActivityDone =
       'printerSetting_agentActivityDone';
@@ -399,6 +406,10 @@ abstract final class LocaleKeys {
       'printerSetting_agentOtherAppIsAgent';
   static String printerSetting_agentOtherAppIsAgentTr({required Object app}) =>
       printerSetting_agentOtherAppIsAgent.trParams({'app': '$app'});
+
+  /// "Trạm in khác"
+  static const printerSetting_agentOtherStation =
+      'printerSetting_agentOtherStation';
 
   /// "Trạm in khác của cửa hàng (@count)"
   static const printerSetting_agentOthersTitle =

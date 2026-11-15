@@ -126,6 +126,8 @@
     "agentSwitchNetworkHint": "This device cannot reach the printers below. Switch to the printer's Wi-Fi to print",
     "agentTag": "Print station",
     "agentThisDevice": "This device",
+    "agentOtherStation": "Other print station",
+    "agentActivityBannerFrom": "From @sender",
     "agentUndo": "Undo",
     "agentWifiConnect": "Connect",
     "agentWifiFar": "Not in range here",

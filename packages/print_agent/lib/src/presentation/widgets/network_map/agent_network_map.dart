@@ -289,7 +289,11 @@ class _AgentNetworkMapState extends State<AgentNetworkMap>
             branchBottom + 10,
           );
           frames.add(
-            _BranchFrame(rect: rect, color: br.self ? _selfColor : _agentColor),
+            _BranchFrame(
+              rect: rect,
+              color: br.self ? _selfColor : _agentColor,
+              self: br.self,
+            ),
           );
           bottom = math.max(bottom, rect.bottom);
           if (stacked) {
@@ -371,24 +375,79 @@ class _AgentNetworkMapState extends State<AgentNetworkMap>
   }
 }
 
-/// Nền khung một nhánh: viền mảnh + nền rất nhạt theo màu nhánh.
+/// Nền khung một nhánh + nhãn góc: "MÁY NÀY" (khung xanh đậm, nhãn đặc) khác
+/// hẳn "TRẠM IN KHÁC" (khung tím mảnh, nhãn viền) để khách phân biệt ngay.
 class _BranchFrame extends StatelessWidget {
-  const _BranchFrame({required this.rect, required this.color});
+  const _BranchFrame({
+    required this.rect,
+    required this.color,
+    required this.self,
+  });
 
   final Rect rect;
   final Color color;
+  final bool self;
 
   @override
   Widget build(BuildContext context) {
+    final label = self
+        ? LocaleKeys.printerSetting_agentThisDevice.tr
+        : LocaleKeys.printerSetting_agentOtherStation.tr;
     return Positioned.fromRect(
       rect: rect,
       child: IgnorePointer(
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.035),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: color.withValues(alpha: 0.22)),
-          ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: self ? 0.07 : 0.035),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: color.withValues(alpha: self ? 0.75 : 0.22),
+                    width: self ? 2 : 1,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              left: 12,
+              top: -9,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: self ? color : Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: color.withValues(alpha: self ? 1 : 0.5),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: 4,
+                  children: [
+                    if (self)
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        size: 12,
+                        color: Colors.white,
+                      ),
+                    Text(
+                      label.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 10,
+                        height: 1.2,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.4,
+                        color: self ? Colors.white : color,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

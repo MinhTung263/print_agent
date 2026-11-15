@@ -4,6 +4,7 @@
 const Map<String, Map<String, String>> agentTranslations = {
   'vi_VN': {
     'bills_rePrint': "In lại",
+    'printerSetting_agentActivityBannerFrom': "Từ @sender",
     'printerSetting_agentActivityDone': "Đã in",
     'printerSetting_agentActivityFailed': "In lỗi",
     'printerSetting_agentActivityPrintingLabel': "Đang in tem",
@@ -121,6 +122,7 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentOfflineSince': "Đang tắt · lần cuối @time",
     'printerSetting_agentOtherAppIsAgent':
         "Máy này đang làm trạm in ở bản app khác (@app). Tắt trạm in ở bản đó trước rồi bật lại ở đây",
+    'printerSetting_agentOtherStation': "Trạm in khác",
     'printerSetting_agentOthersTitle': "Trạm in khác của cửa hàng (@count)",
     'printerSetting_agentPeerMore':
         "Còn @count máy in khác (trạm in dùng bản app cũ chỉ báo một phần)",
@@ -274,6 +276,7 @@ const Map<String, Map<String, String>> agentTranslations = {
   },
   'en_US': {
     'bills_rePrint': "Reprint",
+    'printerSetting_agentActivityBannerFrom': "From @sender",
     'printerSetting_agentActivityDone': "Printed",
     'printerSetting_agentActivityFailed': "Print failed",
     'printerSetting_agentActivityPrintingLabel': "Printing label",
@@ -393,6 +396,7 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentOfflineSince': "Offline · last seen @time",
     'printerSetting_agentOtherAppIsAgent':
         "Another app build on this device (@app) is already the print station. Turn it off there first, then turn it on here",
+    'printerSetting_agentOtherStation': "Other print station",
     'printerSetting_agentOthersTitle':
         "Other print stations in the company (@count)",
     'printerSetting_agentPeerMore':

@@ -126,6 +126,8 @@
     "agentSwitchNetworkHint": "Máy này chưa kết nối được các máy in dưới đây. Chuyển sang đúng Wi-Fi của máy in để in",
     "agentTag": "Trạm in",
     "agentThisDevice": "Máy này",
+    "agentOtherStation": "Trạm in khác",
+    "agentActivityBannerFrom": "Từ @sender",
     "agentUndo": "Hoàn tác",
     "agentWifiConnect": "Kết nối",
     "agentWifiFar": "Không thấy sóng ở đây",

@@ -6,6 +6,7 @@ import 'package:print_agent/src/agent_domain.dart';
 import 'package:printer_label/printer_label.dart';
 import 'package:print_agent/src/presentation/agent_widgets.dart';
 import 'package:print_agent/src/presentation/kit/kit.dart';
+import 'package:print_agent/src/presentation/widgets/agent_activity_banner.dart';
 import 'package:print_agent/src/presentation/widgets/agent_printer_issues_card.dart';
 import 'package:print_agent/src/presentation/widgets/sheets/agent_map_arrange_sheet.dart';
 import 'package:print_agent/src/presentation/widgets/agent_map_header.dart';
@@ -238,6 +239,7 @@ class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
                         AgentMapArrangeSheet.show(isAgent: isAgent),
                       ),
                     ),
+                    if (isAgent) const AgentActivityBanner(),
                     isAgent
                         ? AgentPrintersMap(ssid: _ssid, ips: _ips, cloud: cloud)
                         : SenderAgentsMap(
