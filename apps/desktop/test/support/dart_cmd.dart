@@ -9,3 +9,13 @@ String get dartExecutable {
 }
 
 bool get runInShell => Platform.isWindows;
+
+/// Tắt tiến trình chạy bằng [dartExecutable]. Windows chạy qua shell: `kill()`
+/// chỉ giết `cmd.exe`, tiến trình dart con vẫn chạy — giết cả cây tiến trình.
+Future<void> killProcessTree(Process process) async {
+  if (Platform.isWindows) {
+    await Process.run('taskkill', ['/PID', '${process.pid}', '/T', '/F']);
+  } else {
+    process.kill();
+  }
+}

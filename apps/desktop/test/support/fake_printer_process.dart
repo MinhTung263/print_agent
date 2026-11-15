@@ -63,12 +63,31 @@ class FakePrinter {
     }
   }
 
+  /// Tắt máy in giả và chờ tới khi cổng thật sự đóng.
   Future<void> stop() async {
-    process.kill();
+    await killProcessTree(process);
     await process.exitCode.timeout(
       const Duration(seconds: 10),
       onTimeout: () => -1,
     );
+    await _waitPortClosed();
+  }
+
+  Future<void> _waitPortClosed() async {
+    final end = DateTime.now().add(const Duration(seconds: 10));
+    while (DateTime.now().isBefore(end)) {
+      try {
+        final s = await Socket.connect(
+          InternetAddress.loopbackIPv4,
+          port,
+          timeout: const Duration(milliseconds: 500),
+        );
+        s.destroy();
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+      } on SocketException {
+        return;
+      }
+    }
   }
 }
 

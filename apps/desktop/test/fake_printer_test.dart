@@ -82,7 +82,7 @@ void main() {
         expect(lines.any((l) => l.contains('CÒI BÁO BẾP')), isTrue);
         expect(lines.any((l) => l.contains('GỬI DỮ LIỆU khi')), isFalse);
       } finally {
-        p.kill();
+        await killProcessTree(p);
       }
     },
     timeout: const Timeout(Duration(minutes: 3)),
@@ -105,7 +105,7 @@ void main() {
         expect(out.listSync(), isEmpty);
         expect(lines.any((l) => l.contains('GỬI DỮ LIỆU khi')), isFalse);
       } finally {
-        p.kill();
+        await killProcessTree(p);
       }
     },
     timeout: const Timeout(Duration(minutes: 3)),
