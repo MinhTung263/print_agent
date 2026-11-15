@@ -34,7 +34,6 @@ void main() {
       GetMaterialApp(
         home: AgentPage(
           side: [AgentSettingsCard(agent: agent)],
-          showPeerPrinters: false,
         ),
       ),
     );

@@ -5,6 +5,7 @@ import 'package:print_agent/src/presentation/kit/kit.dart';
 import 'package:print_agent/src/agent_domain.dart';
 import 'package:print_agent/src/presentation/widgets/sheets/agent_forget_button.dart';
 import 'package:print_agent/src/presentation/widgets/sheets/agent_remove_button.dart';
+import 'package:print_agent/src/presentation/widgets/peer_built_in/peer_built_in_printer_tile.dart';
 
 /// Bấm vào một máy Agent KHÁC (thẻ "Máy Agent khác" / nút Agent trên sơ đồ):
 /// xem các máy in Agent đó đang quản lý — tên, loại (LAN / USB / tích hợp), IP,
@@ -112,6 +113,16 @@ class _Body extends StatelessWidget {
               ? null
               : LocaleKeys.printerSetting_agentOfflineSinceTr(time: timeText),
         ),
+        // Máy in có sẵn của trạm này: bật / tắt dùng cho máy bán hàng này
+        // (trước ở mục riêng dưới sơ đồ).
+        Obx(() {
+          final mine = PeerBuiltInPrinters.all
+              .where((p) => p.stationId == '${info['id']}')
+              .firstOrNull;
+          return mine == null
+              ? const SizedBox.shrink()
+              : PeerBuiltInPrinterTile(printer: mine);
+        }),
         if (!online && (names.isNotEmpty || builtIn is Map))
           AppText.raw(
             LocaleKeys.printerSetting_agentPeerOfflineHintTr(time: timeText),

@@ -77,6 +77,11 @@ abstract final class AgentStationInfo {
             },
             if (s.printer.refKind == AgentPrinterKind.lan)
               'addr': s.printer.refAddress ?? '',
+            // Xem chi tiết máy in trên máy khác.
+            if ((s.printer.refMac ?? '').isNotEmpty) 'mac': s.printer.refMac,
+            if (s.printer.refId case final num id) 'id': id,
+            if (s.printer.refId case final String id when id.isNotEmpty)
+              'id': id,
           },
       ],
     };

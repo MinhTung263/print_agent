@@ -410,11 +410,71 @@ abstract final class LocaleKeys {
   static const printerSetting_agentPeerPrintersTitle =
       'printerSetting_agentPeerPrintersTitle';
 
+  /// "Kết nối"
+  static const printerSetting_agentPrinterDetailConnection =
+      'printerSetting_agentPrinterDetailConnection';
+
+  /// "Mã máy in"
+  static const printerSetting_agentPrinterDetailId =
+      'printerSetting_agentPrinterDetailId';
+
+  /// "Địa chỉ IP"
+  static const printerSetting_agentPrinterDetailIp =
+      'printerSetting_agentPrinterDetailIp';
+
+  /// "Địa chỉ MAC"
+  static const printerSetting_agentPrinterDetailMac =
+      'printerSetting_agentPrinterDetailMac';
+
+  /// "Không kết nối được"
+  static const printerSetting_agentPrinterDetailNotReady =
+      'printerSetting_agentPrinterDetailNotReady';
+
+  /// "Khổ giấy"
+  static const printerSetting_agentPrinterDetailPaper =
+      'printerSetting_agentPrinterDetailPaper';
+
+  /// "Sẵn sàng"
+  static const printerSetting_agentPrinterDetailReady =
+      'printerSetting_agentPrinterDetailReady';
+
+  /// "Nhận lệnh in"
+  static const printerSetting_agentPrinterDetailReceive =
+      'printerSetting_agentPrinterDetailReceive';
+
+  /// "Tắt để tạm ngưng gửi phiếu tới máy in này"
+  static const printerSetting_agentPrinterDetailReceiveHint =
+      'printerSetting_agentPrinterDetailReceiveHint';
+
+  /// "Trạm in"
+  static const printerSetting_agentPrinterDetailStation =
+      'printerSetting_agentPrinterDetailStation';
+
+  /// "Trạm in đang tắt"
+  static const printerSetting_agentPrinterDetailStationOff =
+      'printerSetting_agentPrinterDetailStationOff';
+
+  /// "Chi tiết máy in"
+  static const printerSetting_agentPrinterDetailTitle =
+      'printerSetting_agentPrinterDetailTitle';
+
   /// "@count máy in chưa kết nối"
   static const printerSetting_agentPrinterIssues =
       'printerSetting_agentPrinterIssues';
   static String printerSetting_agentPrinterIssuesTr({required Object count}) =>
       printerSetting_agentPrinterIssues.trParams({'count': '$count'});
+
+  /// "Có sẵn trên máy"
+  static const printerSetting_agentPrinterKindBuiltIn =
+      'printerSetting_agentPrinterKindBuiltIn';
+
+  /// "Mạng LAN"
+  static const printerSetting_agentPrinterKindLan =
+      'printerSetting_agentPrinterKindLan';
+
+  /// "Cắm USB"
+  static const printerSetting_agentPrinterKindUsb =
+      'printerSetting_agentPrinterKindUsb';
 
   /// "Đang tạm ngưng in"
   static const printerSetting_agentPrinterOffState =

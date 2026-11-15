@@ -53,7 +53,6 @@ Future<void> main(List<String> args) async {
         builder: (_, _) => agent.config.ready
             ? AgentPage(
                 side: [AgentSettingsCard(agent: agent)],
-                showPeerPrinters: false,
               )
             : LoginPage(agent: agent),
       ),

@@ -10,11 +10,20 @@ import 'package:print_agent/src/presentation/widgets/job_log/agent_job_row.dart'
 class AgentJobLogSheet extends StatefulWidget {
   const AgentJobLogSheet({super.key});
 
-  static Future<void> show() => BaseBottomSheet.show<void>(
-    headerTitle: LocaleKeys.printerSetting_agentJobLog,
-    body: const AgentJobLogSheet(),
-    allowOffline: true,
-  );
+  /// Danh sách dài không đè lên màn Trạm in: điện thoại mở MÀN MỚI; máy tính /
+  /// tablet mở cửa sổ nổi (popup) giữa màn.
+  static Future<void> show() async {
+    if (PrintAgentUi.kit.isTablet) {
+      await Get.dialog<void>(const _JobLogDialog());
+      return;
+    }
+    await Get.to<void>(
+      () => const BaseScaffoldHelper(
+        appBar: BaseAppBar(title: LocaleKeys.printerSetting_agentJobLog),
+        body: AgentJobLogSheet(),
+      ),
+    );
+  }
 
   @override
   State<AgentJobLogSheet> createState() => _AgentJobLogSheetState();
@@ -116,6 +125,52 @@ class _FilterChip extends StatelessWidget {
           text,
           variant: .title,
           textColor: selected ? Colors.white : color,
+        ),
+      ),
+    );
+  }
+}
+
+/// Popup nhật ký lệnh in (máy tính / tablet): tiêu đề + nút đóng, danh sách
+/// cuộn bên trong, cao tối đa 80% màn.
+class _JobLogDialog extends StatelessWidget {
+  const _JobLogDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    final height = MediaQuery.sizeOf(context).height * 0.8;
+    return Dialog(
+      backgroundColor: AppColors.backgroundPrimary,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 640, maxHeight: height),
+        child: AppColumn(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppPadding(
+              padding: const EdgeInsets.only(
+                left: AppSpace.lg,
+                right: AppSpace.xs,
+                top: AppSpace.sm,
+              ),
+              child: AppRow(
+                children: [
+                  const Expanded(
+                    child: AppText(
+                      LocaleKeys.printerSetting_agentJobLog,
+                      variant: .title,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: Get.back<void>,
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
+            ),
+            const Flexible(child: AgentJobLogSheet()),
+          ],
         ),
       ),
     );

@@ -5,6 +5,7 @@ import 'package:print_agent/src/presentation/kit/kit.dart';
 import 'package:print_agent/src/agent_domain.dart';
 import 'package:print_agent/src/presentation/utils/agent_peer_node.dart';
 import 'package:print_agent/src/presentation/utils/agent_peer_printer_toggle.dart';
+import 'package:print_agent/src/presentation/widgets/sheets/agent_printer_detail_sheet.dart';
 
 /// Một máy Agent (khác máy này) trên sơ đồ: thông tin trạm + lúc thấy cuối
 /// (`null` = đang trực tuyến).
@@ -56,8 +57,30 @@ List<AgentMapNode> agentPeerPrinterNodes(
       p,
       offline: offline,
       using: using,
-      // Bấm máy in (Agent đang trực tuyến): bật / tắt nhận lệnh từ xa.
-      onTap: offline ? null : agentPeerPrinterToggle(info, p),
+      // Bấm máy in: xem chi tiết (IP, MAC, mã...) + bật / tắt nhận lệnh từ
+      // xa khi trạm in đang trực tuyến.
+      onTap: agentShowPrinterDetail(
+        AgentPrinterDetail(
+          name: p['name']?.toString() ?? '',
+          kind: p['kind']?.toString() ?? 'lan',
+          state: offline
+              ? AgentPrinterDetailState.stationOff
+              : p['on'] == false
+              ? AgentPrinterDetailState.paused
+              : (p['ok'] == true
+                    ? AgentPrinterDetailState.ready
+                    : AgentPrinterDetailState.notReady),
+          on: p['on'] != false,
+          address: p['addr']?.toString(),
+          mac: p['mac']?.toString(),
+          id: p['id'],
+          paper: p['kind'] == 'builtin' && info['builtIn'] is Map
+              ? (info['builtIn'] as Map)['paper']?.toString()
+              : null,
+          station: AgentIdentity.ofStation(info),
+          onToggle: offline ? null : agentPeerPrinterToggle(info, p),
+        ),
+      ),
     ),
 ];
 
@@ -133,9 +156,9 @@ AgentMapNode _peerPrinterNode(
               ? AgentLinkState.connected
               : AgentLinkState.disconnected),
     onTap: onTap,
-    // Agent bản cũ: biểu tượng "cần cập nhật" thay cho nút bật / tắt.
+    // Agent bản cũ: biểu tượng "cần cập nhật"; còn lại: xem chi tiết.
     tapIcon: agentPeerIsOldVersion(p)
         ? Icons.system_update_alt_rounded
-        : Icons.power_settings_new_rounded,
+        : Icons.info_outline_rounded,
   );
 }

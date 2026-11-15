@@ -21,12 +21,7 @@ import 'package:print_agent/src/presentation/widgets/sender_agents_map.dart';
 /// - Máy bán hàng: đám mây ↔ máy này ↔ các máy Agent của công ty đang trực tuyến
 ///   (dự phòng khi máy in lỗi).
 class AgentPage extends StatefulWidget {
-  const AgentPage({
-    super.key,
-    this.agentSide = const [],
-    this.side = const [],
-    this.showPeerPrinters = true,
-  });
+  const AgentPage({super.key, this.agentSide = const [], this.side = const []});
 
   /// Thẻ thêm ở cột cài đặt khi máy này là Agent (VD Agent máy tính: chọn máy
   /// in, tự chạy khi bật máy, đăng xuất).
@@ -35,10 +30,6 @@ class AgentPage extends StatefulWidget {
   /// Thẻ của app chủ LUÔN hiện ở cột phải (cả khi chưa bật trạm in) — VD cài
   /// đặt máy in của trạm in máy tính.
   final List<Widget> side;
-
-  /// Máy bán hàng: hiện "máy in tích hợp của các trạm in" khi chưa bật trạm
-  /// in. Trạm in máy tính không phải máy bán hàng — tắt.
-  final bool showPeerPrinters;
 
   /// Mở màn mới (toàn màn hình).
   static Future<void> show() async {
@@ -274,9 +265,8 @@ class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
             if (isAgent) AgentDoctorCard(cloud: cloud),
             if (isAgent) ...widget.agentSide,
             ...widget.side,
-            // Máy bán hàng: máy in tích hợp của các Agent, bật / tắt từng máy.
-            if (!isAgent && widget.showPeerPrinters)
-              const BaseCard.section(child: PeerBuiltInPrintersSection()),
+            // Máy in có sẵn của các trạm in: bật / tắt trong bảng mở từ sơ đồ
+            // (bấm vào trạm in) — không lặp lại mục riêng ở đây.
           ],
         ),
       ),

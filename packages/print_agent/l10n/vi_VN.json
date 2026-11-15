@@ -173,6 +173,21 @@
     "agentDoctorPrintersNone": "Chưa có máy in nào — nối máy in vào trạm in này",
     "agentDoctorRole": "Vai trò",
     "agentDoctorPrimary": "Trạm in chính trong mạng",
-    "agentDoctorStandby": "Dự phòng — có trạm in khác cùng mạng ưu tiên hơn"
+    "agentDoctorStandby": "Dự phòng — có trạm in khác cùng mạng ưu tiên hơn",
+    "agentPrinterDetailTitle": "Chi tiết máy in",
+    "agentPrinterDetailConnection": "Kết nối",
+    "agentPrinterKindLan": "Mạng LAN",
+    "agentPrinterKindUsb": "Cắm USB",
+    "agentPrinterKindBuiltIn": "Có sẵn trên máy",
+    "agentPrinterDetailIp": "Địa chỉ IP",
+    "agentPrinterDetailMac": "Địa chỉ MAC",
+    "agentPrinterDetailId": "Mã máy in",
+    "agentPrinterDetailPaper": "Khổ giấy",
+    "agentPrinterDetailStation": "Trạm in",
+    "agentPrinterDetailReady": "Sẵn sàng",
+    "agentPrinterDetailNotReady": "Không kết nối được",
+    "agentPrinterDetailStationOff": "Trạm in đang tắt",
+    "agentPrinterDetailReceive": "Nhận lệnh in",
+    "agentPrinterDetailReceiveHint": "Tắt để tạm ngưng gửi phiếu tới máy in này"
   }
 }

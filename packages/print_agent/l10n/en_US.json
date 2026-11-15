@@ -173,6 +173,21 @@
     "agentDoctorPrintersNone": "No printers yet — connect a printer to this print station",
     "agentDoctorRole": "Role",
     "agentDoctorPrimary": "Main print station on this network",
-    "agentDoctorStandby": "Backup — another print station on this network has priority"
+    "agentDoctorStandby": "Backup — another print station on this network has priority",
+    "agentPrinterDetailTitle": "Printer details",
+    "agentPrinterDetailConnection": "Connection",
+    "agentPrinterKindLan": "LAN",
+    "agentPrinterKindUsb": "USB",
+    "agentPrinterKindBuiltIn": "Built-in",
+    "agentPrinterDetailIp": "IP address",
+    "agentPrinterDetailMac": "MAC address",
+    "agentPrinterDetailId": "Printer ID",
+    "agentPrinterDetailPaper": "Paper size",
+    "agentPrinterDetailStation": "Print station",
+    "agentPrinterDetailReady": "Ready",
+    "agentPrinterDetailNotReady": "Not reachable",
+    "agentPrinterDetailStationOff": "Print station is off",
+    "agentPrinterDetailReceive": "Receive print jobs",
+    "agentPrinterDetailReceiveHint": "Turn off to pause sending jobs to this printer"
   }
 }

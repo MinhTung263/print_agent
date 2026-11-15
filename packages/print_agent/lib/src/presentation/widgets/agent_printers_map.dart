@@ -5,6 +5,7 @@ import 'package:print_agent/src/presentation/kit/kit.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:print_agent/src/presentation/utils/agent_peer_cluster.dart';
+import 'package:print_agent/src/presentation/widgets/sheets/agent_printer_detail_sheet.dart';
 
 /// Máy này là Agent: đám mây ↔ máy này ↔ các máy in Agent quản lý.
 class AgentPrintersMap extends StatelessWidget {
@@ -83,10 +84,11 @@ class AgentPrintersMap extends StatelessWidget {
                 activity: activities.isEmpty
                     ? null
                     : _activityOf(AgentPrintActivityStore.of(s.printer)),
-                // Bấm máy in: bật / tắt nhận lệnh in hộ ngay (có Hoàn tác). Máy
-                // in lỗi kết nối lại ở thẻ máy in lỗi ngay dưới sơ đồ.
-                onTap: () => unawaited(_toggle(s.printer)),
-                tapIcon: Icons.power_settings_new_rounded,
+                // Bấm máy in: xem chi tiết (IP, MAC, mã...) + công tắc nhận
+                // lệnh in (có Hoàn tác). Máy in lỗi kết nối lại ở thẻ máy in
+                // lỗi ngay dưới sơ đồ.
+                onTap: agentShowPrinterDetail(_detail(s, off)),
+                tapIcon: Icons.info_outline_rounded,
               ),
           ],
           nodesLabel: LocaleKeys.printerSetting_agentZoneMyPrinters.tr,
@@ -111,6 +113,33 @@ class AgentPrintersMap extends StatelessWidget {
     if (ip.isEmpty) return null;
     if (ssid != null && subnets.contains(agentSubnetOf(ip))) return ssid;
     return PrintAgentUi.station.wifi.ssidOf(s.printer);
+  }
+
+  static AgentPrinterDetail _detail(
+    AgentPrinterStatus<AgentPrinterRef> s,
+    Set<String> off,
+  ) {
+    final paused = off.contains(AgentPrinterSwitches.keyOf(s.printer));
+    final p = s.printer;
+    return AgentPrinterDetail(
+      name: p.nameOrNull ?? p.refAddress ?? '',
+      kind: switch (p.refKind) {
+        AgentPrinterKind.builtIn => 'builtin',
+        AgentPrinterKind.usb => 'usb',
+        _ => 'lan',
+      },
+      state: paused
+          ? AgentPrinterDetailState.paused
+          : (s.state == AgentPrinterState.connected
+                ? AgentPrinterDetailState.ready
+                : AgentPrinterDetailState.notReady),
+      on: !paused,
+      address: p.refAddress,
+      mac: p.refMac,
+      id: p.refId,
+      station: PrintAgentUi.station.displayName,
+      onToggle: () => unawaited(_toggle(p)),
+    );
   }
 
   /// Bật / tắt nhận lệnh cho máy in [p] + thông báo kèm nút Hoàn tác.
