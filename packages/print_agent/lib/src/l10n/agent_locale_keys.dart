@@ -90,6 +90,78 @@ abstract final class LocaleKeys {
   /// "Trạm in"
   static const printerSetting_agentDashboard = 'printerSetting_agentDashboard';
 
+  /// "Mọi thứ đều ổn"
+  static const printerSetting_agentDoctorAllGood =
+      'printerSetting_agentDoctorAllGood';
+
+  /// "Nhận phiếu qua Internet"
+  static const printerSetting_agentDoctorInternet =
+      'printerSetting_agentDoctorInternet';
+
+  /// "Mất kết nối — kiểm tra mạng của máy này"
+  static const printerSetting_agentDoctorInternetDown =
+      'printerSetting_agentDoctorInternetDown';
+
+  /// "Đang kết nối"
+  static const printerSetting_agentDoctorInternetOk =
+      'printerSetting_agentDoctorInternetOk';
+
+  /// "Đang kết nối…"
+  static const printerSetting_agentDoctorInternetWait =
+      'printerSetting_agentDoctorInternetWait';
+
+  /// "Có @count việc cần xem"
+  static const printerSetting_agentDoctorIssues =
+      'printerSetting_agentDoctorIssues';
+  static String printerSetting_agentDoctorIssuesTr({required Object count}) =>
+      printerSetting_agentDoctorIssues.trParams({'count': '$count'});
+
+  /// "Nhận phiếu trong mạng quán"
+  static const printerSetting_agentDoctorLan = 'printerSetting_agentDoctorLan';
+
+  /// "Chưa mở — máy khác vẫn gửi được qua Internet nhưng chậm hơn"
+  static const printerSetting_agentDoctorLanOff =
+      'printerSetting_agentDoctorLanOff';
+
+  /// "Sẵn sàng — máy cùng mạng gửi phiếu nhanh nhất"
+  static const printerSetting_agentDoctorLanOk =
+      'printerSetting_agentDoctorLanOk';
+
+  /// "Trạm in chính trong mạng"
+  static const printerSetting_agentDoctorPrimary =
+      'printerSetting_agentDoctorPrimary';
+
+  /// "Máy in"
+  static const printerSetting_agentDoctorPrinters =
+      'printerSetting_agentDoctorPrinters';
+
+  /// "Chưa có máy in nào — nối máy in vào trạm in này"
+  static const printerSetting_agentDoctorPrintersNone =
+      'printerSetting_agentDoctorPrintersNone';
+
+  /// "@ok/@total máy in sẵn sàng"
+  static const printerSetting_agentDoctorPrintersOk =
+      'printerSetting_agentDoctorPrintersOk';
+  static String printerSetting_agentDoctorPrintersOkTr({
+    required Object ok,
+    required Object total,
+  }) => printerSetting_agentDoctorPrintersOk.trParams({
+    'ok': '$ok',
+    'total': '$total',
+  });
+
+  /// "Vai trò"
+  static const printerSetting_agentDoctorRole =
+      'printerSetting_agentDoctorRole';
+
+  /// "Dự phòng — có trạm in khác cùng mạng ưu tiên hơn"
+  static const printerSetting_agentDoctorStandby =
+      'printerSetting_agentDoctorStandby';
+
+  /// "Kiểm tra trạm in"
+  static const printerSetting_agentDoctorTitle =
+      'printerSetting_agentDoctorTitle';
+
   /// "Tự in qua trạm in khi máy in không in được · bấm để xem"
   static const printerSetting_agentEntryOff = 'printerSetting_agentEntryOff';
 

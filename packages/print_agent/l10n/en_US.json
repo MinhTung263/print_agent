@@ -157,6 +157,22 @@
     "switchWifi": "Switch Wi-Fi",
     "wifiChecking": "Testing connection...",
     "wifiPassword": "Wi-Fi password (leave empty if none)",
-    "wifiSwitchFailed": "Could not switch to Wi-Fi \"@wifi\". Check the password and that the Wi-Fi is in range"
+    "wifiSwitchFailed": "Could not switch to Wi-Fi \"@wifi\". Check the password and that the Wi-Fi is in range",
+    "agentDoctorTitle": "Print station check",
+    "agentDoctorAllGood": "Everything looks good",
+    "agentDoctorIssues": "@count things need attention",
+    "agentDoctorInternet": "Receive tickets over the Internet",
+    "agentDoctorInternetOk": "Connected",
+    "agentDoctorInternetDown": "Disconnected — check this device's network",
+    "agentDoctorInternetWait": "Connecting…",
+    "agentDoctorLan": "Receive tickets on the shop network",
+    "agentDoctorLanOk": "Ready — devices on the same network send fastest",
+    "agentDoctorLanOff": "Not open — other devices can still send over the Internet, but slower",
+    "agentDoctorPrinters": "Printers",
+    "agentDoctorPrintersOk": "@ok/@total printers ready",
+    "agentDoctorPrintersNone": "No printers yet — connect a printer to this print station",
+    "agentDoctorRole": "Role",
+    "agentDoctorPrimary": "Main print station on this network",
+    "agentDoctorStandby": "Backup — another print station on this network has priority"
   }
 }

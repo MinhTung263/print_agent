@@ -31,6 +31,27 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentCloudDown': "Mất kết nối",
     'printerSetting_agentCloudOk': "Đã kết nối",
     'printerSetting_agentDashboard': "Trạm in",
+    'printerSetting_agentDoctorAllGood': "Mọi thứ đều ổn",
+    'printerSetting_agentDoctorInternet': "Nhận phiếu qua Internet",
+    'printerSetting_agentDoctorInternetDown':
+        "Mất kết nối — kiểm tra mạng của máy này",
+    'printerSetting_agentDoctorInternetOk': "Đang kết nối",
+    'printerSetting_agentDoctorInternetWait': "Đang kết nối…",
+    'printerSetting_agentDoctorIssues': "Có @count việc cần xem",
+    'printerSetting_agentDoctorLan': "Nhận phiếu trong mạng quán",
+    'printerSetting_agentDoctorLanOff':
+        "Chưa mở — máy khác vẫn gửi được qua Internet nhưng chậm hơn",
+    'printerSetting_agentDoctorLanOk':
+        "Sẵn sàng — máy cùng mạng gửi phiếu nhanh nhất",
+    'printerSetting_agentDoctorPrimary': "Trạm in chính trong mạng",
+    'printerSetting_agentDoctorPrinters': "Máy in",
+    'printerSetting_agentDoctorPrintersNone':
+        "Chưa có máy in nào — nối máy in vào trạm in này",
+    'printerSetting_agentDoctorPrintersOk': "@ok/@total máy in sẵn sàng",
+    'printerSetting_agentDoctorRole': "Vai trò",
+    'printerSetting_agentDoctorStandby':
+        "Dự phòng — có trạm in khác cùng mạng ưu tiên hơn",
+    'printerSetting_agentDoctorTitle': "Kiểm tra trạm in",
     'printerSetting_agentEntryOff':
         "Tự in qua trạm in khi máy in không in được · bấm để xem",
     'printerSetting_agentEntryOn': "Máy này đang là trạm in · bấm để xem sơ đồ",
@@ -241,6 +262,27 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentCloudDown': "Disconnected",
     'printerSetting_agentCloudOk': "Connected",
     'printerSetting_agentDashboard': "Print station",
+    'printerSetting_agentDoctorAllGood': "Everything looks good",
+    'printerSetting_agentDoctorInternet': "Receive tickets over the Internet",
+    'printerSetting_agentDoctorInternetDown':
+        "Disconnected — check this device's network",
+    'printerSetting_agentDoctorInternetOk': "Connected",
+    'printerSetting_agentDoctorInternetWait': "Connecting…",
+    'printerSetting_agentDoctorIssues': "@count things need attention",
+    'printerSetting_agentDoctorLan': "Receive tickets on the shop network",
+    'printerSetting_agentDoctorLanOff':
+        "Not open — other devices can still send over the Internet, but slower",
+    'printerSetting_agentDoctorLanOk':
+        "Ready — devices on the same network send fastest",
+    'printerSetting_agentDoctorPrimary': "Main print station on this network",
+    'printerSetting_agentDoctorPrinters': "Printers",
+    'printerSetting_agentDoctorPrintersNone':
+        "No printers yet — connect a printer to this print station",
+    'printerSetting_agentDoctorPrintersOk': "@ok/@total printers ready",
+    'printerSetting_agentDoctorRole': "Role",
+    'printerSetting_agentDoctorStandby':
+        "Backup — another print station on this network has priority",
+    'printerSetting_agentDoctorTitle': "Print station check",
     'printerSetting_agentEntryOff':
         "Automatically prints through a print station when direct printing fails · tap to view",
     'printerSetting_agentEntryOn':

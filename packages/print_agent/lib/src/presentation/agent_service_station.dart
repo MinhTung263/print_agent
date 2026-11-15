@@ -54,6 +54,9 @@ class AgentServiceStation implements AgentStation {
       _service.removeAgent(station);
 
   @override
+  RxBool get isPrimary => _service.isPrimary;
+
+  @override
   RxInt get printed => _service.jobs.printed;
 
   @override

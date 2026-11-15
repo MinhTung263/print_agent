@@ -10,6 +10,7 @@ import 'package:print_agent/src/presentation/widgets/agent_printer_issues_card.d
 import 'package:print_agent/src/presentation/widgets/sheets/agent_map_arrange_sheet.dart';
 import 'package:print_agent/src/presentation/widgets/agent_map_header.dart';
 import 'package:print_agent/src/presentation/widgets/agent_printers_map.dart';
+import 'package:print_agent/src/presentation/widgets/agent_doctor_card.dart';
 import 'package:print_agent/src/presentation/widgets/agent_stats_card.dart';
 import 'package:print_agent/src/presentation/widgets/sender_agents_map.dart';
 
@@ -256,6 +257,8 @@ class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
           side: [
             // Máy Agent: tên + mã để các máy khác phân biệt (đặt tên được).
             if (isAgent) AgentStatsCard(autoRestart: _autoRestart),
+            // "Bác sĩ trạm in": cái gì đang ổn / cần xem.
+            if (isAgent) AgentDoctorCard(cloud: cloud),
             if (isAgent) ...widget.agentSide,
             // Máy bán hàng: máy in tích hợp của các Agent, bật / tắt từng máy.
             if (!isAgent)

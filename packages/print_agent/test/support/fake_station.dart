@@ -65,6 +65,9 @@ class FakeStation implements AgentStation {
 
   @override
   Future<bool> removeAgent(Map<Object?, Object?> station) async => true;
+
+  @override
+  final RxBool isPrimary = true.obs;
   @override
   final RxInt printed = 0.obs;
   @override

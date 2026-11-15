@@ -157,6 +157,22 @@
     "switchWifi": "Chuyển Wi-Fi",
     "wifiChecking": "Đang thử kết nối...",
     "wifiPassword": "Mật khẩu Wi-Fi (để trống nếu không có)",
-    "wifiSwitchFailed": "Không chuyển được sang Wi-Fi \"@wifi\". Kiểm tra mật khẩu và máy có trong vùng sóng Wi-Fi này"
+    "wifiSwitchFailed": "Không chuyển được sang Wi-Fi \"@wifi\". Kiểm tra mật khẩu và máy có trong vùng sóng Wi-Fi này",
+    "agentDoctorTitle": "Kiểm tra trạm in",
+    "agentDoctorAllGood": "Mọi thứ đều ổn",
+    "agentDoctorIssues": "Có @count việc cần xem",
+    "agentDoctorInternet": "Nhận phiếu qua Internet",
+    "agentDoctorInternetOk": "Đang kết nối",
+    "agentDoctorInternetDown": "Mất kết nối — kiểm tra mạng của máy này",
+    "agentDoctorInternetWait": "Đang kết nối…",
+    "agentDoctorLan": "Nhận phiếu trong mạng quán",
+    "agentDoctorLanOk": "Sẵn sàng — máy cùng mạng gửi phiếu nhanh nhất",
+    "agentDoctorLanOff": "Chưa mở — máy khác vẫn gửi được qua Internet nhưng chậm hơn",
+    "agentDoctorPrinters": "Máy in",
+    "agentDoctorPrintersOk": "@ok/@total máy in sẵn sàng",
+    "agentDoctorPrintersNone": "Chưa có máy in nào — nối máy in vào trạm in này",
+    "agentDoctorRole": "Vai trò",
+    "agentDoctorPrimary": "Trạm in chính trong mạng",
+    "agentDoctorStandby": "Dự phòng — có trạm in khác cùng mạng ưu tiên hơn"
   }
 }

@@ -58,8 +58,12 @@ abstract interface class AgentStation {
     void Function(String otherApp)? onOtherApp,
   });
 
-  /// Tắt từ xa một Agent không có máy in.
+  /// Ngắt kết nối từ xa một trạm in khác.
   Future<bool> removeAgent(Map<Object?, Object?> station);
+
+  /// Máy này là trạm in chính trong mạng (không có trạm cùng mạng ưu tiên
+  /// hơn).
+  RxBool get isPrimary;
 
   RxInt get printed;
   RxInt get failed;

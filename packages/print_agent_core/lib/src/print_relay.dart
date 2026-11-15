@@ -308,6 +308,9 @@ class PrintRelay {
   /// Thông tin LAN hiện tại của trạm (IP có thể đổi khi đổi mạng).
   Map<String, Object?>? _lan;
 
+  /// Trạm đang mở cổng nhận lệnh trong mạng nội bộ (LAN 9101).
+  bool get lanListening => _lan != null;
+
   Map<String, Object?> _info() => {
     ...?stationInfo?.call(),
     if (stationId != null) 'id': stationId,
