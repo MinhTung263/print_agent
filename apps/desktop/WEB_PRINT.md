@@ -1,8 +1,11 @@
 # In từ web EasyPOS qua Trạm in (không cần driver)
 
-Trang `https://app.easypos.vn` chạy trên trình duyệt **của máy có cài Trạm in
-EasyPOS** gọi cổng web của trạm in tại `http://127.0.0.1:9102` (trùng cổng thì
-`19102`). Trạm in in ảnh phiếu ra máy in đã chọn (LAN / USB) hoặc ra máy in LAN
+Thiết bị nào bật Trạm in (máy tính, Android, iOS) cũng có cổng web này (mở khi
+Trạm in BẬT). Trang `https://app.easypos.vn` chạy trên **máy đó** gọi
+`http://127.0.0.1:9102`; chạy trên **thiết bị khác trong mạng quán** thì gọi
+`http://<IP thiết bị>:9102` (trùng cổng thì `19102`). Yêu cầu từ thiết bị khác
+bắt buộc có `Origin` của trang EasyPOS. Thử nhanh: `tool/web_test/index.html`
+(xem README của thư mục). Trạm in in ảnh phiếu ra máy in đã chọn (LAN / USB) hoặc ra máy in LAN
 trong quán. Máy tính không phải cài driver máy in.
 
 ```

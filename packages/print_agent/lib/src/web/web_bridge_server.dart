@@ -13,14 +13,18 @@ import 'web_print_request.dart';
 /// - `GET  /v1/info`  → thông tin trạm + máy in ([WebPrintPort.info]).
 /// - `POST /v1/print` → in hoá đơn ([WebPrintRequest]), trả [WebPrintResult].
 ///
-/// Chỉ mở trên địa chỉ nội bộ của máy (127.0.0.1) — máy khác trong mạng không
-/// gọi được; chỉ trang web [WebOriginPolicy] cho phép mới đọc được kết quả
-/// (CORS) và in được. Trả lời preflight "Private Network Access" của Chrome.
+/// Mở theo [bindAddress]: mặc định MỌI địa chỉ của máy để trang web chạy trên
+/// thiết bị KHÁC trong mạng quán cũng in được qua trạm in này. An toàn:
+/// - yêu cầu từ máy khác BẮT BUỘC kèm `Origin` thuộc [WebOriginPolicy] (trang
+///   web lạ / chương trình lạ trong mạng không gửi được);
+/// - yêu cầu từ chính máy này (127.0.0.1) không có `Origin` vẫn nhận.
+/// Trả lời preflight "Private Network Access" của Chrome.
 class WebBridgeServer {
   WebBridgeServer(
     this._port, {
     WebOriginPolicy Function()? policy,
     this.ports = defaultPorts,
+    this.bindAddress,
     void Function(String message)? log,
   }) : _policy = policy ?? (() => const WebOriginPolicy()),
        _log = log ?? ((_) {});
@@ -33,6 +37,9 @@ class WebBridgeServer {
   final WebPrintPort _port;
   final WebOriginPolicy Function() _policy;
   final List<int> ports;
+
+  /// `null` = mọi địa chỉ IPv4 của máy.
+  final InternetAddress? bindAddress;
   final void Function(String message) _log;
 
   HttpServer? _server;
@@ -44,10 +51,13 @@ class WebBridgeServer {
     if (_server != null) return _server!.port;
     for (final p in ports) {
       try {
-        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, p);
+        final server = await HttpServer.bind(
+          bindAddress ?? InternetAddress.anyIPv4,
+          p,
+        );
         _server = server;
         server.listen((r) => unawaited(_serve(r)));
-        _log('[WEB] Cổng web của trạm in mở ở 127.0.0.1:${server.port}');
+        _log('[WEB] Cổng web của trạm in mở ở cổng ${server.port}');
         return server.port;
       } on SocketException catch (e) {
         _log('[WEB] Không mở được cổng $p: ${e.message}');
@@ -66,7 +76,10 @@ class WebBridgeServer {
     final res = request.response;
     try {
       final origin = request.headers.value('origin');
-      if (!_policy().allows(origin)) {
+      final remote = request.connectionInfo?.remoteAddress;
+      final fromOtherDevice = remote != null && !remote.isLoopback;
+      final noOrigin = origin == null || origin.isEmpty;
+      if ((fromOtherDevice && noOrigin) || !_policy().allows(origin)) {
         _log('[WEB] Từ chối trang $origin');
         return await _json(res, HttpStatus.forbidden, _error('origin'));
       }

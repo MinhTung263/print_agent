@@ -29,6 +29,13 @@ export 'src/domain/entities/peer_built_in_printer.dart';
 export 'src/domain/ports/agent_host.dart';
 export 'src/domain/ports/agent_job_printer.dart';
 export 'src/print_agent_module.dart';
+export 'src/web/agent_service_web_print.dart';
+export 'src/web/agent_web_bridge.dart';
+export 'src/web/web_bridge_server.dart';
+export 'src/web/web_origin_policy.dart';
+export 'src/web/web_print_port.dart';
+export 'src/web/web_print_request.dart';
+export 'src/web/web_receipt_image.dart';
 export 'src/domain/ports/agent_printer_gateway.dart';
 
 // Giao diện (dùng chung app EasyPOS và Agent máy tính).

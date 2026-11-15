@@ -5,8 +5,6 @@ import 'package:print_agent/print_agent.dart';
 import 'package:printer_label/desktop.dart';
 
 import '../desktop/keep_awake.dart';
-import '../web/web_bridge_server.dart';
-import '../web/web_origin_policy.dart';
 
 import 'agent_config.dart';
 import 'agent_printer.dart';

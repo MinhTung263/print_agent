@@ -3,9 +3,6 @@ import 'dart:typed_data';
 
 import 'package:print_agent/print_agent.dart';
 
-import '../web/web_print_port.dart';
-import '../web/web_print_request.dart';
-import '../web/web_receipt_image.dart';
 import 'desktop_agent.dart';
 import 'desktop_printer.dart';
 import 'paper_size.dart';

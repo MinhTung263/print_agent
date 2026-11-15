@@ -4,11 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
-import 'package:print_agent_desktop/web/web_bridge_server.dart';
-import 'package:print_agent_desktop/web/web_origin_policy.dart';
-import 'package:print_agent_desktop/web/web_print_port.dart';
-import 'package:print_agent_desktop/web/web_print_request.dart';
-import 'package:print_agent_desktop/web/web_receipt_image.dart';
+import 'package:print_agent/print_agent.dart';
 
 class _FakePort implements WebPrintPort {
   final requests = <WebPrintRequest>[];
@@ -45,6 +41,25 @@ void main() {
       final p = WebOriginPolicy.parse(' http://localhost:4200/ , ');
       expect(p.allows('http://localhost:4200'), isTrue);
       expect(p.allows('http://localhost:5000'), isFalse);
+    });
+  });
+
+  group('WebOriginPolicy.allowLocalHttp', () {
+    test('mặc định (bản thật) không nhận trang http', () {
+      const p = WebOriginPolicy();
+      expect(p.allows('http://192.168.1.20:8080'), isFalse);
+      expect(p.allows('http://localhost:8080'), isFalse);
+    });
+
+    test('bản debug nhận http ở localhost / mạng nội bộ, không nhận ngoài', () {
+      const p = WebOriginPolicy(allowLocalHttp: true);
+      expect(p.allows('http://192.168.1.20:8080'), isTrue);
+      expect(p.allows('http://10.0.0.5'), isTrue);
+      expect(p.allows('http://172.20.1.1:3000'), isTrue);
+      expect(p.allows('http://localhost:4200'), isTrue);
+      expect(p.allows('http://8.8.8.8'), isFalse);
+      expect(p.allows('http://evil.com'), isFalse);
+      expect(p.allows('https://app.easypos.vn'), isTrue);
     });
   });
 
