@@ -235,26 +235,38 @@ class MaterialAgentUiKit implements AgentUiKit {
       Get.dialog<T>(
         Dialog(
           clipBehavior: Clip.antiAlias,
+          backgroundColor: AppColors.backgroundPrimary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520, maxHeight: 640),
+            constraints: const BoxConstraints(maxWidth: 480, maxHeight: 680),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (headerTitle != null)
                   Padding(
-                    padding: const EdgeInsets.all(AppSpace.lg),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpace.lg + 4,
+                      AppSpace.md,
+                      AppSpace.sm,
+                      0,
+                    ),
                     child: Row(
                       children: [
                         Expanded(
                           child: Text(
                             headerTitle.tr,
                             style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
-                        const CloseButton(),
+                        IconButton(
+                          onPressed: Get.back<void>,
+                          icon: const Icon(Icons.close_rounded),
+                        ),
                       ],
                     ),
                   ),

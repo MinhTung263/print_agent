@@ -179,20 +179,28 @@ class _AgentMapArrangeSheetState extends State<AgentMapArrangeSheet> {
             ],
           ),
         ),
-        AppPadding.all(
-          AppSpace.lg,
+        AppPadding.symmetric(
+          horizontal: AppSpace.lg,
+          vertical: AppSpace.md,
           child: AppRow(
             spacing: AppSpace.md,
             children: [
-              Expanded(
-                child: BaseButton(
-                  onPressed: () => unawaited(_reset()),
-                  title: LocaleKeys.printerSetting_agentArrangeReset,
-                  backgroundColor: AppColors.dsGray4,
-                  titleColor: AppColors.textPrimary,
+              // Phụ: chữ, không khối xám ngang hàng nút chính.
+              BaseTap(
+                onTap: () => unawaited(_reset()),
+                child: const AppPadding.symmetric(
+                  horizontal: AppSpace.sm,
+                  vertical: AppSpace.sm,
+                  child: AppText(
+                    LocaleKeys.printerSetting_agentArrangeReset,
+                    variant: .title,
+                    tone: .secondary,
+                  ),
                 ),
               ),
-              Expanded(
+              const Spacer(),
+              SizedBox(
+                width: 160,
                 child: BaseButton(
                   onPressed: () => unawaited(_save()),
                   title: LocaleKeys.printerSetting_agentArrangeSave,
@@ -227,16 +235,18 @@ class _BranchTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final b = branch;
-    final color = b.self ? AppColors.primaryBlueBase : AppColors.purpleAccent;
     return AppPadding.only(
-      bottom: AppSpace.md,
+      bottom: AppSpace.sm,
       child: Container(
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.25)),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.dsGray4.withValues(alpha: 0.6)),
         ),
-        padding: AppEdgeInsets.all(AppSpace.sm),
+        padding: AppEdgeInsets.symmetric(
+          horizontal: AppSpace.md,
+          vertical: AppSpace.sm,
+        ),
         child: AppColumn(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -254,8 +264,12 @@ class _BranchTile extends StatelessWidget {
                     ),
                   )
                 else
-                  const Icon(Icons.push_pin_outlined, color: AppColors.dsGray5),
-                const AgentDeviceAvatar(online: true, size: 28),
+                  const Icon(
+                    Icons.push_pin_outlined,
+                    color: AppColors.dsGray5,
+                    size: 20,
+                  ),
+                const AgentDeviceAvatar(online: true, size: 32),
                 Expanded(
                   child: AppText.raw(b.title, variant: .title, maxLines: 1),
                 ),
@@ -263,7 +277,8 @@ class _BranchTile extends StatelessWidget {
             ),
             if (b.printers.isEmpty)
               const AppPadding.only(
-                left: AppSpace.xl,
+                left: 60,
+                bottom: AppSpace.xs,
                 child: AppText(
                   LocaleKeys.printerSetting_agentPeerNoPrinters,
                   variant: .caption,
@@ -304,23 +319,18 @@ class _PrinterRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(left: 28, top: 4),
-      padding: AppEdgeInsets.symmetric(
-        horizontal: AppSpace.sm,
-        vertical: AppSpace.sm,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.dsGray4),
+      margin: const EdgeInsets.only(left: 60),
+      padding: AppEdgeInsets.symmetric(vertical: AppSpace.sm),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: Color(0xFFEDEFF2))),
       ),
       child: AppRow(
         spacing: AppSpace.sm,
         children: [
-          Icon(printer.icon, size: 18, color: AppColors.dsGray2),
+          Icon(printer.icon, size: 18, color: AppColors.primaryBlueBase),
           Expanded(child: AppText.raw(printer.name, maxLines: 1)),
           const Icon(
-            Icons.drag_handle_rounded,
+            Icons.drag_indicator_rounded,
             size: 18,
             color: AppColors.dsGray5,
           ),

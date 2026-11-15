@@ -12,6 +12,7 @@ import 'desktop/autostart.dart';
 import 'desktop/desktop_shell.dart';
 import 'desktop/single_instance.dart';
 import 'ui/agent_theme.dart';
+import 'ui/dashboard/add_printer_action.dart';
 import 'ui/dashboard/agent_settings_card.dart';
 import 'ui/login_page.dart';
 
@@ -31,6 +32,8 @@ Future<void> main(List<String> args) async {
 
   final config = AgentConfig.load();
   final agent = DesktopAgent(config);
+  // Nút "Thêm máy in" trên sơ đồ / bảng trạm in này.
+  PrintAgentUi.onAddPrinter = () => desktopAddPrinter(agent);
   // Chưa đăng nhập thì luôn hiện cửa sổ (chạy ẩn cũng không làm được gì).
   final startHidden = args.contains(Autostart.backgroundArg) && config.ready;
   await DesktopShell.initWindow(startHidden: startHidden);
@@ -51,9 +54,7 @@ Future<void> main(List<String> args) async {
       home: ListenableBuilder(
         listenable: agent,
         builder: (_, _) => agent.config.ready
-            ? AgentPage(
-                side: [AgentSettingsCard(agent: agent)],
-              )
+            ? AgentPage(side: [AgentSettingsCard(agent: agent)])
             : LoginPage(agent: agent),
       ),
     ),

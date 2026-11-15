@@ -148,10 +148,19 @@ abstract final class PrintAgentUi {
   static AgentUiKit? _kit;
   static AgentStation? _station;
 
+  /// "Thêm máy in" của app chủ (nút + trên sơ đồ, bảng trạm in này): máy tính
+  /// mở hộp chọn máy in, app bán hàng mở thêm nhanh máy in. `null` = ẩn nút.
+  static Future<void> Function()? onAddPrinter;
+
   /// [station]: điều khiển máy Agent của app chủ (màn Máy Agent cần).
-  static void init(AgentUiKit kit, {AgentStation? station}) {
+  static void init(
+    AgentUiKit kit, {
+    AgentStation? station,
+    Future<void> Function()? onAddPrinter,
+  }) {
     _kit = kit;
     _station = station ?? _station;
+    PrintAgentUi.onAddPrinter = onAddPrinter ?? PrintAgentUi.onAddPrinter;
   }
 
   static AgentStation get station {

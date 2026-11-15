@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:print_agent/src/presentation/kit/kit.dart';
 
@@ -30,6 +32,15 @@ class AgentMapHeader extends StatelessWidget {
             maxLines: 2,
           ),
         ),
+        // Máy này là trạm in: thêm máy in (hộp chọn / thêm nhanh của app chủ).
+        if (isAgent && PrintAgentUi.onAddPrinter != null)
+          BaseTap(
+            onTap: () => unawaited(PrintAgentUi.onAddPrinter!()),
+            child: const Icon(
+              Icons.add_circle_outline_rounded,
+              color: AppColors.primaryBlueBase,
+            ),
+          ),
         if (onArrange != null)
           BaseTap(
             onTap: onArrange,

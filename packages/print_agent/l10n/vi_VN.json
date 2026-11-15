@@ -65,7 +65,7 @@
     "agentMapAgent": "Máy này đang là trạm in — các máy in đang quản lý",
     "agentMapSender": "Trạm in của cửa hàng",
     "agentNameSave": "Lưu",
-    "agentNameSheetHint": "Đặt tên dễ nhớ (VD \"Quầy bar\", \"Bếp\") để các máy khác phân biệt trạm in này. Mã sau dấu # là mã riêng của máy, không đổi",
+    "agentNameSheetHint": "Đặt tên để máy bán hàng nhận ra trạm in này",
     "agentNameTitle": "Tên trạm in",
     "agentNoAgentHint": "Chưa có trạm in nào đang bật. Khi máy in không in được, app sẽ tự in qua trạm in nếu cửa hàng có",
     "agentNoPrinters": "Chưa có máy in nào",
@@ -188,6 +188,16 @@
     "agentPrinterDetailNotReady": "Không kết nối được",
     "agentPrinterDetailStationOff": "Trạm in đang tắt",
     "agentPrinterDetailReceive": "Nhận lệnh in",
-    "agentPrinterDetailReceiveHint": "Tắt để tạm ngưng gửi phiếu tới máy in này"
+    "agentPrinterDetailReceiveHint": "Tắt để tạm ngưng gửi phiếu tới máy in này",
+    "agentNameCode": "Mã máy #@code · không đổi",
+    "agentNameSuggest": "Gợi ý nhanh",
+    "agentNameSuggestCashier": "Quầy thu ngân",
+    "agentNameSuggestKitchen": "Bếp",
+    "agentNameSuggestBar": "Quầy bar",
+    "agentNameSuggestFloor1": "Tầng 1",
+    "agentNameSuggestFloor2": "Tầng 2",
+    "agentNameCancel": "Huỷ",
+    "agentAddPrinter": "Thêm máy in",
+    "agentAddPrinterHint": "Tìm máy in trong mạng / cắm USB và nối vào trạm in này"
   }
 }

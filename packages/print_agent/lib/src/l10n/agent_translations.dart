@@ -8,6 +8,9 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentActivityFailed': "In lỗi",
     'printerSetting_agentActivityPrintingLabel': "Đang in tem",
     'printerSetting_agentActivityPrintingReceipt': "Đang in hoá đơn",
+    'printerSetting_agentAddPrinter': "Thêm máy in",
+    'printerSetting_agentAddPrinterHint':
+        "Tìm máy in trong mạng / cắm USB và nối vào trạm in này",
     'printerSetting_agentArrange': "Sắp xếp sơ đồ",
     'printerSetting_agentArrangeEmpty':
         "Chưa có trạm in hay máy in nào để sắp xếp",
@@ -100,9 +103,17 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentMapAgent':
         "Máy này đang là trạm in — các máy in đang quản lý",
     'printerSetting_agentMapSender': "Trạm in của cửa hàng",
+    'printerSetting_agentNameCancel': "Huỷ",
+    'printerSetting_agentNameCode': "Mã máy #@code · không đổi",
     'printerSetting_agentNameSave': "Lưu",
     'printerSetting_agentNameSheetHint':
-        "Đặt tên dễ nhớ (VD \"Quầy bar\", \"Bếp\") để các máy khác phân biệt trạm in này. Mã sau dấu # là mã riêng của máy, không đổi",
+        "Đặt tên để máy bán hàng nhận ra trạm in này",
+    'printerSetting_agentNameSuggest': "Gợi ý nhanh",
+    'printerSetting_agentNameSuggestBar': "Quầy bar",
+    'printerSetting_agentNameSuggestCashier': "Quầy thu ngân",
+    'printerSetting_agentNameSuggestFloor1': "Tầng 1",
+    'printerSetting_agentNameSuggestFloor2': "Tầng 2",
+    'printerSetting_agentNameSuggestKitchen': "Bếp",
     'printerSetting_agentNameTitle': "Tên trạm in",
     'printerSetting_agentNoAgentHint':
         "Chưa có trạm in nào đang bật. Khi máy in không in được, app sẽ tự in qua trạm in nếu cửa hàng có",
@@ -255,6 +266,9 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentActivityFailed': "Print failed",
     'printerSetting_agentActivityPrintingLabel': "Printing label",
     'printerSetting_agentActivityPrintingReceipt': "Printing receipt",
+    'printerSetting_agentAddPrinter': "Add printer",
+    'printerSetting_agentAddPrinterHint':
+        "Find printers on the network / USB and connect them to this station",
     'printerSetting_agentArrange': "Arrange map",
     'printerSetting_agentArrangeEmpty':
         "No print stations or printers to arrange yet",
@@ -349,9 +363,17 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentMapAgent':
         "This device is a print station — printers it manages",
     'printerSetting_agentMapSender': "Company backup print stations",
+    'printerSetting_agentNameCancel': "Cancel",
+    'printerSetting_agentNameCode': "Device code #@code · fixed",
     'printerSetting_agentNameSave': "Save",
     'printerSetting_agentNameSheetHint':
-        "Pick an easy name (e.g. \"Bar\", \"Kitchen\") so other devices can tell this print station apart. The code after # is this device's own fixed code",
+        "Name this print station so sales devices can recognise it",
+    'printerSetting_agentNameSuggest': "Quick picks",
+    'printerSetting_agentNameSuggestBar': "Bar",
+    'printerSetting_agentNameSuggestCashier': "Cashier",
+    'printerSetting_agentNameSuggestFloor1': "Floor 1",
+    'printerSetting_agentNameSuggestFloor2': "Floor 2",
+    'printerSetting_agentNameSuggestKitchen': "Kitchen",
     'printerSetting_agentNameTitle': "Print station name",
     'printerSetting_agentNoAgentHint':
         "No print station is online. When a printer fails, the app prints through a print station if the company has one",

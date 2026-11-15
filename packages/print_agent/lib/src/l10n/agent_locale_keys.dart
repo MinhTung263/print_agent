@@ -24,6 +24,14 @@ abstract final class LocaleKeys {
   static const printerSetting_agentActivityPrintingReceipt =
       'printerSetting_agentActivityPrintingReceipt';
 
+  /// "Thêm máy in"
+  static const printerSetting_agentAddPrinter =
+      'printerSetting_agentAddPrinter';
+
+  /// "Tìm máy in trong mạng / cắm USB và nối vào trạm in này"
+  static const printerSetting_agentAddPrinterHint =
+      'printerSetting_agentAddPrinterHint';
+
   /// "Sắp xếp sơ đồ"
   static const printerSetting_agentArrange = 'printerSetting_agentArrange';
 
@@ -329,12 +337,45 @@ abstract final class LocaleKeys {
   /// "Trạm in của cửa hàng"
   static const printerSetting_agentMapSender = 'printerSetting_agentMapSender';
 
+  /// "Huỷ"
+  static const printerSetting_agentNameCancel =
+      'printerSetting_agentNameCancel';
+
+  /// "Mã máy #@code · không đổi"
+  static const printerSetting_agentNameCode = 'printerSetting_agentNameCode';
+  static String printerSetting_agentNameCodeTr({required Object code}) =>
+      printerSetting_agentNameCode.trParams({'code': '$code'});
+
   /// "Lưu"
   static const printerSetting_agentNameSave = 'printerSetting_agentNameSave';
 
-  /// "Đặt tên dễ nhớ (VD "Quầy bar", "Bếp") để các máy khác phân biệt trạm in này. Mã sau dấu # là mã riêng của máy, không đổi"
+  /// "Đặt tên để máy bán hàng nhận ra trạm in này"
   static const printerSetting_agentNameSheetHint =
       'printerSetting_agentNameSheetHint';
+
+  /// "Gợi ý nhanh"
+  static const printerSetting_agentNameSuggest =
+      'printerSetting_agentNameSuggest';
+
+  /// "Quầy bar"
+  static const printerSetting_agentNameSuggestBar =
+      'printerSetting_agentNameSuggestBar';
+
+  /// "Quầy thu ngân"
+  static const printerSetting_agentNameSuggestCashier =
+      'printerSetting_agentNameSuggestCashier';
+
+  /// "Tầng 1"
+  static const printerSetting_agentNameSuggestFloor1 =
+      'printerSetting_agentNameSuggestFloor1';
+
+  /// "Tầng 2"
+  static const printerSetting_agentNameSuggestFloor2 =
+      'printerSetting_agentNameSuggestFloor2';
+
+  /// "Bếp"
+  static const printerSetting_agentNameSuggestKitchen =
+      'printerSetting_agentNameSuggestKitchen';
 
   /// "Tên trạm in"
   static const printerSetting_agentNameTitle = 'printerSetting_agentNameTitle';

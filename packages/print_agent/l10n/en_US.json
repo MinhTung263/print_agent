@@ -65,7 +65,7 @@
     "agentMapAgent": "This device is a print station — printers it manages",
     "agentMapSender": "Company backup print stations",
     "agentNameSave": "Save",
-    "agentNameSheetHint": "Pick an easy name (e.g. \"Bar\", \"Kitchen\") so other devices can tell this print station apart. The code after # is this device's own fixed code",
+    "agentNameSheetHint": "Name this print station so sales devices can recognise it",
     "agentNameTitle": "Print station name",
     "agentNoAgentHint": "No print station is online. When a printer fails, the app prints through a print station if the company has one",
     "agentNoPrinters": "No printers yet",
@@ -188,6 +188,16 @@
     "agentPrinterDetailNotReady": "Not reachable",
     "agentPrinterDetailStationOff": "Print station is off",
     "agentPrinterDetailReceive": "Receive print jobs",
-    "agentPrinterDetailReceiveHint": "Turn off to pause sending jobs to this printer"
+    "agentPrinterDetailReceiveHint": "Turn off to pause sending jobs to this printer",
+    "agentNameCode": "Device code #@code · fixed",
+    "agentNameSuggest": "Quick picks",
+    "agentNameSuggestCashier": "Cashier",
+    "agentNameSuggestKitchen": "Kitchen",
+    "agentNameSuggestBar": "Bar",
+    "agentNameSuggestFloor1": "Floor 1",
+    "agentNameSuggestFloor2": "Floor 2",
+    "agentNameCancel": "Cancel",
+    "agentAddPrinter": "Add printer",
+    "agentAddPrinterHint": "Find printers on the network / USB and connect them to this station"
   }
 }
