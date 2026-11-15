@@ -164,8 +164,10 @@ class DesktopAgent extends ChangeNotifier {
   Future<void> update(AgentConfig next) async {
     final printerChanged =
         next.printer != _config.printer || next.paper != _config.paper;
+    final acceptAllChanged = next.acceptAll != _config.acceptAll;
     _config = next..save();
     notifyListeners();
+    if (acceptAllChanged) gateway.lanPrintersChanged();
     if (printerChanged) {
       await gateway.printerChanged();
       unawaited(_learnPrinterMac());

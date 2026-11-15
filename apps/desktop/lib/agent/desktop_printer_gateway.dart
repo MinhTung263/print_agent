@@ -5,19 +5,27 @@ import 'package:printer_label/desktop.dart';
 
 import 'agent_config.dart';
 import 'agent_printer.dart';
+import 'desktop_lan_printers.dart';
 import 'desktop_printer.dart';
 
 /// Cổng máy in của Agent máy tính: "máy in tích hợp" = máy in đã chọn ở cài
-/// đặt (LAN / USB); không có danh sách máy in đã lưu như app bán hàng.
+/// đặt (LAN / USB). Bật "In hộ máy in LAN" thì [printers] là các máy in LAN đã
+/// in giúp ([DesktopLanPrinters]) — hiện trên sơ đồ, tạm ngưng riêng từng máy.
 class DesktopPrinterGateway implements AgentPrinterGateway<DesktopPrinter> {
   DesktopPrinterGateway(
     this._config, {
     Future<void> Function(String address)? onRelocated,
     Future<String?> Function(String mac, int port)? findByMac,
+    Future<String?> Function(String ip)? macOf,
   }) : _onRelocated = onRelocated,
-       _findByMac = findByMac ?? _scanByMac;
+       _findByMac = findByMac ?? _scanByMac,
+       _macOf = macOf ?? ArpTable.macOf {
+    lanPrinters = DesktopLanPrinters(() => '${_config().companyId ?? 0}');
+  }
 
   final AgentConfig Function() _config;
+  late final DesktopLanPrinters lanPrinters;
+  final Future<String?> Function(String ip) _macOf;
 
   /// Máy in của Agent vừa được tìm thấy ở địa chỉ mới (lưu lại cấu hình).
   final Future<void> Function(String address)? _onRelocated;
@@ -47,7 +55,42 @@ class DesktopPrinterGateway implements AgentPrinterGateway<DesktopPrinter> {
   }
 
   @override
-  List<DesktopPrinter> get printers => const [];
+  List<DesktopPrinter> get printers {
+    if (!_config().acceptAll) return const [];
+    // Máy in của trạm in đã hiện riêng — không hiện lần nữa.
+    final own = _config().printer.trim();
+    return [
+      for (final p in lanPrinters.printers)
+        if (p.address != own) p,
+    ];
+  }
+
+  /// Bật / tắt "In hộ máy in LAN": danh sách máy in báo lên sơ đồ đổi theo.
+  void lanPrintersChanged() => _printers.add(null);
+
+  /// Vừa in giúp máy in LAN [printer]: nhớ lại (sơ đồ hiện máy này). Chưa biết
+  /// MAC thì đọc bảng ARP (vừa nối tới máy in) để tìm lại khi máy in đổi IP.
+  Future<void> printedFor(DesktopPrinter printer) async {
+    if (printer.kind != AgentPrinterKind.lan) return;
+    if (lanPrinters.remember(printer)) _printers.add(null);
+    if (printer.mac != null && printer.mac!.isNotEmpty) return;
+    final known = lanPrinters.printers.where(
+      (p) => p.address == printer.address.trim(),
+    );
+    if (known.any((p) => p.mac != null && p.mac!.isNotEmpty)) return;
+    final parsed = parsePrinterAddress(printer.address);
+    if (parsed == null) return;
+    final mac = await _macOf(parsed.$1);
+    if (mac == null) return;
+    final withMac = DesktopPrinter(
+      kind: printer.kind,
+      address: printer.address,
+      name: printer.name,
+      id: printer.id,
+      mac: mac,
+    );
+    if (lanPrinters.remember(withMac)) _printers.add(null);
+  }
 
   @override
   bool get hasBuiltIn => _config().hasPrinter;
@@ -118,6 +161,8 @@ class DesktopPrinterGateway implements AgentPrinterGateway<DesktopPrinter> {
     if (printer.kind == AgentPrinterKind.builtIn) {
       await _onRelocated?.call(found);
       _setConnected(true);
+    } else if (lanPrinters.moved(printer, found)) {
+      _printers.add(null);
     }
     return printer.withAddress(found);
   }

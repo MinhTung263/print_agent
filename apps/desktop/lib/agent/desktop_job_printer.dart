@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:print_agent/print_agent.dart';
@@ -50,7 +51,10 @@ class DesktopJobPrinter implements AgentJobPrinter<DesktopPrinter> {
         detail: 'Trạm in trên máy tính chưa in được tem',
       );
     }
-    return AgentPrinter.printJob(job, printer.address);
+    final failure = await AgentPrinter.printJob(job, printer.address);
+    // Nhớ máy in cho sơ đồ — không bắt lệnh chờ (đọc bảng ARP).
+    if (failure == null) unawaited(_gateway.printedFor(printer));
+    return failure;
   }
 
   /// Agent máy tính không gửi lệnh đi (không có máy in đã lưu để gửi).
