@@ -19,7 +19,8 @@
   label { display:block; font-weight:600; margin:0 0 6px; }
   .field { margin-bottom:12px; }
   .row { display:flex; gap:8px; } .row > * { flex:1; min-width:0; }
-  input[type=text], input[type=password], input[type=number], select { width:100%; height:44px; border:1px solid var(--border); border-radius:8px; padding:0 12px; font-size:15px; background:var(--card); color:var(--text); }
+  input[type=text], input[type=number], select, textarea { width:100%; height:44px; border:1px solid var(--border); border-radius:8px; padding:0 12px; font-size:15px; background:var(--card); color:var(--text); }
+  textarea { width:100%; border:1px solid var(--border); border-radius:8px; padding:10px 12px; font:13px/1.4 ui-monospace,Menlo,monospace; resize:vertical; }
   button { height:44px; border:0; border-radius:8px; padding:0 16px; font-size:15px; font-weight:600; cursor:pointer; }
   .primary { background:var(--primary); color:#fff; } .ghost { background:var(--primary-soft); color:var(--primary); }
   button:disabled { opacity:.5; cursor:default; }
@@ -47,16 +48,12 @@
   <section class="card" id="shopCard">
     <h2>1. Cửa hàng</h2>
     <div id="shopStatus" style="margin-bottom:12px"></div>
-    <div id="loginBox">
-      <div class="field"><label for="user">Tài khoản EasyPOS</label><input type="text" id="user" autocomplete="username" placeholder="Tên đăng nhập"></div>
-      <div class="field"><label for="pass">Mật khẩu</label><input type="password" id="pass" autocomplete="current-password" placeholder="Mật khẩu"></div>
-      <button class="primary" id="btnLogin" style="width:100%">Đăng nhập</button>
-      <div class="hint">Mật khẩu chỉ dùng để lấy danh sách công ty, không lưu lại.</div>
+    <div class="field">
+      <label for="paste">Dán curl hoặc mã cửa hàng</label>
+      <textarea id="paste" rows="3" placeholder="curl 'https://api.easypos.vn/...' -H 'authorization: Bearer ...'"></textarea>
+      <div class="hint">Mở app.easypos.vn (đã đăng nhập) → F12 → Network → chuột phải một yêu cầu → Copy → Copy as cURL, rồi dán vào đây. Trang chỉ đọc mã công ty / mã chủ ngay trong trình duyệt, không lưu token hay gửi đi đâu.</div>
     </div>
-    <div id="companyBox" style="display:none">
-      <div class="field"><label for="companySel">Công ty</label><select id="companySel"></select></div>
-      <button class="ghost" id="btnLogout" style="width:100%">Đăng xuất / đổi tài khoản</button>
-    </div>
+    <button class="primary" id="btnPaste" style="width:100%">Đọc và kết nối</button>
     <details id="manual">
       <summary>Nhập tay mã cửa hàng</summary>
       <div class="row field" style="margin-top:12px">
@@ -88,12 +85,12 @@
     <ul class="timeline" id="timeline"></ul>
   </section>
 
-  <p class="hint">Chỉ để kiểm tra. Cần cùng tài khoản/công ty với Trạm in. Cổng in trực tiếp qua LAN: <a href="lan.html">trang LAN</a>.</p>
+  <p class="hint">Chỉ để kiểm tra. Cần cùng công ty với Trạm in. Cổng in trực tiếp qua LAN: <a href="lan.html">trang LAN</a>.</p>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="relay.js"></script>
-<script src="login.js"></script>
+<script src="curl.js"></script>
 <script>
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -261,45 +258,29 @@ $('btnPrint').onclick = async () => {
   finally { b.disabled = false; }
 };
 
-// ---------- Đăng nhập ----------
-let loginCompanies = [];
-function showCompanies(list, fullName) {
-  loginCompanies = list;
-  $('loginBox').style.display = 'none'; $('companyBox').style.display = '';
-  $('companySel').innerHTML = list.map((c, k) => `<option value="${k}">${esc(c.name)}${c.address ? ' — ' + esc(c.address) : ''}</option>`).join('');
-  $('shopHint').textContent = `Xin chào ${fullName}.`;
-}
-function pickCompany() {
-  const c = loginCompanies[+$('companySel').value]; if (!c) return;
-  fillFields(PrintRelay.shopKey('production', c.id, c.ownerId)); connect();
-}
-$('btnLogin').onclick = async () => {
-  const b = $('btnLogin'), u = $('user').value.trim(), p = $('pass').value;
-  if (!u || !p) { $('shopStatus').innerHTML = pill('err', 'Nhập tài khoản và mật khẩu'); return; }
-  b.disabled = true; $('shopStatus').innerHTML = pill('warn', 'Đang đăng nhập…');
-  try {
-    const r = await EasyposLogin.login(u, p);
-    $('pass').value = ''; store.set('user', u);
-    showCompanies(r.companies, r.fullName); pickCompany();
-  } catch (e) {
-    $('shopStatus').innerHTML = pill('err', e.message || 'Đăng nhập không thành công');
-    if (e.code === 'cors') $('manual').open = true;
-  } finally { b.disabled = false; }
-};
-$('pass').onkeydown = (e) => { if (e.key === 'Enter') $('btnLogin').click(); };
-$('companySel').onchange = pickCompany;
-$('btnLogout').onclick = async () => {
-  await disconnect(); stations.clear(); selected = null; renderStations(); updatePrinters();
-  $('companyBox').style.display = 'none'; $('loginBox').style.display = ''; $('shopStatus').innerHTML = ''; $('shopHint').textContent = '';
+// ---------- Dán curl ----------
+$('btnPaste').onclick = () => {
+  const r = CurlShop.parseShop($('paste').value);
+  $('paste').value = '';   // không giữ token / mật khẩu trên trang
+  if (r.env) { if (![...$('env').options].some((o) => o.value === r.env)) $('env').add(new Option(r.env, r.env)); $('env').value = r.env; }
+  if (r.companyId) $('company').value = r.companyId;
+  if (r.ownerId) $('owner').value = r.ownerId;
+  if (r.companyId && r.ownerId) {
+    $('shopHint').textContent = r.companies > 1 ? `Có ${r.companies} công ty, đang dùng công ty đầu tiên (mã ${r.companyId}).` : 'Đã đọc mã cửa hàng.';
+    connect();
+  } else {
+    $('manual').open = true;
+    $('shopStatus').innerHTML = pill('warn', r.companyId ? `Thấy mã công ty ${r.companyId}, chưa thấy mã chủ` : 'Không thấy mã công ty trong nội dung đã dán');
+    $('shopHint').textContent = 'Nhập nốt mã còn thiếu ở mục "Nhập tay" bên dưới rồi bấm Kết nối.';
+  }
 };
 
 // ---------- Khởi động ----------
 $('btnConnect').onclick = connect;
 (async () => {
   const saved = store.get('shop'); if (saved) fillFields(saved);
-  const lastUser = store.get('user'); if (lastUser) $('user').value = lastUser;
   const auto = await autoDetect();
-  if (!auto && !saved) $('shopHint').textContent = 'Đăng nhập tài khoản EasyPOS, hoặc nhập tay mã cửa hàng.';
+  if (!auto && !saved) $('shopHint').textContent = 'Dán curl lấy từ app.easypos.vn, hoặc nhập tay mã cửa hàng.';
   if (shopFromFields()) connect();
 })();
 </script>
