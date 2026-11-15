@@ -24,7 +24,7 @@ class BrandPanel extends StatelessWidget {
           _Logo(size: 64, light: true),
           SizedBox(height: 28),
           Text(
-            'Trạm in\nEasyPOS',
+            'Trạm in',
             style: TextStyle(
               color: Colors.white,
               fontSize: 40,
@@ -34,24 +34,28 @@ class BrandPanel extends StatelessWidget {
           ),
           SizedBox(height: 12),
           Text(
-            'Biến máy tính này thành trạm in giúp cho cả cửa hàng.',
+            'Cài một lần trên máy tính ở quầy — cả quán in hoá đơn, phiếu bếp '
+            'ra máy in, không phải cài driver.',
             style: TextStyle(color: Color(0xE6FFFFFF), fontSize: 16),
           ),
           SizedBox(height: 36),
           _Point(
-            icon: Icons.cloud_sync_rounded,
-            title: 'Nhận lệnh từ mọi máy bán hàng',
-            text: 'Điện thoại, máy POS dùng 4G hay khác mạng vẫn in được.',
+            icon: Icons.devices_rounded,
+            title: 'In từ mọi thiết bị bán hàng',
+            text:
+                'Điện thoại, máy POS bấm in là ra phiếu, kể cả khi dùng mạng '
+                'di động. Trang web bán hàng mở trên máy này cũng in được.',
           ),
           _Point(
             icon: Icons.print_rounded,
-            title: 'In ra máy in của máy tính',
-            text: 'Máy in hoá đơn LAN hoặc USB đã cài trên máy này.',
+            title: 'Dùng luôn máy in sẵn có',
+            text: 'Máy in hoá đơn cắm dây mạng hoặc cắm USB vào máy tính này.',
           ),
           _Point(
-            icon: Icons.lock_rounded,
-            title: 'Mã hoá khi truyền',
-            text: 'Lệnh in được mã hoá khi gửi qua mạng.',
+            icon: Icons.verified_user_rounded,
+            title: 'Chỉ cửa hàng bạn in được',
+            text:
+                'Phiếu in được mã hoá, máy ngoài cửa hàng không gửi lệnh in được.',
           ),
         ],
       ),
@@ -75,7 +79,7 @@ class BrandHeader extends StatelessWidget {
         ),
         SizedBox(height: 4),
         Text(
-          'Biến máy tính này thành trạm in giúp',
+          'In hoá đơn, phiếu bếp không phải cài driver',
           style: TextStyle(fontSize: 13, color: AgentColors.textSecondary),
         ),
       ],

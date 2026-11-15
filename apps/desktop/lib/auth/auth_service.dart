@@ -36,21 +36,10 @@ class LoginException implements Exception {
 abstract final class AuthService {
   static const _path = '/api/client/common/authenticate';
 
-  /// Máy chủ API theo môi trường (giống app).
-  static const Map<String, String> _hosts = {
-    'Production': 'https://api.easypos.vn',
-    'Staging': 'http://10.100.140.9:8085',
-    'Test': 'http://10.100.140.9:8082',
-    'Test 88': 'http://10.100.140.9:8888',
-  };
-
-  static List<String> get envs => _hosts.keys.toList();
-
-  static String _url(String env) =>
-      '${_hosts[env] ?? _hosts['Production']}$_path';
+  /// Luôn đăng nhập máy chủ thật (Production) — trạm in cài cho khách.
+  static const String _host = 'https://api.easypos.vn';
 
   static Future<LoginResult> login({
-    required String env,
     required String username,
     required String password,
   }) async {
@@ -59,7 +48,7 @@ abstract final class AuthService {
     final Object? json;
     int status = 0;
     try {
-      final req = await client.postUrl(Uri.parse(_url(env)));
+      final req = await client.postUrl(Uri.parse('$_host$_path'));
       req.headers.contentType = ContentType.json;
       req.write(jsonEncode({'username': username, 'password': password}));
       final res = await req.close().timeout(const Duration(seconds: 30));

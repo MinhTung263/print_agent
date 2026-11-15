@@ -75,8 +75,21 @@ class AgentConfig {
     userName: userName ?? this.userName,
   );
 
-  static AgentConfig load() => AgentConfig(
-    env: AgentStore.get('env') ?? 'Production',
+  /// Môi trường duy nhất (trạm in luôn chạy máy chủ thật).
+  static const String production = 'Production';
+
+  static AgentConfig load() {
+    // Bản cũ từng đăng nhập môi trường thử nghiệm: bỏ phiên đó, đăng nhập lại.
+    final env = AgentStore.get('env');
+    if (env != null && env != production) {
+      clearSession();
+      AgentStore.set('env', production);
+    }
+    return _load();
+  }
+
+  static AgentConfig _load() => AgentConfig(
+    env: production,
     companyId: int.tryParse(AgentStore.get('companyId') ?? ''),
     ownerId: int.tryParse(AgentStore.get('ownerId') ?? ''),
     name: AgentStore.get('name') ?? '',

@@ -120,6 +120,7 @@ DEPENDS="libc6, libstdc++6, libgcc-s1"
 DEPENDS+=", libgtk-3-0t64 | libgtk-3-0"
 DEPENDS+=", libglib2.0-0t64 | libglib2.0-0"
 DEPENDS+=", libayatana-appindicator3-1"
+DEPENDS+=", libsecret-1-0"
 DEPENDS+=", libepoxy0, libfontconfig1"
 
 cat > "$ROOT/DEBIAN/control" <<EOF

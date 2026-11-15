@@ -178,7 +178,6 @@ class AgentSettingsCard extends StatelessWidget {
                   [
                     if (config.companyName.isNotEmpty) config.companyName,
                     '#${config.companyId}',
-                    config.env,
                     if (config.userName.isNotEmpty) config.userName,
                   ].join(' · '),
                   variant: .caption,

@@ -4,19 +4,24 @@ import 'package:flutter/material.dart';
 
 import '../agent/desktop_agent.dart';
 import '../auth/auth_service.dart';
+import '../auth/saved_login.dart';
 import 'agent_theme.dart';
 import 'widgets/login/brand_panel.dart';
 import 'widgets/login/company_picker.dart';
 import 'widgets/login/login_form.dart';
 
-/// Đăng nhập tài khoản EasyPOS → chọn công ty (nếu nhiều) → bật Agent. Chỉ dùng để
-/// biết công ty; KHÔNG lưu mật khẩu.
+/// Đăng nhập tài khoản EasyPOS (luôn máy chủ thật) → chọn công ty (nếu nhiều)
+/// → bật trạm in. Chọn "Ghi nhớ" thì tài khoản + mật khẩu cất trong kho bảo
+/// mật của máy ([SavedLoginStore]), lần sau tự điền.
 ///
 /// Màn rộng: 2 cột (giới thiệu | form); màn hẹp (iframe): một cột.
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key, required this.agent});
+  const LoginPage({super.key, required this.agent, this.savedLogin});
 
   final DesktopAgent agent;
+
+  /// Mặc định kho bảo mật của hệ điều hành.
+  final SavedLoginStore? savedLogin;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -25,12 +30,29 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   late final _user = TextEditingController(text: widget.agent.config.userName);
   final _pass = TextEditingController();
-  late String _env = AuthService.envs.contains(widget.agent.config.env)
-      ? widget.agent.config.env
-      : 'Production';
+  late final SavedLoginStore _saved =
+      widget.savedLogin ?? SecureSavedLoginStore();
+  bool _remember = false;
   bool _loading = false;
   String? _error;
   LoginResult? _result;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_restore());
+  }
+
+  /// Tự điền tài khoản đã ghi nhớ.
+  Future<void> _restore() async {
+    final saved = await _saved.read();
+    if (saved == null || !mounted) return;
+    setState(() {
+      _remember = true;
+      _user.text = saved.username;
+      _pass.text = saved.password;
+    });
+  }
 
   @override
   void dispose() {
@@ -50,12 +72,15 @@ class _LoginPageState extends State<LoginPage> {
       _error = null;
     });
     try {
+      final password = _pass.text;
       final result = await AuthService.login(
-        env: _env,
         username: user,
-        password: _pass.text,
+        password: password,
       );
-      _pass.clear();
+      await (_remember
+          ? _saved.save(SavedLogin(username: user, password: password))
+          : _saved.clear());
+      if (!_remember) _pass.clear();
       if (result.companies.length == 1) {
         await _choose(result.companies.first);
       } else if (mounted) {
@@ -72,7 +97,6 @@ class _LoginPageState extends State<LoginPage> {
     final agent = widget.agent;
     await agent.update(
       agent.config.copyWith(
-        env: _env,
         companyId: c.id,
         ownerId: c.ownerId,
         companyName: c.name,
@@ -94,10 +118,10 @@ class _LoginPageState extends State<LoginPage> {
     return LoginForm(
       user: _user,
       pass: _pass,
-      env: _env,
+      remember: _remember,
       loading: _loading,
       error: _error,
-      onEnvChanged: (e) => setState(() => _env = e),
+      onRememberChanged: (v) => setState(() => _remember = v),
       onSubmit: () => unawaited(_login()),
     );
   }

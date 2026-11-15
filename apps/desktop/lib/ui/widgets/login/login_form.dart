@@ -1,27 +1,28 @@
 import 'package:flutter/material.dart';
 
-import '../../../auth/auth_service.dart';
 import '../../agent_theme.dart';
 
-/// Form đăng nhập: nhãn trên ô (không nhãn nổi), môi trường thu gọn ở góc.
+/// Form đăng nhập: nhãn trên ô (không nhãn nổi), ô ghi nhớ mật khẩu.
 class LoginForm extends StatefulWidget {
   const LoginForm({
     super.key,
     required this.user,
     required this.pass,
-    required this.env,
+    required this.remember,
     required this.loading,
     required this.error,
-    required this.onEnvChanged,
+    required this.onRememberChanged,
     required this.onSubmit,
   });
 
   final TextEditingController user;
   final TextEditingController pass;
-  final String env;
+
+  /// Ghi nhớ tài khoản + mật khẩu trên máy này.
+  final bool remember;
   final bool loading;
   final String? error;
-  final ValueChanged<String> onEnvChanged;
+  final ValueChanged<bool> onRememberChanged;
   final VoidCallback onSubmit;
 
   @override
@@ -37,33 +38,14 @@ class _LoginFormState extends State<LoginForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Đăng nhập',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    SizedBox(height: 6),
-                    Text(
-                      'Dùng tài khoản EasyPOS của cửa hàng.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AgentColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _EnvButton(env: widget.env, onChanged: widget.onEnvChanged),
-            ],
+          const Text(
+            'Đăng nhập',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Dùng tài khoản EasyPOS của cửa hàng.',
+            style: TextStyle(fontSize: 14, color: AgentColors.textSecondary),
           ),
           const SizedBox(height: 28),
           const _Label('Tài khoản'),
@@ -99,11 +81,16 @@ class _LoginFormState extends State<LoginForm> {
               ),
             ),
           ),
+          const SizedBox(height: 8),
+          _RememberBox(
+            value: widget.remember,
+            onChanged: widget.loading ? null : widget.onRememberChanged,
+          ),
           if (widget.error != null) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             _ErrorBox(widget.error!),
           ],
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           SizedBox(
             height: 50,
             child: FilledButton(
@@ -129,18 +116,6 @@ class _LoginFormState extends State<LoginForm> {
                       ),
                     ),
             ),
-          ),
-          const SizedBox(height: 16),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.shield_outlined, size: 14, color: AgentColors.muted),
-              SizedBox(width: 6),
-              Text(
-                'Mật khẩu không được lưu trên máy này',
-                style: TextStyle(fontSize: 12, color: AgentColors.muted),
-              ),
-            ],
           ),
         ],
       ),
@@ -188,51 +163,30 @@ class _Label extends StatelessWidget {
   }
 }
 
-/// Môi trường (ít khi đổi) — nút nhỏ ở góc, bấm chọn.
-class _EnvButton extends StatelessWidget {
-  const _EnvButton({required this.env, required this.onChanged});
+/// Ô "Ghi nhớ mật khẩu" (bấm cả dòng chữ cũng được).
+class _RememberBox extends StatelessWidget {
+  const _RememberBox({required this.value, required this.onChanged});
 
-  final String env;
-  final ValueChanged<String> onChanged;
+  final bool value;
+  final ValueChanged<bool>? onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final prod = env == 'Production';
-    return PopupMenuButton<String>(
-      tooltip: 'Môi trường',
-      onSelected: onChanged,
-      itemBuilder: (_) => [
-        for (final e in AuthService.envs)
-          CheckedPopupMenuItem(value: e, checked: e == env, child: Text(e)),
-      ],
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: (prod ? AgentColors.success : AgentColors.warning).withValues(
-            alpha: 0.1,
+    final change = onChanged;
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: change == null ? null : () => change(!value),
+      child: Row(
+        children: [
+          Checkbox(
+            value: value,
+            onChanged: change == null ? null : (v) => change(v ?? false),
           ),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.circle,
-              size: 8,
-              color: prod ? AgentColors.success : AgentColors.warning,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              env,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: prod ? AgentColors.success : const Color(0xFFB45309),
-              ),
-            ),
-            const Icon(Icons.expand_more_rounded, size: 16),
-          ],
-        ),
+          const Text(
+            'Ghi nhớ tài khoản và mật khẩu',
+            style: TextStyle(fontSize: 13),
+          ),
+        ],
       ),
     );
   }

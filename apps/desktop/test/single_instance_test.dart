@@ -19,11 +19,12 @@ void main() {
         'test/support/second_instance.dart',
         dir.path,
       ], runInShell: runInShell);
-      expect(
-        second.stdout.toString().trim(),
-        'null',
-        reason: '${second.stderr}',
+      // `dart run` có thể in "Running build hooks..." trước (gói có hook).
+      final out = second.stdout.toString().replaceAll(
+        'Running build hooks...',
+        '',
       );
+      expect(out.trim(), 'null', reason: '${second.stderr}');
       await shown.timeout(const Duration(seconds: 5));
       await first.dispose();
     },
