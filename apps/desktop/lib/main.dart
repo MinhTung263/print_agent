@@ -51,7 +51,10 @@ Future<void> main(List<String> args) async {
       home: ListenableBuilder(
         listenable: agent,
         builder: (_, _) => agent.config.ready
-            ? AgentPage(agentSide: [AgentSettingsCard(agent: agent)])
+            ? AgentPage(
+                side: [AgentSettingsCard(agent: agent)],
+                showPeerPrinters: false,
+              )
             : LoginPage(agent: agent),
       ),
     ),

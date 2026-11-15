@@ -16,6 +16,7 @@ import 'desktop_job_printer.dart';
 import 'desktop_printer.dart';
 import 'desktop_printer_gateway.dart';
 import 'desktop_web_print.dart';
+import '../ui/dashboard/desktop_header.dart';
 import 'desktop_wifi.dart';
 
 /// Agent máy tính (Windows / Linux / macOS): dùng chung [AgentService] + màn
@@ -41,7 +42,7 @@ class DesktopAgent extends ChangeNotifier {
       canHandleOther: _canHandleLan,
     );
     PrintAgentUi.init(
-      const MaterialAgentUiKit(),
+      DesktopAgentUiKit(this),
       station: AgentServiceStation(
         service,
         wifi: const DesktopWifi(),

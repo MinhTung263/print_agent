@@ -32,7 +32,10 @@ void main() {
     final agent = DesktopAgent(const AgentConfig(printer: '10.0.0.5'));
     await t.pumpWidget(
       GetMaterialApp(
-        home: AgentPage(agentSide: [AgentSettingsCard(agent: agent)]),
+        home: AgentPage(
+          side: [AgentSettingsCard(agent: agent)],
+          showPeerPrinters: false,
+        ),
       ),
     );
     await t.pump(const Duration(milliseconds: 100));

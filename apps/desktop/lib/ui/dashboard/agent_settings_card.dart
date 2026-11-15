@@ -10,7 +10,8 @@ import 'package:printer_label/desktop.dart';
 import '../ds/ds.dart';
 import 'printer_picker_dialog.dart';
 
-/// Cài đặt Agent: máy in, khổ giấy, in hộ máy in LAN, cửa hàng.
+/// Cài đặt trạm in: máy in, khổ giấy, in hộ máy in LAN, tự chạy (cửa hàng +
+/// đăng xuất ở đầu trang).
 class AgentSettingsCard extends StatelessWidget {
   const AgentSettingsCard({super.key, required this.agent});
 
@@ -164,34 +165,6 @@ class AgentSettingsCard extends StatelessWidget {
               ),
             ),
           ],
-          const AppDivider(),
-          AppRow(
-            spacing: AppSpace.sm,
-            children: [
-              const Icon(
-                Icons.storefront_outlined,
-                size: 18,
-                color: AppColors.dsGray2,
-              ),
-              Expanded(
-                child: AppText(
-                  [
-                    if (config.companyName.isNotEmpty) config.companyName,
-                    '#${config.companyId}',
-                    if (config.userName.isNotEmpty) config.userName,
-                  ].join(' · '),
-                  variant: .caption,
-                  tone: .secondary,
-                  maxLines: 2,
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () => unawaited(agent.logout()),
-                icon: const Icon(Icons.logout_rounded, size: 18),
-                label: const Text('Đăng xuất'),
-              ),
-            ],
-          ),
         ],
       ),
     );
