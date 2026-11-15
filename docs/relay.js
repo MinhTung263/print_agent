@@ -1,12 +1,4 @@
-/*
- * Giao thức hàng đợi in của EasyPOS (kênh MQTT) cho trình duyệt — GIỐNG HỆT
- * `MqttPrintRelayTransport` (packages/print_agent_core):
- *   secret = "easypos-print-relay-v1|{môi trường}/c{công ty}_{chủ}"
- *   topic  = "easypos/print_relay/" + sha256("topic|" + secret)[0..32 hex]
- *   khoá   = sha256("key|" + secret)  (AES-256-GCM)
- *   gói    = base64( iv(12) + mã hoá + tag(16) ), nội dung là JSON.
- * Chạy được cả trình duyệt lẫn Node (test: test/relay.test.js).
- */
+/* Kênh hàng đợi in cho trình duyệt — khớp bản Dart (xem test/relay.test.js). */
 (function (g) {
   const te = new TextEncoder();
   const td = new TextDecoder();
