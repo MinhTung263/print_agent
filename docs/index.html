@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thử in qua Trạm in</title>
+<style>
+  :root { --primary:#0074BD; --primary-soft:#E8F1F8; --bg:#F4F6F8; --card:#fff; --text:#1F2933; --muted:#667085; --ok:#12805C; --ok-soft:#E3F5EE; --err:#C0392B; --err-soft:#FBE9E7; --warn:#B26A00; --warn-soft:#FFF3E0; --border:#D8DEE4; }
+  @media (prefers-color-scheme: dark) {
+    :root { --primary:#4DA3E0; --primary-soft:#173246; --bg:#12171C; --card:#1B222A; --text:#E6EAEE; --muted:#9AA6B2; --ok:#4CC9A0; --ok-soft:#133A2E; --err:#F08A7E; --err-soft:#3E1F1B; --warn:#F2B35E; --warn-soft:#3A2B12; --border:#2C3640; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 -apple-system,Segoe UI,Roboto,sans-serif; }
+  main { max-width:620px; margin:0 auto; padding:16px; }
+  h1 { font-size:20px; margin:8px 0 4px; }
+  h2 { font-size:16px; margin:0 0 12px; }
+  p.sub { color:var(--muted); margin:0 0 16px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:12px; }
+  label { display:block; font-weight:600; margin:0 0 6px; }
+  .field { margin-bottom:12px; }
+  .row { display:flex; gap:8px; } .row > * { flex:1; min-width:0; }
+  input[type=text], input[type=number], select { width:100%; height:44px; border:1px solid var(--border); border-radius:8px; padding:0 12px; font-size:15px; background:var(--card); color:var(--text); }
+  button { height:44px; border:0; border-radius:8px; padding:0 16px; font-size:15px; font-weight:600; cursor:pointer; }
+  .primary { background:var(--primary); color:#fff; } .ghost { background:var(--primary-soft); color:var(--primary); }
+  button:disabled { opacity:.5; cursor:default; }
+  .pill { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:700; }
+  .pill.ok { background:var(--ok-soft); color:var(--ok); } .pill.err { background:var(--err-soft); color:var(--err); }
+  .pill.warn { background:var(--warn-soft); color:var(--warn); } .pill.info { background:var(--primary-soft); color:var(--primary); }
+  .hint { color:var(--muted); font-size:12px; margin-top:6px; }
+  .station { display:flex; gap:12px; align-items:center; padding:12px; border:1px solid var(--border); border-radius:12px; margin-bottom:8px; cursor:pointer; }
+  .station.sel { border-color:var(--primary); background:var(--primary-soft); }
+  .station .ic { width:44px; height:44px; border-radius:10px; background:var(--primary-soft); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:22px; flex:none; }
+  .station .t { font-weight:700; } .station .s { color:var(--muted); font-size:12px; }
+  .grow { flex:1; min-width:0; }
+  .timeline { margin:12px 0 0; padding:0; list-style:none; }
+  .timeline li { padding:6px 0; border-top:1px solid var(--border); display:flex; justify-content:space-between; gap:8px; }
+  canvas { max-width:100%; border:1px dashed var(--border); border-radius:8px; background:#fff; }
+  details { margin-top:12px; } summary { cursor:pointer; color:var(--primary); font-weight:600; }
+  a { color:var(--primary); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Thử in qua Trạm in</h1>
+  <p class="sub">Chọn một thiết bị đang bật Trạm in (điện thoại, máy POS, máy tính) rồi in thử. Lệnh đi qua kênh cloud của cửa hàng, không cần biết IP hay cùng Wi-Fi.</p>
+
+  <section class="card" id="shopCard">
+    <h2>1. Cửa hàng</h2>
+    <div id="shopStatus" style="margin-bottom:12px"></div>
+    <div class="row field">
+      <div><label for="env">Môi trường</label>
+        <select id="env"><option value="production">Production</option><option value="staging">Staging</option><option value="test">Test</option><option value="test_88">Test 88</option></select></div>
+      <div><label for="company">Mã công ty</label><input type="text" id="company" inputmode="numeric" placeholder="VD 12345"></div>
+      <div><label for="owner">Mã chủ</label><input type="text" id="owner" inputmode="numeric" placeholder="VD 6789"></div>
+    </div>
+    <button class="primary" id="btnConnect" style="width:100%">Kết nối</button>
+    <div class="hint" id="shopHint"></div>
+  </section>
+
+  <section class="card">
+    <h2>2. Trạm in trong cửa hàng</h2>
+    <div id="stations"><div class="hint">Chưa kết nối cửa hàng.</div></div>
+  </section>
+
+  <section class="card">
+    <h2>3. In thử</h2>
+    <div class="row field">
+      <div><label for="printer">Máy in</label><select id="printer" disabled><option>Chọn Trạm in trước</option></select></div>
+      <div><label for="paper">Khổ giấy</label><select id="paper"><option value="size58">58mm</option><option value="size80">80mm</option></select></div>
+      <div style="flex:.5"><label for="copies">Số bản</label><input type="number" id="copies" min="1" max="10" value="1"></div>
+    </div>
+    <div class="field"><label style="font-weight:400"><input type="checkbox" id="beep"> Kêu còi (phiếu bếp)</label></div>
+    <canvas id="cv"></canvas>
+    <button class="primary" id="btnPrint" style="width:100%;margin-top:12px" disabled>In thử</button>
+    <ul class="timeline" id="timeline"></ul>
+  </section>
+
+  <p class="hint">Chỉ để kiểm tra. Cần cùng tài khoản/công ty với Trạm in. Cổng in trực tiếp qua LAN: <a href="lan.html">trang LAN</a>.</p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="relay.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pill = (cls, t) => `<span class="pill ${cls}">${esc(t)}</span>`;
+const BROKER = 'wss://broker.emqx.io:8084/mqtt';
+const store = { get: (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} } };
+
+let client = null, ch = null, selected = null, seq = Date.now().toString(36);
+const stations = new Map();   // topic id -> info
+const jobs = new Map();       // jobId -> {t0}
+
+// ---------- Cửa hàng ----------
+function shopFromFields() {
+  const c = $('company').value.trim(), o = $('owner').value.trim();
+  if (!/^\d+$/.test(c) || !/^\d+$/.test(o)) return null;
+  return PrintRelay.shopKey($('env').value, c, o);
+}
+function fillFields(key) {
+  const p = PrintRelay.parseShopKey(key); if (!p) return false;
+  const opt = [...$('env').options].find((o) => o.value === p.env);
+  if (!opt) $('env').add(new Option(p.env, p.env));
+  $('env').value = p.env; $('company').value = p.companyId; $('owner').value = p.ownerId;
+  return true;
+}
+
+// Tự nhận cửa hàng từ Trạm in chạy TRÊN CHÍNH MÁY NÀY (cổng 9102) — chỉ khi Trạm in cho phép trang này.
+async function autoDetect() {
+  for (const port of [9102, 19102]) {
+    try {
+      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 1500);
+      const r = await fetch(`http://127.0.0.1:${port}/v1/info`, { signal: ctl.signal }); clearTimeout(t);
+      const info = await r.json();
+      if (info && info.shopKey && fillFields(info.shopKey)) {
+        $('shopHint').textContent = `Đã tự nhận cửa hàng từ Trạm in "${info.name || ''}" trên máy này.`;
+        return true;
+      }
+    } catch (_) {}
+  }
+  return false;
+}
+
+async function connect() {
+  const key = shopFromFields();
+  if (!key) { $('shopStatus').innerHTML = pill('err', 'Nhập mã công ty và mã chủ (số)'); return; }
+  store.set('shop', key);
+  await disconnect();
+  stations.clear(); selected = null; renderStations(); updatePrinters();
+  ch = await PrintRelay.channel(key);
+  $('shopStatus').innerHTML = pill('warn', 'Đang kết nối…');
+  client = mqtt.connect(BROKER, { clientId: 'webtest_' + PrintRelay.randomHex(6), clean: true, reconnectPeriod: 3000, connectTimeout: 10000, protocolVersion: 4 });
+  client.on('connect', () => {
+    $('shopStatus').innerHTML = pill('ok', 'Đã kết nối') + ` <span class="hint">${esc(key)}</span>`;
+    client.subscribe(`${ch.root}/stations/+`, { qos: 1 });
+    setTimeout(() => { if (!stations.size) renderStations(); }, 2000);
+  });
+  client.on('reconnect', () => { $('shopStatus').innerHTML = pill('warn', 'Đang nối lại…'); });
+  client.on('error', (e) => { $('shopStatus').innerHTML = pill('err', 'Lỗi kết nối: ' + (e.message || e)); });
+  client.on('message', onMessage);
+  renderStations();
+}
+async function disconnect() { if (client) { const c = client; client = null; await new Promise((r) => c.end(true, {}, r)); } }
+
+async function onMessage(topic, payload) {
+  if (!ch) return;
+  const sp = `${ch.root}/stations/`, st = `${ch.root}/status/`;
+  if (topic.startsWith(sp)) {
+    const id = topic.slice(sp.length);
+    const info = await PrintRelay.decrypt(ch, payload);
+    if (info && typeof info === 'object') stations.set(id, info); else stations.delete(id);
+    if (selected && !stations.has(selected)) selected = null;
+    renderStations(); updatePrinters();
+  } else if (topic.startsWith(st)) {
+    const jobId = topic.slice(st.length), v = await PrintRelay.decrypt(ch, payload);
+    if (typeof v === 'string' && jobs.has(jobId)) jobProgress(jobId, v);
+  }
+}
+
+// ---------- Trạm in ----------
+function builtInText(i) {
+  const b = i.builtIn; if (!b) return '';
+  return b.off ? 'Máy in tích hợp: đã tắt' : `Máy in tích hợp: ${b.ready ? 'sẵn sàng' : 'chưa kết nối'}`;
+}
+function renderStations() {
+  const box = $('stations');
+  if (!client) { box.innerHTML = '<div class="hint">Chưa kết nối cửa hàng.</div>'; return; }
+  if (!stations.size) { box.innerHTML = '<div class="hint">Chưa thấy Trạm in nào. Bật Trạm in trên điện thoại / máy POS / máy tính (cùng công ty và môi trường).</div>'; return; }
+  box.innerHTML = '';
+  for (const [tid, i] of stations) {
+    const p = i.printers || {};
+    const el = document.createElement('div');
+    el.className = 'station' + (selected === tid ? ' sel' : '');
+    el.innerHTML = `<div class="ic">🖨</div><div class="grow"><div class="t">${esc(i.name || 'Máy Agent')}</div>
+      <div class="s">${esc(i.model || '')} ${i.app ? '· ' + esc(i.app) : ''}</div>
+      <div class="s">${[builtInText(i), p.total ? `${p.ok}/${p.total} máy in kết nối` : ''].filter(Boolean).join(' · ') || 'Chưa có máy in'}</div></div>
+      ${selected === tid ? pill('info', 'Đang chọn') : ''}`;
+    el.onclick = () => { selected = tid; renderStations(); updatePrinters(); };
+    box.appendChild(el);
+  }
+}
+function printerOptions(i) {
+  const out = [];
+  if (i.builtIn) out.push({ type: 'builtin', name: 'Máy in tích hợp', label: 'Máy in tích hợp' });
+  for (const p of (i.printers && i.printers.names) || []) {
+    if (p.kind === 'lan' && p.addr) out.push({ type: 'lan', ip: p.addr, name: p.name, label: `${p.name || 'Máy in LAN'} (${p.addr})${p.ok ? '' : ' — chưa kết nối'}` });
+  }
+  return out;
+}
+function updatePrinters() {
+  const sel = $('printer'), i = selected && stations.get(selected);
+  const opts = i ? printerOptions(i) : [];
+  sel.innerHTML = opts.length ? opts.map((o, k) => `<option value="${k}">${esc(o.label)}</option>`).join('') : `<option>${i ? 'Trạm in này chưa có máy in' : 'Chọn Trạm in trước'}</option>`;
+  sel.disabled = !opts.length; sel._opts = opts;
+  if (i && i.builtIn && i.builtIn.paper) $('paper').value = Number(i.builtIn.paper) >= 80 || i.builtIn.paper === 'size80' ? 'size80' : 'size58';
+  $('btnPrint').disabled = !opts.length || !client;
+}
+
+// ---------- Phiếu thử ----------
+function drawReceipt() {
+  const cv = $('cv'), W = $('paper').value === 'size80' ? 576 : 384, k = W / 384, ctx = cv.getContext('2d');
+  const L = [
+    ['QUÁN CÀ PHÊ EASYPOS', 'bold 20px sans-serif', 'center'], ['Phiếu in thử từ trang web', '13px sans-serif', 'center'],
+    ['Số HĐ: TEST-' + seq + '   Bàn: 05', '13px sans-serif', 'left'], [new Date().toLocaleString('vi-VN'), '12px sans-serif', 'left'],
+    ['------------------------------------', '13px monospace', 'left'],
+    ['Cà phê sữa đá (size L)   2   58.000', '14px sans-serif', 'left'], ['Trà đào cam sả ít đường  1   45.000', '14px sans-serif', 'left'],
+    ['Ghi chú: không đá, thêm trân châu', 'italic 11px sans-serif', 'left'], ['------------------------------------', '13px monospace', 'left'],
+    ['Tổng cộng            103.000đ', 'bold 17px sans-serif', 'left'], ['Cảm ơn quý khách - Hẹn gặp lại!', '12px sans-serif', 'center'],
+  ];
+  cv.width = W; cv.height = Math.round((L.length * 28 + 24) * k);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height); ctx.fillStyle = '#000'; ctx.textBaseline = 'middle'; ctx.scale(k, k);
+  L.forEach(([t, f, a], n) => { ctx.font = f; ctx.textAlign = a; ctx.fillText(t, a === 'center' ? 192 : 6, 24 + n * 28); });
+}
+drawReceipt(); $('paper').onchange = drawReceipt;
+
+// ---------- In ----------
+const STATUS_TEXT = { pending: 'Đã gửi, chờ Trạm in nhận', printing: 'Trạm in đang in', done: 'Đã in xong', failed: 'Trạm in in lỗi (kiểm tra máy in)', held: 'Máy in hết giấy / mở nắp — Trạm in sẽ tự in khi sẵn sàng' };
+function line(jobId, text, cls) {
+  let li = document.getElementById('j' + jobId + text);
+  if (li) return;
+  li = document.createElement('li'); li.id = 'j' + jobId + text;
+  li.innerHTML = `<span>${esc(text)}</span><span>${pill(cls, new Date().toLocaleTimeString('vi-VN'))}</span>`;
+  $('timeline').prepend(li);
+}
+function jobProgress(jobId, v) {
+  const j = jobs.get(jobId); if (!j) return;
+  clearTimeout(j.timer);
+  const cls = v === 'done' ? 'ok' : v === 'failed' ? 'err' : v === 'held' ? 'warn' : 'info';
+  line(jobId, `${STATUS_TEXT[v] || v} (+${Math.round(performance.now() - j.t0)}ms)`, cls);
+  if (v === 'done' || v === 'failed') { client && client.unsubscribe(`${ch.root}/status/${jobId}`); jobs.delete(jobId); }
+}
+$('btnPrint').onclick = async () => {
+  const b = $('btnPrint'), i = selected && stations.get(selected), opt = $('printer')._opts?.[+$('printer').value];
+  if (!i || !opt || !client) return;
+  b.disabled = true;
+  try {
+    const dataUrl = $('cv').toDataURL('image/png');
+    const job = PrintRelay.receiptJob({ imageBase64: dataUrl.split(',')[1], printer: opt, stationId: i.id, paper: $('paper').value, copies: +$('copies').value || 1, beep: $('beep').checked });
+    const jobId = PrintRelay.randomHex(8);
+    jobs.set(jobId, { t0: performance.now(), timer: setTimeout(() => { line(jobId, 'Chưa thấy Trạm in phản hồi sau 20 giây — kiểm tra Trạm in còn bật và cùng công ty', 'err'); jobs.delete(jobId); }, 20000) });
+    await new Promise((r, e) => client.subscribe(`${ch.root}/status/${jobId}`, { qos: 1 }, (err) => (err ? e(err) : r())));
+    const body = await PrintRelay.encrypt(ch, job);
+    await new Promise((r, e) => client.publish(`${ch.root}/jobs/${jobId}`, body, { qos: 1 }, (err) => (err ? e(err) : r())));
+    line(jobId, STATUS_TEXT.pending + ` → ${i.name || 'Trạm in'}`, 'info');
+    seq = Date.now().toString(36); drawReceipt();
+  } catch (e) { line('x' + Date.now(), 'Lỗi gửi lệnh: ' + (e.message || e), 'err'); }
+  finally { b.disabled = false; }
+};
+
+// ---------- Khởi động ----------
+$('btnConnect').onclick = connect;
+(async () => {
+  const saved = store.get('shop'); if (saved) fillFields(saved);
+  const auto = await autoDetect();
+  if (!auto && !saved) $('shopHint').textContent = 'Nhập mã công ty và mã chủ. Mở http://127.0.0.1:9102/v1/info trên máy có Trạm in desktop để xem "shopKey" (dạng production/c12345_6789).';
+  if (shopFromFields()) connect();
+})();
+</script>
+</body>
+</html>

@@ -49,6 +49,8 @@ class AgentServiceWebPrint<P extends AgentPrinterRef> implements WebPrintPort {
     'ready': PrintAgentModule.host.shopKey != null,
     'on': _on,
     'companyId': _company(),
+    // Mã hàng đợi in của cửa hàng (xem DesktopWebPrint).
+    'shopKey': PrintAgentModule.host.shopKey,
     'name': _service.displayName,
     'paper': defaultPaper(),
     'printers': [

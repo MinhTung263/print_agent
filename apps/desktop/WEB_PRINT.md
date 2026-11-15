@@ -4,8 +4,8 @@ Thiết bị nào bật Trạm in (máy tính, Android, iOS) cũng có cổng we
 Trạm in BẬT). Trang `https://app.easypos.vn` chạy trên **máy đó** gọi
 `http://127.0.0.1:9102`; chạy trên **thiết bị khác trong mạng quán** thì gọi
 `http://<IP thiết bị>:9102` (trùng cổng thì `19102`). Yêu cầu từ thiết bị khác
-bắt buộc có `Origin` của trang EasyPOS. Thử nhanh: `tool/web_test/index.html`
-(xem README của thư mục). Trạm in in ảnh phiếu ra máy in đã chọn (LAN / USB) hoặc ra máy in LAN
+bắt buộc có `Origin` của trang EasyPOS. Thử nhanh: `docs/lan.html` (qua IP) và `docs/index.html` (qua cloud)
+(xem `docs/README.md`). Trạm in in ảnh phiếu ra máy in đã chọn (LAN / USB) hoặc ra máy in LAN
 trong quán. Máy tính không phải cài driver máy in.
 
 ```
