@@ -14,14 +14,18 @@ class AgentServiceStation implements AgentStation {
   AgentServiceStation(
     this._service, {
     required this.wifi,
-    required this.networkChanges,
-  });
+    required Stream<void> networkChanges,
+  }) : networkChanges = networkChanges.isBroadcast
+           ? networkChanges
+           : networkChanges.asBroadcastStream();
 
   final AgentService<AgentPrinterRef> _service;
 
   @override
   final AgentWifi wifi;
 
+  /// Luồng đổi mạng, nghe được NHIỀU lần (màn Trạm in mở lại sau đăng xuất /
+  /// vào lại công ty nghe lại — luồng một-người-nghe sẽ lỗi).
   @override
   final Stream<void> networkChanges;
 

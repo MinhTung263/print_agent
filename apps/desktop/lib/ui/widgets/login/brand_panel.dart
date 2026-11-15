@@ -87,8 +87,8 @@ class BrandHeader extends StatelessWidget {
   }
 }
 
-/// Logo EasyPOS (cùng biểu tượng app — tool/gen_app_icon.dart) trên ô trắng
-/// bo góc; [light]: viền mờ cho nền màu.
+/// Logo Agent (cùng biểu tượng app — tool/gen_app_icon.dart, đã có nền bo
+/// góc); [light]: viền trắng mờ để nổi trên nền cùng màu.
 class _Logo extends StatelessWidget {
   const _Logo({required this.size, this.light = false});
 
@@ -97,16 +97,28 @@ class _Logo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(size * 0.28);
+    final radius = BorderRadius.circular(size * 0.225);
     return Container(
       width: size,
       height: size,
+      foregroundDecoration: light
+          ? BoxDecoration(
+              borderRadius: radius,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.35),
+                width: 2,
+              ),
+            )
+          : null,
       decoration: BoxDecoration(
-        color: Colors.white,
         borderRadius: radius,
-        border: light
-            ? Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2)
-            : Border.all(color: AgentColors.agent.withValues(alpha: 0.15)),
+        boxShadow: [
+          BoxShadow(
+            color: AgentColors.agent.withValues(alpha: 0.18),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: radius,
