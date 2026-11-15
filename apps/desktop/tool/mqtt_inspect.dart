@@ -116,7 +116,8 @@ Future<void> main(List<String> args) async {
             stdout.writeln(
               '      - ${p['name']}  ${p['addr'] ?? p['kind']}  '
               '${p['ok'] == true ? 'kết nối' : 'mất kết nối'}'
-              '${p['on'] == false ? ' (đã tắt nhận lệnh)' : ''}',
+              '${p['on'] == false ? ' (đã tắt nhận lệnh)' : ''}'
+              '${p['key'] == null ? '  [KHÔNG có khoá — bản cũ, không tắt từ xa được]' : '  khoá=${p['key']}'}',
             );
           }
         }

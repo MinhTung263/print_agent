@@ -72,6 +72,7 @@
     "agentPeerMore": "Còn @count máy in khác (máy Agent dùng bản cũ chỉ báo một phần)",
     "agentPeerNoPrinters": "Máy Agent này chưa báo máy in nào",
     "agentPeerOfflineHint": "Máy Agent đang tắt — trạng thái máy in dưới đây là lần cuối lúc @time",
+    "agentPeerOldVersion": "@agent đang chạy bản app cũ nên chưa bật / tắt máy in từ xa được. Cập nhật EasyPOS trên máy Agent đó (hoặc bấm máy in ngay trên máy Agent).",
     "agentPeerOnline": "Đang trực tuyến",
     "agentPeerPrinterFail": "Mất kết nối",
     "agentPeerPrinterOff": "Đã tắt",

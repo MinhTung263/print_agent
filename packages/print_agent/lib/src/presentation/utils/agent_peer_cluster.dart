@@ -133,6 +133,9 @@ AgentMapNode _peerPrinterNode(
               ? AgentLinkState.connected
               : AgentLinkState.disconnected),
     onTap: onTap,
-    tapIcon: Icons.power_settings_new_rounded,
+    // Agent bản cũ: biểu tượng "cần cập nhật" thay cho nút bật / tắt.
+    tapIcon: agentPeerIsOldVersion(p)
+        ? Icons.system_update_alt_rounded
+        : Icons.power_settings_new_rounded,
   );
 }

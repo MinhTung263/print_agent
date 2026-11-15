@@ -93,6 +93,8 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentPeerNoPrinters': "Máy Agent này chưa báo máy in nào",
     'printerSetting_agentPeerOfflineHint':
         "Máy Agent đang tắt — trạng thái máy in dưới đây là lần cuối lúc @time",
+    'printerSetting_agentPeerOldVersion':
+        "@agent đang chạy bản app cũ nên chưa bật / tắt máy in từ xa được. Cập nhật EasyPOS trên máy Agent đó (hoặc bấm máy in ngay trên máy Agent).",
     'printerSetting_agentPeerOnline': "Đang trực tuyến",
     'printerSetting_agentPeerPrinterFail': "Mất kết nối",
     'printerSetting_agentPeerPrinterOff': "Đã tắt",
@@ -294,6 +296,8 @@ const Map<String, Map<String, String>> agentTranslations = {
         "This Agent has not reported any printer",
     'printerSetting_agentPeerOfflineHint':
         "This Agent is off — printer status below is as of @time",
+    'printerSetting_agentPeerOldVersion':
+        "@agent runs an older app version, so its printers cannot be turned on / off remotely. Update EasyPOS on that Agent device (or tap the printer on the Agent device itself).",
     'printerSetting_agentPeerOnline': "Online",
     'printerSetting_agentPeerPrinterFail': "Disconnected",
     'printerSetting_agentPeerPrinterOff': "Off",

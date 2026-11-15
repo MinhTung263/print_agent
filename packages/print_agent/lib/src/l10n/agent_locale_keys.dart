@@ -298,6 +298,12 @@ abstract final class LocaleKeys {
   static String printerSetting_agentPeerOfflineHintTr({required Object time}) =>
       printerSetting_agentPeerOfflineHint.trParams({'time': '$time'});
 
+  /// "@agent đang chạy bản app cũ nên chưa bật / tắt máy in từ xa được. Cập nhật EasyPOS trên máy Agent đó (hoặc bấm máy in ngay trên máy Agent)."
+  static const printerSetting_agentPeerOldVersion =
+      'printerSetting_agentPeerOldVersion';
+  static String printerSetting_agentPeerOldVersionTr({required Object agent}) =>
+      printerSetting_agentPeerOldVersion.trParams({'agent': '$agent'});
+
   /// "Đang trực tuyến"
   static const printerSetting_agentPeerOnline =
       'printerSetting_agentPeerOnline';

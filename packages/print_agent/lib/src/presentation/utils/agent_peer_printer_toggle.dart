@@ -13,16 +13,33 @@ typedef _PeerPrinter = ({
   String name,
 });
 
+/// Agent bản cũ: chưa báo khoá máy in (chưa biết lệnh bật / tắt từ xa).
+bool agentPeerIsOldVersion(Map<Object?, Object?> printer) {
+  final key = printer['key'];
+  return key is! String || key.isEmpty;
+}
+
 /// Bấm máy in của một Agent KHÁC trên sơ đồ: bật / tắt nhận lệnh cho máy in đó
 /// từ xa ([AgentPrinterRemote]) + thông báo kèm Hoàn tác. Agent bản cũ (chưa
-/// báo khoá máy in) thì không bấm được — trả `null`.
+/// báo khoá máy in): báo cần cập nhật app trên máy Agent đó.
 VoidCallback? agentPeerPrinterToggle(
   Map<Object?, Object?> station,
   Map<Object?, Object?> printer,
 ) {
   final stationId = station['id']?.toString() ?? '';
+  if (stationId.isEmpty) return null;
   final key = printer['key'];
-  if (stationId.isEmpty || key is! String || key.isEmpty) return null;
+  if (agentPeerIsOldVersion(printer) || key is! String) {
+    return () => unawaited(
+      AppNotification.show(
+        message: LocaleKeys.printerSetting_agentPeerOldVersionTr(
+          agent: AgentIdentity.ofStation(station),
+        ),
+        type: AppNotificationType.warning,
+        duration: const Duration(seconds: 6),
+      ),
+    );
+  }
   final target = (
     stationId: stationId,
     agent: AgentIdentity.ofStation(station),

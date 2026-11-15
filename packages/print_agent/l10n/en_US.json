@@ -72,6 +72,7 @@
     "agentPeerMore": "@count more printers (older Agent version reports only some)",
     "agentPeerNoPrinters": "This Agent has not reported any printer",
     "agentPeerOfflineHint": "This Agent is off — printer status below is as of @time",
+    "agentPeerOldVersion": "@agent runs an older app version, so its printers cannot be turned on / off remotely. Update EasyPOS on that Agent device (or tap the printer on the Agent device itself).",
     "agentPeerOnline": "Online",
     "agentPeerPrinterFail": "Disconnected",
     "agentPeerPrinterOff": "Off",
