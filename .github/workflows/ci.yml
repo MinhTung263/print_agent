@@ -1,7 +1,8 @@
 # Kiểm thử + build Agent máy tính trên Windows / Linux thật (máy GitHub).
 # - test: analyze + test mọi package; Windows thêm test in RAW qua spooler thật
 #   (hàng in "Generic / Text Only" ghi ra file — so từng byte ESC/POS).
-# - build-windows / build-linux: bản chạy được, tải ở mục Artifacts của lần chạy.
+# - build-windows / build-linux: bản chạy được, tải ở mục Artifacts của lần chạy;
+#   kèm bộ cài Setup .exe (Inno Setup) và gói .deb (apps/desktop/installer/).
 name: CI
 
 on:
@@ -94,10 +95,50 @@ jobs:
       - name: Build
         working-directory: apps/desktop
         run: flutter build windows --release
+      # Kèm thư viện Visual C++ (app-local) — máy khách chưa cài VC++ Redistributable
+      # vẫn chạy được.
+      - name: Kèm thư viện VC++ runtime
+        shell: pwsh
+        run: |
+          $dest = 'apps/desktop/build/windows/x64/runner/Release'
+          foreach ($dll in 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll') {
+            if (-not (Test-Path (Join-Path $dest $dll))) {
+              Copy-Item (Join-Path $env:WINDIR "System32\$dll") $dest
+            }
+          }
       - uses: actions/upload-artifact@v4
         with:
           name: easypos-print-agent-windows
           path: apps/desktop/build/windows/x64/runner/Release/
+      # Bộ cài Setup .exe (Inno Setup). Máy GitHub thường có sẵn ISCC, thiếu thì cài
+      # qua choco. Phiên bản lấy từ `version:` của apps/desktop/pubspec.yaml.
+      - name: Bộ cài Windows (Inno Setup)
+        working-directory: apps/desktop
+        shell: pwsh
+        run: |
+          $iscc = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          if (-not (Test-Path $iscc)) {
+            $cmd = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+            if (-not $cmd) { throw 'Không tìm thấy ISCC.exe' }
+            $iscc = $cmd.Source
+          }
+          $line = Select-String -Path pubspec.yaml -Pattern '^version:\s*([0-9.]+)(\+([0-9]+))?' | Select-Object -First 1
+          if (-not $line) { throw 'Không đọc được version trong pubspec.yaml' }
+          $ver = $line.Matches[0].Groups[1].Value
+          $build = $line.Matches[0].Groups[3].Value
+          if (-not $build) { $build = '0' }
+          Write-Host "Phiên bản $ver (build $build)"
+          & $iscc "/DMyAppVersion=$ver" "/DMyAppBuild=$build" installer\windows\easypos_print_agent.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: easypos-print-agent-windows-setup
+          path: apps/desktop/build/installer/*.exe
+          if-no-files-found: error
 
   build-linux:
     name: Build Linux
@@ -123,3 +164,16 @@ jobs:
         with:
           name: easypos-print-agent-linux
           path: apps/desktop/build/linux/x64/release/bundle/
+      # Gói .deb: cài vào /opt, lối tắt menu, quy tắc udev cho máy in USB.
+      - name: Đóng gói .deb
+        run: |
+          bash apps/desktop/installer/linux/build_deb.sh
+          for f in apps/desktop/build/installer/*.deb; do
+            dpkg-deb --info "$f"
+            dpkg-deb --contents "$f" | grep -v '/opt/easypos-print-agent/data/' || true
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: easypos-print-agent-linux-deb
+          path: apps/desktop/build/installer/*.deb
+          if-no-files-found: error
