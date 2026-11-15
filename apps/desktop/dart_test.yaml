@@ -1,0 +1,4 @@
+# Các test chạy tiến trình `dart run` riêng (máy in giả, bản Agent thứ hai):
+# chạy song song thì tranh khoá build hook của `dart run` → chậm, quá thời
+# gian ngẫu nhiên. Chạy lần lượt từng file cho ổn định.
+concurrency: 1

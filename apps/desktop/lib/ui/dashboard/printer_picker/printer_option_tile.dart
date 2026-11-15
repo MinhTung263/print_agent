@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../agent_theme.dart';
-import 'printer_option.dart';
+import '../../../printers/printer_option.dart';
 
 /// Thẻ một máy in: biểu tượng loại kết nối, tên, địa chỉ; viền xanh + dấu
 /// tích khi đang chọn; nhãn "Đang dùng" với máy in hiện tại.

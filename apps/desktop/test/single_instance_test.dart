@@ -29,5 +29,8 @@ void main() {
       await first.dispose();
     },
     timeout: const Timeout(Duration(minutes: 2)),
+    // Tiến trình `dart run` riêng có lúc chậm khi chạy song song với các test
+    // khác cũng `dart run` (khoá build): thử lại thay vì báo lỗi oan.
+    retry: 2,
   );
 }

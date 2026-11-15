@@ -1,8 +1,7 @@
-import 'package:printer_label/desktop.dart';
-
 enum PrinterOptionKind { lan, usb }
 
-/// Một máy in trong hộp chọn: LAN dò thấy / nhập tay, hoặc USB.
+/// Một máy in trong hộp chọn: LAN dò thấy / nhập tay, hoặc USB (tầng domain —
+/// không phụ thuộc plugin / giao diện).
 class PrinterOption {
   const PrinterOption({
     required this.kind,
@@ -25,12 +24,20 @@ class PrinterOption {
     subtitle: address,
   );
 
-  factory PrinterOption.usb(UsbPrinterInfo p) => PrinterOption(
+  /// Máy in USB; [setupPort] khác `null` = chưa cài đặt (cài một lần).
+  factory PrinterOption.usb({
+    required String address,
+    required String name,
+    String? setupPort,
+    bool missing = false,
+  }) => PrinterOption(
     kind: PrinterOptionKind.usb,
-    address: p.address,
-    title: p.name,
-    subtitle: p.needsSetup ? 'Cắm USB · cần cài đặt một lần' : 'Cắm USB',
-    setupPort: p.setupPort,
+    address: address,
+    title: name,
+    subtitle: missing
+        ? 'Cắm USB · chưa thấy máy in'
+        : (setupPort != null ? 'Cắm USB · cần cài đặt một lần' : 'Cắm USB'),
+    setupPort: setupPort,
   );
 
   final PrinterOptionKind kind;
@@ -40,7 +47,7 @@ class PrinterOption {
   final String title;
   final String subtitle;
 
-  /// Máy USB chưa có hàng in: cổng / URI để cài đặt ([UsbPrinters.setup]).
+  /// Máy USB chưa có hàng in: cổng / URI để cài đặt.
   final String? setupPort;
 
   bool get needsSetup => setupPort != null;

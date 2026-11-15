@@ -1,13 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:printer_label/desktop.dart';
-import 'package:printer_label/printer_label.dart' show PrinterLabel;
 
 import '../agent_theme.dart';
 import 'printer_picker/manual_ip_field.dart';
 import 'printer_picker/printer_picker_parts.dart';
-import 'printer_picker/printer_option.dart';
+import '../../printers/data/desktop_printer_discovery.dart';
+import '../../printers/printer_discovery.dart';
+import '../../printers/printer_option.dart';
+import '../../printers/printer_picker_list.dart';
 import 'printer_picker/printer_option_tile.dart';
 
 /// Chọn máy in của trạm in: tự dò CÙNG LÚC máy in mạng (cổng 9100) và máy in
@@ -20,15 +21,17 @@ import 'printer_picker/printer_option_tile.dart';
 Future<String?> showPrinterPickerDialog(
   BuildContext context, {
   String current = '',
+  PrinterDiscovery discovery = const DesktopPrinterDiscovery(),
 }) => showDialog<String>(
   context: context,
-  builder: (_) => _PrinterPickerDialog(current: current),
+  builder: (_) => _PrinterPickerDialog(current: current, discovery: discovery),
 );
 
 class _PrinterPickerDialog extends StatefulWidget {
-  const _PrinterPickerDialog({required this.current});
+  const _PrinterPickerDialog({required this.current, required this.discovery});
 
   final String current;
+  final PrinterDiscovery discovery;
 
   @override
   State<_PrinterPickerDialog> createState() => _PrinterPickerDialogState();
@@ -50,71 +53,37 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
 
   Future<void> _scan() async {
     setState(() => _scanning = true);
-    final results = await Future.wait([
-      LanPrinterScanner.scan(),
-      if (UsbPrinters.supported) UsbPrinters.list(),
-    ]);
+    final found = await widget.discovery.find();
     if (!mounted) return;
-    final lan = results[0] as List<LanPrinterFound>;
-    final usb = results.length > 1
-        ? results[1] as List<UsbPrinterInfo>
-        : const <UsbPrinterInfo>[];
-    final options = [
-      for (final p in usb) PrinterOption.usb(p),
-      for (final p in lan) PrinterOption.lan(p.address),
-    ];
-    // Máy in đang dùng không dò thấy (tắt / khác mạng) vẫn hiện để giữ chọn.
-    final cur = widget.current;
-    if (cur.isNotEmpty && !options.any((o) => o.address == cur)) {
-      options.insert(
-        0,
-        UsbPrinters.isLocal(cur)
-            ? PrinterOption(
-                kind: PrinterOptionKind.usb,
-                address: cur,
-                title: UsbPrinters.label(cur),
-                subtitle: 'Cắm USB · chưa thấy máy in',
-              )
-            : PrinterOption.lan(cur),
+    setState(() {
+      _options = found;
+      _scanning = false;
+      _selected = PrinterPickerList.preselect(_all, _selected);
+    });
+    // Tên model máy in mạng (không gửi gì vào cổng in): thẻ hiện "Xprinter
+    // XP-80C" thay vì "Máy in mạng".
+    for (final o in found.where((o) => o.kind == PrinterOptionKind.lan)) {
+      unawaited(
+        widget.discovery.modelOf(o.address).then((model) {
+          if (!mounted || model == null) return;
+          setState(
+            () => _options = PrinterPickerList.withModel(
+              _options,
+              o.address,
+              model,
+            ),
+          );
+        }),
       );
     }
-    options.sort(
-      (a, b) => (a.address == cur ? 0 : 1) - (b.address == cur ? 0 : 1),
-    );
-    setState(() {
-      _options = options;
-      _scanning = false;
-      // Chỉ một máy in: chọn sẵn.
-      if (_selected == null && _all.length == 1) _selected = _all.first.key;
-    });
-    unawaited(_loadModels(lan));
   }
 
-  /// Đọc tên model máy in mạng (SNMP / mDNS... — không gửi gì vào cổng in)
-  /// để thẻ hiện "Xprinter XP-80C" thay vì "Máy in mạng".
-  Future<void> _loadModels(List<LanPrinterFound> lan) async {
-    await Future.wait([
-      for (final p in lan)
-        PrinterLabel.getLanPrinterName(p.host)
-            .then((name) {
-              if (!mounted || (name ?? '').trim().isEmpty) return;
-              setState(() {
-                _options = [
-                  for (final o in _options)
-                    o.address == p.address
-                        ? PrinterOption.lan(p.address, model: name)
-                        : o,
-                ];
-              });
-            })
-            .catchError((_) {}),
-    ]);
-  }
-
-  List<PrinterOption> get _all => [
-    ..._manual.where((m) => !_options.any((o) => o.key == m.key)),
-    ..._options,
-  ];
+  List<PrinterOption> get _all => PrinterPickerList.merge(
+    found: _options,
+    manual: _manual,
+    current: widget.current,
+    missing: widget.discovery.missing,
+  );
 
   void _addManual(String address) => setState(() {
     if (!_all.any((o) => o.address == address)) {
@@ -131,7 +100,7 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
       return;
     }
     setState(() => _settingUp = true);
-    final address = await UsbPrinters.setup(option.setupPort!);
+    final address = await widget.discovery.setupUsb(option.setupPort!);
     if (!mounted) return;
     setState(() => _settingUp = false);
     if (address != null) {
@@ -185,7 +154,7 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
                       ),
               ),
               const SizedBox(height: 12),
-              ManualIpField(onFound: _addManual),
+              ManualIpField(discovery: widget.discovery, onFound: _addManual),
               const SizedBox(height: 16),
               Row(
                 children: [

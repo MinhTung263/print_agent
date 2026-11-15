@@ -1,58 +1,44 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:printer_label/desktop.dart';
 
+import '../../../printers/printer_discovery.dart';
 import '../../agent_theme.dart';
+import 'ip_octets_field.dart';
 
-/// "Nhập IP thủ công" (thu gọn mặc định): nhập IP → kiểm tra kết nối cổng in
-/// ngay → kết nối được thì [onFound] (thêm vào danh sách và chọn luôn).
+/// "Nhập IP thủ công" (thu gọn mặc định): 4 ô số như app EasyPOS → kiểm tra
+/// kết nối cổng in → kết nối được thì [onFound] (thêm vào danh sách và chọn).
 class ManualIpField extends StatefulWidget {
-  const ManualIpField({super.key, required this.onFound});
+  const ManualIpField({
+    super.key,
+    required this.discovery,
+    required this.onFound,
+  });
 
-  /// Địa chỉ chuẩn (`ip` / `ip:cổng`) đã kết nối được.
+  final PrinterDiscovery discovery;
+
+  /// IP đã kết nối được.
   final ValueChanged<String> onFound;
 
   @override
   State<ManualIpField> createState() => _ManualIpFieldState();
 }
 
-enum _Check { idle, checking, ok, failed, invalid }
+enum _Check { idle, checking, ok, failed }
 
 class _ManualIpFieldState extends State<ManualIpField> {
-  final _input = TextEditingController();
   bool _open = false;
+  String? _ip;
   _Check _check = _Check.idle;
 
-  static final RegExp _ipv4 = RegExp(
-    r'^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$',
-  );
-
-  @override
-  void dispose() {
-    _input.dispose();
-    super.dispose();
-  }
-
   Future<void> _test() async {
-    final parsed = parsePrinterAddress(_input.text);
-    final host = parsed?.$1 ?? '';
-    final m = _ipv4.firstMatch(host);
-    if (parsed == null ||
-        m == null ||
-        [1, 2, 3, 4].any((i) => int.parse(m.group(i)!) > 255)) {
-      setState(() => _check = _Check.invalid);
-      return;
-    }
+    final ip = _ip;
+    if (ip == null) return;
     setState(() => _check = _Check.checking);
-    final ok = await LanPrinterScanner.probe(
-      host,
-      port: parsed.$2,
-      timeout: const Duration(seconds: 2),
-    );
+    final ok = await widget.discovery.reachable(ip);
     if (!mounted) return;
     setState(() => _check = ok ? _Check.ok : _Check.failed);
-    if (ok) widget.onFound(parsed.$2 == 9100 ? host : '$host:${parsed.$2}');
+    if (ok) widget.onFound(ip);
   }
 
   @override
@@ -68,7 +54,7 @@ class _ManualIpFieldState extends State<ManualIpField> {
       );
     }
     final (message, color) = switch (_check) {
-      _Check.idle => ('Xem IP trên phiếu tự in của máy in', AgentColors.muted),
+      _Check.idle => ('Ví dụ: 192.168.1.42', AgentColors.textSecondary),
       _Check.checking => ('Đang kiểm tra kết nối…', AgentColors.textSecondary),
       _Check.ok => (
         'Kết nối được — đã thêm vào danh sách',
@@ -78,39 +64,37 @@ class _ManualIpFieldState extends State<ManualIpField> {
         'Không kết nối được. Kiểm tra máy in đã bật và cùng mạng với máy này',
         AgentColors.error,
       ),
-      _Check.invalid => (
-        'IP chưa đúng, VD 192.168.1.100 hoặc 192.168.1.100:9100',
-        AgentColors.error,
-      ),
     };
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(bottom: 6),
-          child: Text(
-            'Địa chỉ IP máy in',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AgentColors.card,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AgentColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'Địa chỉ IP',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
           ),
-        ),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _input,
-                autofocus: true,
-                decoration: const InputDecoration(hintText: 'VD 192.168.1.100'),
-                onChanged: (_) {
-                  if (_check != _Check.idle) {
-                    setState(() => _check = _Check.idle);
-                  }
-                },
-                onSubmitted: (_) => unawaited(_test()),
-              ),
-            ),
-            const SizedBox(width: 8),
-            FilledButton.tonal(
-              onPressed: _check == _Check.checking
+          const SizedBox(height: 10),
+          IpOctetsField(
+            prefill: widget.discovery.localIp,
+            onChanged: (ip) => setState(() {
+              _ip = ip;
+              _check = _Check.idle;
+            }),
+            onSubmitted: () => unawaited(_test()),
+          ),
+          const SizedBox(height: 8),
+          Text(message, style: TextStyle(fontSize: 12, color: color)),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.tonal(
+              onPressed: _ip == null || _check == _Check.checking
                   ? null
                   : () => unawaited(_test()),
               child: _check == _Check.checking
@@ -118,13 +102,11 @@ class _ManualIpFieldState extends State<ManualIpField> {
                       dimension: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Kiểm tra'),
+                  : const Text('Kiểm tra kết nối'),
             ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(message, style: TextStyle(fontSize: 12, color: color)),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }
