@@ -57,3 +57,22 @@ test('lệnh in có đủ trường Agent đọc (PrintRelayJob.fromMap)', () =>
   assert.equal(lan.printerType, 'lan');
   assert.equal('targetStation' in lan, false);
 });
+
+test('lệnh in tem có đủ trường Agent đọc (PrintRelayJob.fromMap, kind label)', () => {
+  const j = R.labelJob({ images: ['AAA', 'BBB'], printer: { type: 'lan', ip: '192.168.0.9', name: 'Tem' }, stationId: 'st1', labelSize: 'single_40_30', copies: 2 });
+  assert.equal(j.kind, 'label');
+  assert.equal(j.printerType, 'lan');
+  assert.equal(j.printerIp, '192.168.0.9');
+  assert.equal(j.targetStation, 'st1');
+  assert.equal(j.labelSize, 'single_40_30');
+  assert.equal(j.copies, 2);
+  assert.deepEqual(j.images, ['AAA', 'BBB']);
+  assert.equal('image' in j, false);
+  assert.equal(R.labelJob({ images: [], printer: { type: 'builtin' }, labelSize: 'single', copies: 0 }).copies, 1);
+});
+
+test('lệnh in tem kèm kích thước thật (labelSpec) cho Agent máy tính', () => {
+  const j = R.labelJob({ images: ['A'], printer: { type: 'lan', ip: '10.0.0.5' }, labelSize: 'double', spec: { w: 105, h: 40, gap: 1, count: 2 } });
+  assert.deepEqual(j.labelSpec, { w: 105, h: 40, gap: 1, count: 2, shiftX: 0 });
+  assert.equal('labelSpec' in R.labelJob({ images: ['A'], printer: { type: 'builtin' }, labelSize: 'single' }), false);
+});

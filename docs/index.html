@@ -27,6 +27,9 @@
   .pill { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:700; }
   .pill.ok { background:var(--ok-soft); color:var(--ok); } .pill.err { background:var(--err-soft); color:var(--err); }
   .pill.warn { background:var(--warn-soft); color:var(--warn); } .pill.info { background:var(--primary-soft); color:var(--primary); }
+  .seg { display:flex; gap:8px; }
+  .seg button { flex:1; height:44px; background:var(--primary-soft); color:var(--primary); border:2px solid transparent; }
+  .seg button.on { background:var(--primary); color:#fff; }
   .hint { color:var(--muted); font-size:12px; margin-top:6px; }
   .station { display:flex; gap:12px; align-items:center; padding:12px; border:1px solid var(--border); border-radius:12px; margin-bottom:8px; cursor:pointer; }
   .station.sel { border-color:var(--primary); background:var(--primary-soft); }
@@ -75,8 +78,23 @@
   <section class="card">
     <h2>3. In thử</h2>
     <div class="row field">
+      <div><label for="kind">Loại phiếu</label>
+        <select id="kind"><option value="receipt">Hoá đơn</option><option value="label">Tem trà sữa</option></select></div>
+    </div>
+    <div id="temBox" style="display:none">
+      <div class="field">
+        <label>Số tem trên một hàng</label>
+        <div class="seg" id="perRow"></div>
+      </div>
+      <div class="row field">
+        <div style="flex:2"><label for="temSize">Khổ một tem (mm)</label><select id="temSize"></select></div>
+        <div style="flex:1"><label for="cups">Số ly</label><input type="number" id="cups" min="1" max="20" value="2"></div>
+      </div>
+      <div class="hint" id="temInfo" style="margin:-4px 0 12px"></div>
+    </div>
+    <div class="row field">
       <div><label for="printer">Máy in</label><select id="printer" disabled><option>Chọn Trạm in trước</option></select></div>
-      <div><label for="paper">Khổ giấy</label><select id="paper"><option value="size58">58mm</option><option value="size80">80mm</option></select></div>
+      <div id="paperBox"><label for="paper">Khổ giấy</label><select id="paper"><option value="size58">58mm</option><option value="size80">80mm</option></select></div>
       <div style="flex:.5"><label for="copies">Số bản</label><input type="number" id="copies" min="1" max="10" value="1"></div>
     </div>
     <div class="field"><label style="font-weight:400"><input type="checkbox" id="beep"> Kêu còi (phiếu bếp)</label></div>
@@ -91,6 +109,7 @@
 <script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="relay.js"></script>
 <script src="curl.js"></script>
+<script src="tem.js"></script>
 <script>
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -222,7 +241,32 @@ function drawReceipt() {
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height); ctx.fillStyle = '#000'; ctx.textBaseline = 'middle'; ctx.scale(k, k);
   L.forEach(([t, f, a], n) => { ctx.font = f; ctx.textAlign = a; ctx.fillText(t, a === 'center' ? 192 : 6, 24 + n * 28); });
 }
-drawReceipt(); $('paper').onchange = drawReceipt;
+// Xem trước theo loại phiếu: hoá đơn, hoặc hàng tem trà sữa đầu tiên.
+const isLabel = () => $('kind').value === 'label';
+const temSize = () => TeaLabel.bySize($('temSize').value) || TeaLabel.SIZES[0];
+const temInfo = (i = 0, total = 1) => ({ shop: 'EasyPOS Tea', order: String(seq).slice(-3).toUpperCase(), time: new Date().toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }), total, startIndex: i + 1 });
+function refreshPreview() {
+  $('temBox').style.display = isLabel() ? '' : 'none';
+  $('paperBox').style.display = isLabel() ? 'none' : '';
+  if (!isLabel()) return drawReceipt();
+  const size = temSize(), cups = Math.max(1, +$('cups').value || 1);
+  TeaLabel.drawRow($('cv'), size, TeaLabel.rows(cups, size)[0], temInfo(0, cups));
+  $('temInfo').textContent = `${size.count} tem/hàng · tem ${size.tem}mm · cả hàng ${size.w}×${size.h}mm · khe ${size.gap}mm · ${size.use}` +
+    (size.custom ? ' · khổ này chỉ Agent máy tính in đúng (app bản hiện tại chưa có khổ này)' : '');
+}
+// Chọn số tem mỗi hàng → danh sách khổ tem của loại đó.
+let perRow = 2;
+function renderSizes(keep) {
+  $('perRow').innerHTML = TeaLabel.COUNTS.map((c) => `<button type="button" data-c="${c}" class="${c === perRow ? 'on' : ''}">${c} tem</button>`).join('');
+  $('perRow').querySelectorAll('button').forEach((b) => { b.onclick = () => { perRow = +b.dataset.c; renderSizes(); refreshPreview(); }; });
+  $('temSize').innerHTML = TeaLabel.ofCount(perRow).map((z) => `<option value="${z.id}">${z.title}</option>`).join('');
+  if (keep && TeaLabel.ofCount(perRow).some((z) => z.id === keep)) $('temSize').value = keep;
+}
+renderSizes();
+$('temSize').value = 'double_40_30';
+['kind', 'temSize', 'cups', 'paper'].forEach((id) => { $(id).onchange = refreshPreview; });
+$('cups').oninput = refreshPreview;
+refreshPreview();
 
 // ---------- In ----------
 const STATUS_TEXT = { pending: 'Đã gửi, chờ Trạm in nhận', printing: 'Trạm in đang in', done: 'Đã in xong', failed: 'Trạm in in lỗi (kiểm tra máy in)', held: 'Máy in hết giấy / mở nắp — Trạm in sẽ tự in khi sẵn sàng' };
@@ -245,15 +289,23 @@ $('btnPrint').onclick = async () => {
   if (!i || !opt || !client) return;
   b.disabled = true;
   try {
-    const dataUrl = $('cv').toDataURL('image/png');
-    const job = PrintRelay.receiptJob({ imageBase64: dataUrl.split(',')[1], printer: opt, stationId: i.id, paper: $('paper').value, copies: +$('copies').value || 1, beep: $('beep').checked });
+    let job;
+    if (isLabel()) {
+      // Mỗi hàng tem một ảnh (không có tiền tố data:), Trạm in co về đúng khổ giấy.
+      const size = temSize(), cups = Math.max(1, +$('cups').value || 1), list = TeaLabel.rows(cups, size);
+      const images = list.map((row, n) => TeaLabel.drawRow(document.createElement('canvas'), size, row, temInfo(n * size.count, cups)).toDataURL('image/png').split(',')[1]);
+      job = PrintRelay.labelJob({ images, printer: opt, stationId: i.id, labelSize: size.name, copies: +$('copies').value || 1, spec: size });
+    } else {
+      const dataUrl = $('cv').toDataURL('image/png');
+      job = PrintRelay.receiptJob({ imageBase64: dataUrl.split(',')[1], printer: opt, stationId: i.id, paper: $('paper').value, copies: +$('copies').value || 1, beep: $('beep').checked });
+    }
     const jobId = PrintRelay.randomHex(8);
     jobs.set(jobId, { t0: performance.now(), timer: setTimeout(() => { line(jobId, 'Chưa thấy Trạm in phản hồi sau 20 giây — kiểm tra Trạm in còn bật và cùng công ty', 'err'); jobs.delete(jobId); }, 20000) });
     await new Promise((r, e) => client.subscribe(`${ch.root}/status/${jobId}`, { qos: 1 }, (err) => (err ? e(err) : r())));
     const body = await PrintRelay.encrypt(ch, job);
     await new Promise((r, e) => client.publish(`${ch.root}/jobs/${jobId}`, body, { qos: 1 }, (err) => (err ? e(err) : r())));
     line(jobId, STATUS_TEXT.pending + ` → ${i.name || 'Trạm in'}`, 'info');
-    seq = Date.now().toString(36); drawReceipt();
+    seq = Date.now().toString(36); refreshPreview();
   } catch (e) { line('x' + Date.now(), 'Lỗi gửi lệnh: ' + (e.message || e), 'err'); }
   finally { b.disabled = false; }
 };

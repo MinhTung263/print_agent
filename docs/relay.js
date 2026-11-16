@@ -86,6 +86,33 @@
     };
   }
 
-  g.PrintRelay = { PREFIX, randomHex, normalizeEnv, shopKey, parseShopKey, channel, encrypt, decrypt, receiptJob };
+  /**
+   * Lệnh in tem (`PrintRelayJob.toMap`, kind label). [images]: mỗi ảnh (PNG base64,
+   * không có tiền tố data:) là MỘT HÀNG tem; [labelSize]: tên khổ tem của app
+   * (`single`, `single_40_30`, `double`...); [copies]: số lần in mỗi hàng.
+   */
+  function labelJob({ images, printer, stationId, labelSize, copies = 1, spec, sender = 'Web thử in' }) {
+    const builtin = printer.type === 'builtin';
+    return {
+      kind: 'label',
+      status: 'pending',
+      createdAt: Date.now(),
+      printerId: null,
+      printerIp: builtin ? 'builtin' : printer.ip,
+      printerType: builtin ? 'builtin' : 'lan',
+      ...(stationId ? { targetStation: stationId } : {}),
+      printerName: printer.name || null,
+      sender,
+      key: randomHex(12),
+      labelSize,
+      copies: Math.max(1, copies | 0),
+      images,
+      // Kích thước thật của hàng tem (mm): Agent máy tính dùng đúng số này (khổ app
+      // chưa có tên vẫn in đúng); app bản cũ bỏ qua và dùng [labelSize].
+      ...(spec ? { labelSpec: { w: spec.w, h: spec.h, gap: spec.gap, count: spec.count, shiftX: 0 } } : {}),
+    };
+  }
+
+  g.PrintRelay = { PREFIX, randomHex, normalizeEnv, shopKey, parseShopKey, channel, encrypt, decrypt, receiptJob, labelJob };
   if (typeof module !== 'undefined') module.exports = g.PrintRelay;
 })(typeof globalThis !== 'undefined' ? globalThis : window);
