@@ -299,7 +299,7 @@ function renderSizes(keep) {
   if (keep && TeaLabel.ofCount(perRow).some((z) => z.id === keep)) $('temSize').value = keep;
 }
 renderSizes();
-$('temSize').value = 'double_40_30';
+$('temSize').value = 'double'; // mặc định: 2 tem/hàng, mỗi tem 35×22mm
 $('tpl').innerHTML = TeaLabel.TEMPLATES.map((t) => `<option value="${t.id}">${t.title}</option>`).join('');
 ['kind', 'tpl', 'temSize', 'cups', 'paper', 'frame'].forEach((id) => { $(id).onchange = refreshPreview; });
 $('cups').oninput = refreshPreview;
