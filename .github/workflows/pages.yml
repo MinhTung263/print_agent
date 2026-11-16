@@ -35,6 +35,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Đóng dấu bản (đổi ngay khi tải lại, khỏi chờ bộ nhớ đệm 10 phút)
+        run: |
+          V="${GITHUB_SHA::7}"
+          sed -i "s/__BUILD__/$V/g" docs/index.html
+          echo "{\"v\":\"$V\"}" > docs/version.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -36,6 +36,7 @@
   .steps { display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:var(--muted); }
   .steps span.on { color:var(--primary); font-weight:700; } .steps span.done { color:var(--ok); }
   .eta { margin-top:6px; font-size:13px; }
+  .newver { display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--warn-soft); color:var(--warn); border:1px solid var(--warn); border-radius:12px; padding:10px 14px; margin-bottom:12px; font-weight:600; }
   .seg { display:flex; gap:8px; }
   .seg button { flex:1; height:44px; background:var(--primary-soft); color:var(--primary); border:2px solid transparent; }
   .seg button.on { background:var(--primary); color:#fff; }
@@ -54,6 +55,10 @@
 </head>
 <body>
 <main>
+  <div class="newver" id="newVer" hidden>
+    <span>Có bản mới của trang.</span>
+    <button type="button" class="primary" id="btnNewVer" style="height:36px">Tải lại</button>
+  </div>
   <h1>Thử in qua Trạm in</h1>
   <p class="sub">Chọn một thiết bị đang bật Trạm in (điện thoại, máy POS, máy tính) rồi in thử. Lệnh đi qua kênh cloud của cửa hàng, không cần biết IP hay cùng Wi-Fi.</p>
 
@@ -126,9 +131,9 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script src="relay.js"></script>
-<script src="curl.js"></script>
-<script src="tem.js"></script>
+<script src="relay.js?v=__BUILD__"></script>
+<script src="curl.js?v=__BUILD__"></script>
+<script src="tem.js?v=__BUILD__"></script>
 <script>
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -401,6 +406,22 @@ $('btnPaste').onclick = () => {
     $('shopHint').textContent = 'Nhập nốt mã còn thiếu ở mục "Nhập tay" bên dưới rồi bấm Kết nối.';
   }
 };
+
+// ---------- Bản mới của trang ----------
+// GitHub Pages cho trình duyệt giữ tệp tới 10 phút. Mỗi lần triển khai ghi mã bản vào
+// BUILD (và vào ?v= của các tệp script) + version.json; trang hỏi version.json (bỏ qua bộ
+// nhớ đệm) và báo "Có bản mới" kèm nút tải lại ngay — không phải đợi hết 10 phút.
+const BUILD = '__BUILD__';
+async function checkVersion() {
+  if (!/^[0-9a-f]{7}$/.test(BUILD)) return;   // chạy trên máy (chưa đóng dấu bản)
+  try {
+    const r = await fetch(`version.json?t=${Date.now()}`, { cache: 'no-store' });
+    const j = await r.json();
+    if (j && j.v && j.v !== BUILD) { $('newVer').hidden = false; $('btnNewVer').onclick = () => { location.href = `${location.pathname}?v=${j.v}`; }; }
+  } catch (_) {}
+}
+checkVersion(); setInterval(checkVersion, 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkVersion(); });
 
 // ---------- Khởi động ----------
 $('btnConnect').onclick = connect;
