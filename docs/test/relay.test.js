@@ -76,3 +76,14 @@ test('lệnh in tem kèm kích thước thật (labelSpec) cho Agent máy tính'
   assert.deepEqual(j.labelSpec, { w: 105, h: 40, gap: 1, count: 2, shiftX: 0 });
   assert.equal('labelSpec' in R.labelJob({ images: ['A'], printer: { type: 'builtin' }, labelSize: 'single' }), false);
 });
+
+test('stationFresh: trạm báo gần đây còn sống, trạm báo từ lâu coi như đã tắt', () => {
+  const now = 1_000_000;
+  assert.equal(R.stationFresh({ at: now - 30_000 }, now), true);
+  assert.equal(R.stationFresh({ at: now - 149_000 }, now), true);
+  assert.equal(R.stationFresh({ at: now - 151_000 }, now), false);
+  assert.equal(R.stationFresh({ at: now - 3 * 3600_000 }, now), false);
+  // Thông tin rất cũ không có `at`: không giấu nhầm.
+  assert.equal(R.stationFresh({ name: 'x' }, now), true);
+  assert.equal(R.stationFresh(null, now), true);
+});

@@ -113,6 +113,19 @@
     };
   }
 
-  g.PrintRelay = { PREFIX, randomHex, normalizeEnv, shopKey, parseShopKey, channel, encrypt, decrypt, receiptJob, labelJob };
+  /**
+   * Trạm in còn "sống": thông tin trạm (retained trên broker, không tự mất khi trạm tắt)
+   * kèm `at` = lúc trạm báo lần cuối. Trạm đang chạy báo lại mỗi 45s và khi có lệnh dò
+   * (ping), nên quá [maxAgeMs] không thấy báo = trạm đã tắt / gỡ / cài lại với mã mới.
+   * Thông tin cũ không có `at` (bản rất cũ) coi như còn sống — không giấu nhầm.
+   */
+  const STATION_MAX_AGE_MS = 150000;
+  function stationFresh(info, now = Date.now(), maxAgeMs = STATION_MAX_AGE_MS) {
+    const at = info && Number(info.at);
+    if (!at) return true;
+    return now - at <= maxAgeMs;
+  }
+
+  g.PrintRelay = { PREFIX, stationFresh, STATION_MAX_AGE_MS, randomHex, normalizeEnv, shopKey, parseShopKey, channel, encrypt, decrypt, receiptJob, labelJob };
   if (typeof module !== 'undefined') module.exports = g.PrintRelay;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

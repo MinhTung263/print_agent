@@ -37,6 +37,8 @@
   .steps span.on { color:var(--primary); font-weight:700; } .steps span.done { color:var(--ok); }
   .eta { margin-top:6px; font-size:13px; }
   [hidden] { display:none !important; }
+  .station.stale { opacity:.55; }
+  .linkbtn { background:none; border:0; color:var(--primary); cursor:pointer; padding:6px 2px; font-size:13px; height:auto; }
   .newver { display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--warn-soft); color:var(--warn); border:1px solid var(--warn); border-radius:12px; padding:10px 14px; margin-bottom:12px; font-weight:600; }
   .seg { display:flex; gap:8px; }
   .seg button { flex:1; height:44px; background:var(--primary-soft); color:var(--primary); border:2px solid transparent; }
@@ -227,21 +229,36 @@ function builtInText(i) {
   const b = i.builtIn; if (!b) return '';
   return b.off ? 'Máy in tích hợp: đã tắt' : `Máy in tích hợp: ${b.ready ? 'sẵn sàng' : 'chưa kết nối'}`;
 }
+let showStale = false;
 function renderStations() {
   const box = $('stations');
   if (!client) { box.innerHTML = '<div class="hint">Chưa kết nối cửa hàng.</div>'; return; }
   if (!stations.size) { box.innerHTML = '<div class="hint">Chưa thấy Trạm in nào. Bật Trạm in trên điện thoại / máy POS / máy tính (cùng công ty và môi trường).</div>'; return; }
   box.innerHTML = '';
-  for (const [tid, i] of stations) {
+  // Trạm đã tắt / cài lại với mã mới vẫn còn tin cũ trên broker: ẩn bớt cho khỏi rối.
+  const now = Date.now();
+  const live = [], stale = [];
+  for (const e of stations) (PrintRelay.stationFresh(e[1], now) || e[0] === selected ? live : stale).push(e);
+  const add = ([tid, i], old) => {
     const p = i.printers || {};
     const el = document.createElement('div');
-    el.className = 'station' + (selected === tid ? ' sel' : '');
+    el.className = 'station' + (selected === tid ? ' sel' : '') + (old ? ' stale' : '');
     el.innerHTML = `<div class="ic">🖨</div><div class="grow"><div class="t">${esc(i.name || 'Máy Agent')}</div>
       <div class="s">${esc(i.model || '')} ${i.app ? '· ' + esc(i.app) : ''}</div>
-      <div class="s">${[builtInText(i), p.total ? `${p.ok}/${p.total} máy in kết nối` : ''].filter(Boolean).join(' · ') || 'Chưa có máy in'}</div></div>
+      <div class="s">${[old ? 'Có thể đã tắt' : '', builtInText(i), p.total ? `${p.ok}/${p.total} máy in kết nối` : ''].filter(Boolean).join(' · ') || 'Chưa có máy in'}</div></div>
       ${selected === tid ? pill('info', 'Đang chọn') : ''}`;
     el.onclick = () => { selected = tid; renderStations(); updatePrinters(); };
     box.appendChild(el);
+  };
+  live.forEach((e) => add(e, false));
+  if (!live.length && !stale.length) box.innerHTML = '<div class="hint">Chưa thấy Trạm in nào.</div>';
+  if (stale.length) {
+    if (showStale) stale.forEach((e) => add(e, true));
+    const a = document.createElement('button');
+    a.type = 'button'; a.className = 'linkbtn';
+    a.textContent = showStale ? 'Ẩn các trạm cũ' : `Hiện ${stale.length} trạm cũ (có thể đã tắt)`;
+    a.onclick = () => { showStale = !showStale; renderStations(); };
+    box.appendChild(a);
   }
 }
 function printerOptions(i) {
