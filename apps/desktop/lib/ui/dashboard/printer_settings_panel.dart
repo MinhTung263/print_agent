@@ -170,13 +170,13 @@ class _TestPrintButtonState extends State<_TestPrintButton> {
     final error = await widget.agent.printTestTo(widget.address);
     if (!mounted) return;
     setState(() => _busy = false);
+    // In được thì không báo gì (tờ giấy ra là đủ); chỉ báo khi LỖI để biết vì sao.
+    if (error == null) return;
     messenger.showSnackBar(
       SnackBar(
-        backgroundColor: error == null
-            ? AppColors.successGreen
-            : AppColors.errorRed,
-        duration: Duration(seconds: error == null ? 4 : 10),
-        content: Text(error ?? 'Đã gửi phiếu in thử'),
+        backgroundColor: AppColors.errorRed,
+        duration: const Duration(seconds: 10),
+        content: Text(error),
       ),
     );
   }

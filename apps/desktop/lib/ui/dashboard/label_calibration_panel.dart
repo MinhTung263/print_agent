@@ -68,23 +68,21 @@ class _LabelCalibrationPanelState extends State<LabelCalibrationPanel> {
 
   Future<void> _run(
     Future<AgentPrintFailure?> Function(LabelPreset size) action,
-    String ok,
   ) async {
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _busy = true);
     final failure = await action(_size);
     if (!mounted) return;
     setState(() => _busy = false);
-    final error = failure == null
-        ? null
-        : AgentJobErrorText.message(failure.error, detail: failure.detail);
+    // In được thì không báo gì (tờ giấy ra là đủ); chỉ báo khi LỖI để biết vì sao.
+    if (failure == null) return;
     messenger.showSnackBar(
       SnackBar(
-        backgroundColor: error == null
-            ? AppColors.successGreen
-            : AppColors.errorRed,
-        duration: Duration(seconds: error == null ? 4 : 10),
-        content: Text(error ?? ok),
+        backgroundColor: AppColors.errorRed,
+        duration: const Duration(seconds: 10),
+        content: Text(
+          AgentJobErrorText.message(failure.error, detail: failure.detail),
+        ),
       ),
     );
   }
@@ -100,15 +98,12 @@ class _LabelCalibrationPanelState extends State<LabelCalibrationPanel> {
         repeat: repeat,
       );
 
-  Future<void> _printSlip() => _run((size) => _slip(size), 'Đã gửi tem thử');
+  Future<void> _printSlip() => _run((size) => _slip(size));
 
   /// In [LabelDrift.rows] hàng liền nhau trong một lần: nhìn hàng cuối lệch bao nhiêu so
   /// với hàng đầu để tính khe đúng.
   Future<void> _printMeasure() async {
-    await _run(
-      (size) => _slip(size, repeat: LabelDrift.rows),
-      'Đã in ${LabelDrift.rows} tem liền — so tem cuối với tem đầu',
-    );
+    await _run((size) => _slip(size, repeat: LabelDrift.rows));
     if (mounted) setState(() => _measured = true);
   }
 
