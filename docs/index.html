@@ -127,7 +127,7 @@
     <ul class="timeline" id="timeline"></ul>
   </section>
 
-  <p class="hint">Chỉ để kiểm tra. Cần cùng công ty với Trạm in. Cổng in trực tiếp qua LAN: <a href="lan.html">trang LAN</a>.</p>
+  <p class="hint">Chỉ để kiểm tra. <span id="buildTag"></span> Cần cùng công ty với Trạm in. Cổng in trực tiếp qua LAN: <a href="lan.html">trang LAN</a>.</p>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
@@ -412,6 +412,7 @@ $('btnPaste').onclick = () => {
 // BUILD (và vào ?v= của các tệp script) + version.json; trang hỏi version.json (bỏ qua bộ
 // nhớ đệm) và báo "Có bản mới" kèm nút tải lại ngay — không phải đợi hết 10 phút.
 const BUILD = '__BUILD__';
+$('buildTag').textContent = /^[0-9a-f]{7}$/.test(BUILD) ? `[Bản trang ${BUILD}]` : '[chạy trên máy]';
 async function checkVersion() {
   if (!/^[0-9a-f]{7}$/.test(BUILD)) return;   // chạy trên máy (chưa đóng dấu bản)
   try {
