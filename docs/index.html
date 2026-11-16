@@ -33,8 +33,10 @@
   .prog .bar { height:6px; border-radius:3px; background:var(--primary-soft); overflow:hidden; }
   .prog .bar > i { display:block; height:100%; width:0; background:var(--primary); }
   .prog.ok .bar > i { background:var(--ok); } .prog.err .bar > i { background:var(--err); } .prog.warn .bar > i { background:var(--warn); }
-  .steps { display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:var(--muted); }
-  .steps span.on { color:var(--primary); font-weight:700; } .steps span.done { color:var(--ok); }
+  .progline { display:flex; justify-content:space-between; gap:12px; margin-top:8px; font-size:14px; font-weight:600; color:var(--primary); }
+  .progline #progTime { font-weight:400; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .prog.ok .progline > span:first-child { color:var(--ok); } .prog.err .progline > span:first-child { color:var(--err); } .prog.warn .progline > span:first-child { color:var(--warn); }
+  .log { margin-top:10px; } .log summary { cursor:pointer; font-size:13px; color:var(--muted); }
   .eta { margin-top:6px; font-size:13px; }
   [hidden] { display:none !important; }
   .station.stale { opacity:.55; }
@@ -125,10 +127,9 @@
     <button class="primary" id="btnPrint" style="width:100%;margin-top:12px" disabled>In thử</button>
     <div class="prog" id="prog" hidden>
       <div class="bar"><i id="progBar"></i></div>
-      <div class="steps" id="progSteps"></div>
-      <div class="eta" id="progEta"></div>
+      <div class="progline"><span id="progText"></span><span id="progTime"></span></div>
     </div>
-    <ul class="timeline" id="timeline"></ul>
+    <details class="log" id="logBox" hidden><summary>Chi tiết lần in này</summary><ul class="timeline" id="timeline"></ul></details>
   </section>
 
   <p class="hint">Chỉ để kiểm tra. <span id="buildTag"></span> Cần cùng công ty với Trạm in. Cổng in trực tiếp qua LAN: <a href="lan.html">trang LAN</a>.</p>
@@ -352,10 +353,10 @@ function line(jobId, text, cls) {
   if (li) return;
   li = document.createElement('li'); li.id = 'j' + jobId + text;
   li.innerHTML = `<span>${esc(text)}</span><span>${pill(cls, new Date().toLocaleTimeString('vi-VN'))}</span>`;
-  $('timeline').prepend(li);
+  $('timeline').prepend(li); $('logBox').hidden = false;
 }
 // ---------- Tiến trình in: nút xoay + thanh bước + thời gian chờ ----------
-const STEPS = ['Chuẩn bị', 'Gửi lệnh', 'Trạm in nhận', 'Đang in'];
+const STEPS = ['Chuẩn bị phiếu…', 'Gửi lệnh tới Trạm in…', 'Trạm in đã nhận lệnh…', 'Máy in đang in…'];
 const hist = () => { try { return JSON.parse(localStorage.getItem('printMs') || '[]'); } catch (_) { return []; } };
 const medianMs = () => { const h = hist().slice().sort((a, b) => a - b); return h.length ? h[Math.floor(h.length / 2)] : 0; };
 const printUi = {
@@ -363,7 +364,8 @@ const printUi = {
   start() {
     this.label = $('btnPrint').textContent; this.t0 = this.tStep = performance.now(); this.step = 0; this.cur = 0; this.target = 0;
     $('btnPrint').disabled = true; $('prog').hidden = false; $('prog').className = 'prog';
-    $('progSteps').innerHTML = STEPS.map((t, i) => `<span data-i="${i}">${t}</span>`).join('');
+    // Mỗi lần in một danh sách chi tiết mới (không dồn lại các lần trước).
+    $('timeline').innerHTML = ''; $('logBox').hidden = true; $('logBox').open = false;
     clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 100); this.tick(); this.animate();
   },
   go(i) { if (i > this.step) { this.step = i; this.tStep = performance.now(); } this.tick(); },
@@ -379,10 +381,11 @@ const printUi = {
   },
   tick() {
     const el = (performance.now() - this.t0) / 1000, eta = medianMs() / 1000;
-    $('btnPrint').innerHTML = `<span class="spin"></span>${STEPS[this.step]}… ${el.toFixed(1)}s`;
+    $('btnPrint').innerHTML = '<span class="spin"></span>Đang in…';
     this.target = PrintRelay.progressTarget(this.step, performance.now() - this.tStep, (eta || 2) * 1000 / STEPS.length);
-    document.querySelectorAll('#progSteps span').forEach((sp) => { const i = +sp.dataset.i; sp.className = i < this.step ? 'done' : i === this.step ? 'on' : ''; });
-    $('progEta').textContent = eta ? `Đã chờ ${el.toFixed(1)}s · thường mất khoảng ${eta.toFixed(1)}s` : `Đã chờ ${el.toFixed(1)}s`;
+    // Một dòng duy nhất: việc đang làm + thời gian.
+    $('progText').textContent = STEPS[this.step];
+    $('progTime').textContent = `${el.toFixed(1)}s`;
   },
   finish(kind, text) {   // kind: ok | err | warn
     clearInterval(this.timer); this.timer = null; cancelAnimationFrame(this.raf); const el = performance.now() - this.t0;
@@ -391,8 +394,8 @@ const printUi = {
     // Về 100% bằng chuyển động ngắn (không nhảy vọt).
     const bar = $('progBar'); bar.style.transition = 'width .3s ease-out'; bar.style.width = '100%';
     setTimeout(() => { bar.style.transition = ''; }, 400);
-    document.querySelectorAll('#progSteps span').forEach((sp) => { sp.className = kind === 'ok' ? 'done' : ''; });
-    $('progEta').textContent = `${text} · ${(el / 1000).toFixed(1)}s`;
+    $('progText').textContent = (kind === 'ok' ? '✓ ' : '') + text;
+    $('progTime').textContent = `${(el / 1000).toFixed(1)}s`;
     if (kind === 'ok') { const h = hist(); h.push(Math.round(el)); try { localStorage.setItem('printMs', JSON.stringify(h.slice(-7))); } catch (_) {} }
   },
 };
