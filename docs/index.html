@@ -418,7 +418,18 @@ async function checkVersion() {
   try {
     const r = await fetch(`version.json?t=${Date.now()}`, { cache: 'no-store' });
     const j = await r.json();
-    if (j && j.v && j.v !== BUILD) { $('newVer').hidden = false; $('btnNewVer').onclick = () => { location.href = `${location.pathname}?v=${j.v}`; }; }
+    if (j && j.v && j.v !== BUILD) {
+      $('newVer').hidden = false;
+      // Vừa bấm tải lại (có ?r=) mà vẫn ra bản cũ: máy chủ / bộ nhớ đệm chưa cập nhật xong —
+      // báo chờ thay vì để nút bấm như không có tác dụng.
+      const retried = /[?&]r=/.test(location.search);
+      $('newVer').querySelector('span').textContent = retried
+        ? 'Máy chủ chưa cập nhật xong bản mới — chờ ít phút rồi bấm Tải lại.'
+        : 'Có bản mới của trang.';
+      // Mỗi lần bấm dùng địa chỉ MỚI (?r=thời gian): không dính bộ nhớ đệm trình duyệt / CDN
+      // (bấm lại đúng địa chỉ cũ thì trình duyệt tải lại bản cũ, như không bấm).
+      $('btnNewVer').onclick = () => { location.replace(`${location.pathname}?v=${j.v}&r=${Date.now()}`); };
+    }
   } catch (_) {}
 }
 checkVersion(); setInterval(checkVersion, 60000);
