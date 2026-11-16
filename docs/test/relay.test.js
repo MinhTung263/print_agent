@@ -115,3 +115,32 @@ test('progressTarget: tăng đều theo bước và theo thời gian, không lù
   // Vừa vào bước: nhích ngay (không đứng yên).
   assert.ok(R.progressTarget(2, 300) > R.progressTarget(2, 0));
 });
+
+test('printerOptions: nhận loại máy in (tem / hoá đơn) và gồm cả máy USB của trạm', () => {
+  const info = {
+    builtIn: { templates: ['label'] },
+    printers: { names: [
+      { name: 'Máy in tem · XP-420B', kind: 'lan', addr: '192.168.1.100', ok: true },
+      { name: 'Máy in hoá đơn · Gprinter', kind: 'usb', addr: 'cups:EasyPOS_G', ok: true },
+      { name: 'Máy in của trạm', kind: 'builtin', ok: true },
+      { name: 'Không địa chỉ', kind: 'usb', ok: true },
+    ] },
+  };
+  const o = R.printerOptions(info);
+  assert.deepEqual(o.map((x) => [x.type, x.isLabel]), [['builtin', true], ['lan', true], ['usb', false]]);
+  assert.equal(o[2].addr, 'cups:EasyPOS_G');
+  assert.match(o[0].label, /máy in tem/);
+  // Máy in của trạm là máy hoá đơn.
+  assert.equal(R.printerOptions({ builtIn: { templates: ['temporaryPrintForm', 'paymentPrintingForm'] } })[0].isLabel, false);
+  assert.deepEqual(R.printerOptions(null), []);
+});
+
+test('job tới máy USB của trạm mang địa chỉ cổng + loại usb', () => {
+  const j = R.receiptJob({ imageBase64: 'x', printer: { type: 'usb', addr: 'cups:Q', name: 'G' }, stationId: 's1', paper: 'size80' });
+  assert.equal(j.printerType, 'usb');
+  assert.equal(j.printerIp, 'cups:Q');
+  assert.equal(j.usbDeviceId, 'cups:Q');
+  const l = R.labelJob({ images: ['x'], printer: { type: 'usb', addr: 'cups:T' }, stationId: 's1', labelSize: 'double' });
+  assert.equal(l.printerType, 'usb');
+  assert.equal(R.receiptJob({ imageBase64: 'x', printer: { type: 'builtin' }, paper: 'size80' }).printerType, 'builtin');
+});

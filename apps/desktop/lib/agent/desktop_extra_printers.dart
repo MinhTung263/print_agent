@@ -80,6 +80,7 @@ class DesktopExtraPrinters {
     double? offsetYMm,
     double? gapMm,
     bool? beep,
+    bool? autoCut,
   }) {
     _load();
     final i = _items.indexWhere((e) => e.address == address.trim());
@@ -93,6 +94,7 @@ class DesktopExtraPrinters {
       offsetYMm: offsetYMm,
       gapMm: gapMm,
       beep: beep,
+      autoCut: autoCut,
     );
     _save();
     return true;
@@ -107,6 +109,7 @@ class DesktopExtraPrinters {
     offsetYMm: v.offsetYMm,
     gapMm: v.gapMm,
     beep: v.beep,
+    autoCut: v.autoCut,
   );
 
   /// Máy in [from] tìm lại được ở [to] (đổi IP, theo MAC).
@@ -166,6 +169,7 @@ class ExtraPrinter {
     this.offsetYMm = 0,
     this.gapMm = 0,
     this.beep = true,
+    this.autoCut = true,
   });
 
   final String address;
@@ -183,6 +187,7 @@ class ExtraPrinter {
   final double offsetYMm;
   final double gapMm;
   final bool beep;
+  final bool autoCut;
 
   PrinterSettings get settings => PrinterSettings(
     type: type,
@@ -191,6 +196,7 @@ class ExtraPrinter {
     offsetYMm: offsetYMm,
     gapMm: gapMm,
     beep: beep,
+    autoCut: autoCut,
   );
 
   ExtraPrinter copyWith({
@@ -203,6 +209,7 @@ class ExtraPrinter {
     double? offsetYMm,
     double? gapMm,
     bool? beep,
+    bool? autoCut,
   }) => ExtraPrinter(
     address: address ?? this.address,
     name: name ?? this.name,
@@ -213,6 +220,7 @@ class ExtraPrinter {
     offsetYMm: offsetYMm ?? this.offsetYMm,
     gapMm: gapMm ?? this.gapMm,
     beep: beep ?? this.beep,
+    autoCut: autoCut ?? this.autoCut,
   );
 
   /// "Máy in tem · XP-420B" như máy in chính.
@@ -238,6 +246,7 @@ class ExtraPrinter {
     'offsetY': offsetYMm,
     'gap': gapMm,
     'beep': beep,
+    'autoCut': autoCut,
   };
 
   static ExtraPrinter? fromJson(Map<Object?, Object?> m) {
@@ -252,6 +261,7 @@ class ExtraPrinter {
       offsetXMm: _mm(m['offsetX']),
       offsetYMm: _mm(m['offsetY']),
       beep: m['beep'] != false,
+      autoCut: m['autoCut'] != false,
       gapMm: (m['gap'] is num ? (m['gap'] as num).toDouble() : 0.0)
           .clamp(0.0, 10.0)
           .toDouble(),

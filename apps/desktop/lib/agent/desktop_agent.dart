@@ -259,6 +259,7 @@ class DesktopAgent extends ChangeNotifier {
       offsetYMm: _config.labelOffsetYMm,
       gapMm: _config.labelGapMm,
       beep: _config.beep,
+      autoCut: _config.autoCut,
     );
   }
 
@@ -289,6 +290,7 @@ class DesktopAgent extends ChangeNotifier {
           labelOffsetYMm: next.offsetYMm,
           labelGapMm: next.gapMm,
           beep: next.beep,
+          autoCut: next.autoCut,
         ),
       );
     } else if (gateway.extras.updateSettings(a, next)) {
@@ -450,6 +452,7 @@ class DesktopAgent extends ChangeNotifier {
             address: a,
             label: AgentIdentity.label(service.displayName, service.stationId),
             paperMm: s.paper.pageMm,
+            autoCut: s.autoCut,
           );
     if (a == _config.printer.trim()) unawaited(gateway.reconnectBuiltIn());
     return failure == null

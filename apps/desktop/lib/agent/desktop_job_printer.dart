@@ -32,6 +32,7 @@ class DesktopJobPrinter implements AgentJobPrinter<DesktopPrinter> {
         offsetYMm: _config().labelOffsetYMm,
         gapMm: _config().labelGapMm,
         beep: _config().beep,
+        autoCut: _config().autoCut,
       );
 
   final AgentConfig Function() _config;
@@ -78,6 +79,7 @@ class DesktopJobPrinter implements AgentJobPrinter<DesktopPrinter> {
             job,
             printer.address,
             allowBeep: settings.beep,
+            autoCut: settings.autoCut,
           );
     // Nhớ máy in cho sơ đồ — không bắt lệnh chờ (đọc bảng ARP).
     if (failure == null) unawaited(_gateway.printedFor(printer));

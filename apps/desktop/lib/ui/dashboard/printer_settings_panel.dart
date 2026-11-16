@@ -97,6 +97,33 @@ class PrinterSettingsPanel extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      AppText('Tự động cắt giấy'),
+                      AppText(
+                        'Máy in tự cắt sau mỗi phiếu. Tắt nếu máy không có dao cắt hoặc bạn muốn tự xé.',
+                        variant: .caption,
+                        tone: .secondary,
+                        maxLines: 2,
+                      ),
+                    ],
+                  ),
+                ),
+                CupertinoSwitch(
+                  value: s.autoCut,
+                  activeTrackColor: AppColors.primaryBlueBase,
+                  onChanged: (v) => unawaited(
+                    agent.updateSettings(address, s.copyWith(autoCut: v)),
+                  ),
+                ),
+              ],
+            ),
+            AppRow(
+              spacing: AppSpace.sm,
+              children: [
+                const Expanded(
+                  child: AppColumn(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                       AppText('Còi báo'),
                       AppText(
                         'Máy in kêu bíp khi có phiếu báo bếp. Tắt để máy in im lặng.',

@@ -47,6 +47,7 @@ abstract final class AgentPrinter {
     PrintRelayJob job,
     String address, {
     bool allowBeep = true,
+    bool autoCut = true,
   }) async {
     if (job.images.isEmpty) {
       return const AgentPrintFailure(AgentJobError.noContent);
@@ -66,6 +67,7 @@ abstract final class AgentPrinter {
         copies: job.copies,
         openDrawer: job.openDrawer,
         beep: job.beep && allowBeep,
+        cut: autoCut,
       ),
     );
   }
@@ -185,6 +187,7 @@ abstract final class AgentPrinter {
     required String address,
     required String label,
     required int paperMm,
+    bool autoCut = true,
   }) {
     final port = portOf(address);
     if (port == null) {
@@ -206,7 +209,7 @@ abstract final class AgentPrinter {
           '${two(now.day)}/${two(now.month)}/${now.year} '
               '${two(now.hour)}:${two(now.minute)}',
           'Kho ${paperMm}mm - $address',
-        ]),
+        ], cut: autoCut),
       ),
     );
   }

@@ -13,6 +13,7 @@ class PrinterSettings {
     this.offsetYMm = 0,
     this.gapMm = 0,
     this.beep = true,
+    this.autoCut = true,
   });
 
   final PrinterType type;
@@ -26,6 +27,9 @@ class PrinterSettings {
   /// Cho máy in kêu bíp khi phiếu có yêu cầu (phiếu báo bếp). Tắt: máy in im lặng.
   final bool beep;
 
+  /// Tự động cắt giấy sau mỗi phiếu (máy hoá đơn có dao cắt). Tắt: chỉ đẩy giấy, tự xé.
+  final bool autoCut;
+
   LabelCalibration get calibration =>
       LabelCalibration(offsetXMm: offsetXMm, offsetYMm: offsetYMm);
 
@@ -36,6 +40,7 @@ class PrinterSettings {
     double? offsetYMm,
     double? gapMm,
     bool? beep,
+    bool? autoCut,
   }) => PrinterSettings(
     type: type ?? this.type,
     paper: paper ?? this.paper,
@@ -43,6 +48,7 @@ class PrinterSettings {
     offsetYMm: offsetYMm ?? this.offsetYMm,
     gapMm: gapMm ?? this.gapMm,
     beep: beep ?? this.beep,
+    autoCut: autoCut ?? this.autoCut,
   );
 
   PrinterSettings withCalibration(LabelCalibration c) =>

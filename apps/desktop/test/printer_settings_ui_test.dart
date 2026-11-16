@@ -161,6 +161,29 @@ void main() {
     agent.dispose();
   });
 
+  test('tự động cắt giấy: mặc định bật, lưu riêng từng máy', () async {
+    final agent = DesktopAgent(const AgentConfig(printer: '10.0.0.5'));
+    agent.gateway.extras.add('10.0.0.6');
+    expect(agent.settingsOf('10.0.0.5').autoCut, isTrue);
+    expect(agent.settingsOf('10.0.0.6').autoCut, isTrue);
+    await agent.updateSettings(
+      '10.0.0.6',
+      const PrinterSettings(autoCut: false),
+    );
+    expect(agent.settingsOf('10.0.0.6').autoCut, isFalse);
+    expect(agent.settingsOf('10.0.0.5').autoCut, isTrue);
+    await agent.updateSettings(
+      '10.0.0.5',
+      const PrinterSettings(autoCut: false),
+    );
+    expect(AgentConfig.load().autoCut, isFalse);
+    expect(
+      agent.gateway.extras.byAddress('10.0.0.6')!.settings.autoCut,
+      isFalse,
+    );
+    agent.dispose();
+  });
+
   test('khe lẻ lưu riêng từng máy', () async {
     final agent = DesktopAgent(const AgentConfig(printer: '10.0.0.5'));
     agent.gateway.extras.add('10.0.0.6', type: PrinterType.label);
@@ -229,6 +252,7 @@ void main() {
       await show('10.0.0.5');
       expect(find.text('Khổ giấy'), findsOneWidget);
       expect(find.text('Còi báo'), findsOneWidget);
+      expect(find.text('Tự động cắt giấy'), findsOneWidget);
       expect(find.text('In thử'), findsOneWidget);
       expect(find.text('Căn chỉnh tem'), findsNothing);
       expect(t.takeException(), isNull);

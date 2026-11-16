@@ -75,7 +75,9 @@ abstract final class AgentStationInfo {
               AgentPrinterKind.usb => 'usb',
               _ => 'lan',
             },
-            if (s.printer.refKind == AgentPrinterKind.lan)
+            // LAN: IP; USB của máy tính: địa chỉ cổng (trang web chọn được máy in USB của trạm).
+            if (s.printer.refKind == AgentPrinterKind.lan ||
+                s.printer.refKind == AgentPrinterKind.usb)
               'addr': s.printer.refAddress ?? '',
             // Xem chi tiết máy in trên máy khác.
             if ((s.printer.refMac ?? '').isNotEmpty) 'mac': s.printer.refMac,

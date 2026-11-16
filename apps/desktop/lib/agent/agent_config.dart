@@ -24,6 +24,7 @@ class AgentConfig {
     this.printerName = '',
     this.printerType = PrinterType.receipt,
     this.beep = true,
+    this.autoCut = true,
   });
 
   final String env;
@@ -65,6 +66,9 @@ class AgentConfig {
   /// Máy in chính có kêu bíp khi phiếu yêu cầu không.
   final bool beep;
 
+  /// Máy in chính tự động cắt giấy sau mỗi phiếu không.
+  final bool autoCut;
+
   bool get ready => companyId != null && ownerId != null;
 
   bool get hasPrinter => printer.trim().isNotEmpty;
@@ -86,6 +90,7 @@ class AgentConfig {
     String? printerName,
     PrinterType? printerType,
     bool? beep,
+    bool? autoCut,
   }) => AgentConfig(
     env: env ?? this.env,
     companyId: companyId ?? this.companyId,
@@ -106,6 +111,7 @@ class AgentConfig {
     printerName: printerName ?? this.printerName,
     printerType: printerType ?? this.printerType,
     beep: beep ?? this.beep,
+    autoCut: autoCut ?? this.autoCut,
   );
 
   /// Môi trường duy nhất (trạm in luôn chạy máy chủ thật).
@@ -140,6 +146,7 @@ class AgentConfig {
     printerName: AgentStore.get('printerName') ?? '',
     printerType: PrinterType.fromName(AgentStore.get('printerType')),
     beep: AgentStore.get('beep') != '0',
+    autoCut: AgentStore.get('autoCut') != '0',
   );
 
   /// Đọc độ chỉnh (mm), giới hạn ±20mm; sai / rỗng = 0.
@@ -163,6 +170,7 @@ class AgentConfig {
     AgentStore.set('printerName', printerName);
     AgentStore.set('printerType', printerType.name);
     AgentStore.set('beep', beep ? '1' : '0');
+    AgentStore.set('autoCut', autoCut ? '1' : '0');
   }
 
   /// Đăng xuất: bỏ công ty đã lưu (giữ mã Agent, tên, máy in, khổ giấy).
@@ -195,6 +203,7 @@ class AgentConfig {
     printerName: printerName,
     printerType: printerType,
     beep: beep,
+    autoCut: autoCut,
   );
 
   /// Mã Agent của máy này — cố định (lưu lại), để máy bán hàng nhớ đúng "máy in

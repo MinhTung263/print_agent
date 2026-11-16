@@ -66,14 +66,15 @@
    * `stationId`: mã Agent đích (`id` trong thông tin trạm).
    */
   function receiptJob({ imageBase64, printer, stationId, paper, copies = 1, beep = false, openDrawer = false, sender = 'Web thử in' }) {
-    const builtin = printer.type === 'builtin';
+    const builtin = printer.type === 'builtin', usb = printer.type === 'usb';
     return {
       kind: 'receipt',
       status: 'pending',
       createdAt: Date.now(),
       printerId: null,
-      printerIp: builtin ? 'builtin' : printer.ip,
-      printerType: builtin ? 'builtin' : 'lan',
+      printerIp: builtin ? 'builtin' : usb ? printer.addr : printer.ip,
+      printerType: builtin ? 'builtin' : usb ? 'usb' : 'lan',
+      ...(usb ? { usbDeviceId: printer.addr } : {}),
       ...(stationId ? { targetStation: stationId } : {}),
       printerName: printer.name || null,
       sender,
@@ -92,14 +93,15 @@
    * (`single`, `single_40_30`, `double`...); [copies]: số lần in mỗi hàng.
    */
   function labelJob({ images, printer, stationId, labelSize, copies = 1, spec, sender = 'Web thử in' }) {
-    const builtin = printer.type === 'builtin';
+    const builtin = printer.type === 'builtin', usb = printer.type === 'usb';
     return {
       kind: 'label',
       status: 'pending',
       createdAt: Date.now(),
       printerId: null,
-      printerIp: builtin ? 'builtin' : printer.ip,
-      printerType: builtin ? 'builtin' : 'lan',
+      printerIp: builtin ? 'builtin' : usb ? printer.addr : printer.ip,
+      printerType: builtin ? 'builtin' : usb ? 'usb' : 'lan',
+      ...(usb ? { usbDeviceId: printer.addr } : {}),
       ...(stationId ? { targetStation: stationId } : {}),
       printerName: printer.name || null,
       sender,
@@ -151,6 +153,30 @@
     return from + (to - from) * 0.85 * frac;
   }
 
-  g.PrintRelay = { PREFIX, progressTarget, replacedStationIds, stationFresh, STATION_MAX_AGE_MS, randomHex, normalizeEnv, shopKey, parseShopKey, channel, encrypt, decrypt, receiptJob, labelJob };
+  /**
+   * Danh sách máy in của một trạm (`info` = thông tin trạm) để chọn khi in thử, mỗi máy kèm loại:
+   * `isLabel` (máy in tem) hay máy in hoá đơn. Máy in của trạm: tem nếu mẫu in nhận được chỉ có `label`.
+   * Máy khác: nhận ra qua tên ("Máy in tem · ...") — Agent máy tính đặt tên theo loại máy.
+   */
+  function printerOptions(info) {
+    const out = [];
+    const isLabelName = (n) => /^máy in tem/i.test(n || '');
+    if (info && info.builtIn) {
+      const t = info.builtIn.templates || [];
+      const label = t.length === 1 && t[0] === 'label';
+      out.push({ type: 'builtin', name: 'Máy in của trạm', isLabel: label,
+        label: `Máy in của trạm (${label ? 'máy in tem' : 'máy in hoá đơn'})` });
+    }
+    for (const p of (info && info.printers && info.printers.names) || []) {
+      if (!p.addr || (p.kind !== 'lan' && p.kind !== 'usb')) continue;
+      const isLabel = isLabelName(p.name), ok = p.ok ? '' : ' — chưa kết nối';
+      out.push(p.kind === 'usb'
+        ? { type: 'usb', addr: p.addr, name: p.name, isLabel, label: `${p.name || 'Máy in USB'} (USB)${ok}` }
+        : { type: 'lan', ip: p.addr, name: p.name, isLabel, label: `${p.name || 'Máy in LAN'} (${p.addr})${ok}` });
+    }
+    return out;
+  }
+
+  g.PrintRelay = { PREFIX, printerOptions, progressTarget, replacedStationIds, stationFresh, STATION_MAX_AGE_MS, randomHex, normalizeEnv, shopKey, parseShopKey, channel, encrypt, decrypt, receiptJob, labelJob };
   if (typeof module !== 'undefined') module.exports = g.PrintRelay;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

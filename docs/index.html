@@ -115,7 +115,8 @@
       <div class="hint" id="temInfo" style="margin:-4px 0 12px"></div>
     </div>
     <div class="row field">
-      <div><label for="printer">Máy in</label><select id="printer" disabled><option>Chọn Trạm in trước</option></select></div>
+      <div><label for="printer">Máy in</label><select id="printer" disabled><option>Chọn Trạm in trước</option></select>
+        <div class="hint" id="printerHint" hidden style="color:var(--warn);margin-top:6px"></div></div>
       <div id="paperBox"><label for="paper">Khổ giấy</label><select id="paper"><option value="size58">58mm</option><option value="size80">80mm</option></select></div>
       <div style="flex:.5"><label for="copies">Số bản</label><input type="number" id="copies" min="1" max="10" value="1"></div>
     </div>
@@ -263,19 +264,22 @@ function renderStations() {
     box.appendChild(a);
   }
 }
-function printerOptions(i) {
-  const out = [];
-  if (i.builtIn) out.push({ type: 'builtin', name: 'Máy in tích hợp', label: 'Máy in tích hợp' });
-  for (const p of (i.printers && i.printers.names) || []) {
-    if (p.kind === 'lan' && p.addr) out.push({ type: 'lan', ip: p.addr, name: p.name, label: `${p.name || 'Máy in LAN'} (${p.addr})${p.ok ? '' : ' — chưa kết nối'}` });
-  }
-  return out;
-}
 function updatePrinters() {
   const sel = $('printer'), i = selected && stations.get(selected);
-  const opts = i ? printerOptions(i) : [];
-  sel.innerHTML = opts.length ? opts.map((o, k) => `<option value="${k}">${esc(o.label)}</option>`).join('') : `<option>${i ? 'Trạm in này chưa có máy in' : 'Chọn Trạm in trước'}</option>`;
+  const all = i ? PrintRelay.printerOptions(i) : [];
+  // Chỉ máy in ĐÚNG LOẠI với phiếu đang in: hoá đơn gửi tới máy in tem (hoặc tem tới máy hoá đơn)
+  // không ra gì — phải nói rõ thay vì để người dùng chọn nhầm.
+  const wantLabel = typeof isLabel === 'function' && isLabel();
+  const opts = all.filter((o) => !!o.isLabel === wantLabel);
+  sel.innerHTML = opts.length ? opts.map((o, k) => `<option value="${k}">${esc(o.label)}</option>`).join('')
+    : `<option>${!i ? 'Chọn Trạm in trước' : all.length ? `Trạm in này chưa có máy in ${wantLabel ? 'tem' : 'hoá đơn'}` : 'Trạm in này chưa có máy in'}</option>`;
   sel.disabled = !opts.length; sel._opts = opts;
+  const other = all.filter((o) => !!o.isLabel !== wantLabel);
+  const hint = $('printerHint');
+  if (hint) {
+    hint.hidden = !(i && !opts.length && other.length);
+    hint.textContent = `Trạm in này chỉ có ${wantLabel ? 'máy in hoá đơn' : 'máy in tem'} (${other.map((o) => o.name).filter(Boolean).join(', ') || 'máy in của trạm'}) — ${wantLabel ? 'đổi "Loại phiếu" sang Hoá đơn để in' : 'đổi "Loại phiếu" sang Tem để in'}.`;
+  }
   if (i && i.builtIn && i.builtIn.paper) $('paper').value = Number(i.builtIn.paper) >= 80 || i.builtIn.paper === 'size80' ? 'size80' : 'size58';
   $('btnPrint').disabled = !opts.length || !client;
 }
@@ -322,6 +326,7 @@ renderSizes();
 $('temSize').value = 'double'; // mặc định: 2 tem/hàng, mỗi tem 35×22mm
 $('tpl').innerHTML = TeaLabel.TEMPLATES.map((t) => `<option value="${t.id}">${t.title}</option>`).join('');
 ['kind', 'tpl', 'temSize', 'cups', 'paper', 'frame'].forEach((id) => { $(id).onchange = refreshPreview; });
+$('kind').addEventListener('change', () => updatePrinters());
 $('cups').oninput = refreshPreview;
 refreshPreview();
 
