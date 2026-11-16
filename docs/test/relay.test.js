@@ -87,3 +87,14 @@ test('stationFresh: trạm báo gần đây còn sống, trạm báo từ lâu c
   assert.equal(R.stationFresh({ name: 'x' }, now), true);
   assert.equal(R.stationFresh(null, now), true);
 });
+
+test('replacedStationIds: gom mã cũ mà trạm mới báo đã thay', () => {
+  const m = new Map([
+    ['new1', { name: 'A', prev: ['old1', 'old2', ''] }],
+    ['old1', { name: 'A' }],
+    ['other', { name: 'B', prev: 'không phải mảng' }],
+  ]);
+  const r = R.replacedStationIds(m);
+  assert.deepEqual([...r].sort(), ['old1', 'old2']);
+  assert.equal(R.replacedStationIds(new Map()).size, 0);
+});

@@ -238,7 +238,9 @@ function renderStations() {
   // Trạm đã tắt / cài lại với mã mới vẫn còn tin cũ trên broker: ẩn bớt cho khỏi rối.
   const now = Date.now();
   const live = [], stale = [];
-  for (const e of stations) (PrintRelay.stationFresh(e[1], now) || e[0] === selected ? live : stale).push(e);
+  // Trạm cũ đã được thay bằng trạm mã mới (báo `prev`): bỏ hẳn, không phải "trạm cũ" nữa.
+  const replaced = PrintRelay.replacedStationIds(stations);
+  for (const e of stations) if (replaced.has(e[0]) && e[0] !== selected) continue; else (PrintRelay.stationFresh(e[1], now) || e[0] === selected ? live : stale).push(e);
   const add = ([tid, i], old) => {
     const p = i.printers || {};
     const el = document.createElement('div');

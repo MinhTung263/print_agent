@@ -126,6 +126,18 @@
     return now - at <= maxAgeMs;
   }
 
-  g.PrintRelay = { PREFIX, stationFresh, STATION_MAX_AGE_MS, randomHex, normalizeEnv, shopKey, parseShopKey, channel, encrypt, decrypt, receiptJob, labelJob };
+  /**
+   * Mã trạm cũ đã được thay: trạm đổi sang mã theo máy báo kèm `prev` = các mã cũ của nó (cài lại,
+   * đổi cách sinh mã). Trạm cũ còn tin retained trên broker thì ẩn đi — chính là trạm này.
+   */
+  function replacedStationIds(stations) {
+    const out = new Set();
+    for (const info of stations.values()) {
+      if (info && Array.isArray(info.prev)) for (const id of info.prev) if (typeof id === 'string' && id) out.add(id);
+    }
+    return out;
+  }
+
+  g.PrintRelay = { PREFIX, replacedStationIds, stationFresh, STATION_MAX_AGE_MS, randomHex, normalizeEnv, shopKey, parseShopKey, channel, encrypt, decrypt, receiptJob, labelJob };
   if (typeof module !== 'undefined') module.exports = g.PrintRelay;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

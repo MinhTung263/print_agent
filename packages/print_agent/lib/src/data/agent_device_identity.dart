@@ -1,4 +1,5 @@
 import '../print_agent_module.dart';
+import 'machine_id.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -10,7 +11,8 @@ import 'package:printer_label/printer_label.dart';
 /// prod...) dùng chung một mã → một máy chỉ hiện là MỘT Agent.
 ///
 /// Mã = băm của mã phần cứng ([PrinterLabel.deviceId]: serial trên Android ≤
-/// 7.1, ANDROID_ID trên 8+) — không gửi mã gốc đi. Máy không đọc được mã phần
+/// 7.1, ANDROID_ID trên 8+; máy tính: [MachineId] — MachineGuid Windows,
+/// IOPlatformUUID macOS, machine-id Linux) — không gửi mã gốc đi. Máy không đọc được mã phần
 /// cứng (iOS...) giữ mã ngẫu nhiên như trước. Mã cũ (ngẫu nhiên) được nhớ lại
 /// ([previousIds]) và báo kèm thông tin trạm để máy khác gộp Agent cũ vào mã mới.
 abstract final class AgentDeviceIdentity {
@@ -20,16 +22,19 @@ abstract final class AgentDeviceIdentity {
   /// Đổi mã đang lưu ở [storageKey] sang mã theo máy (nếu khác) — gọi TRƯỚC khi
   /// tạo trạm (mã trạm cố định từ lúc tạo).
   static Future<void> adopt(String storageKey) async {
-    if (!Platform.isAndroid) return;
     String? raw;
     try {
-      raw = await PrinterLabel.deviceId().timeout(const Duration(seconds: 2));
+      if (Platform.isAndroid) {
+        raw = await PrinterLabel.deviceId().timeout(const Duration(seconds: 2));
+      } else if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+        raw = await MachineId.read();
+      }
     } catch (_) {}
     if (raw == null || raw.isEmpty) return;
-    final id = sha256
-        .convert(utf8.encode('easypos-agent:$raw'))
-        .toString()
-        .substring(0, 16);
+    final id = stationIdFor(
+      raw,
+      user: Platform.isAndroid ? '' : MachineId.osUser,
+    );
     final current =
         PrintAgentModule.host.storage.get(storageKey)?.toString() ?? '';
     if (current == id) return;
@@ -45,6 +50,13 @@ abstract final class AgentDeviceIdentity {
       '[AGENT] Mã Agent theo máy: $id (thay mã cũ "$current")',
     );
   }
+
+  /// Mã trạm từ mã máy [raw] (băm, 16 ký tự hex). Máy tính: gắn thêm tên người dùng hệ điều hành
+  /// ([user]) — hai người dùng cùng đăng nhập một máy chạy hai Agent riêng không trùng mã.
+  static String stationIdFor(String raw, {String user = ''}) => sha256
+      .convert(utf8.encode('easypos-agent:$raw${user.isEmpty ? '' : ':$user'}'))
+      .toString()
+      .substring(0, 16);
 
   /// Các mã Agent cũ của máy này (trước khi dùng mã theo máy).
   static List<String> get previousIds {
