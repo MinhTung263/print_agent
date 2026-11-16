@@ -119,4 +119,36 @@ void main() {
       findsNothing,
     );
   });
+
+  testWidgets('có onRemove: hiện nút Xoá máy in; không có thì không hiện', (
+    t,
+  ) async {
+    await pump(
+      t,
+      AgentPrinterDetail(
+        name: 'Bếp',
+        kind: 'lan',
+        state: AgentPrinterDetailState.ready,
+        on: true,
+        onRemove: () async => true,
+      ),
+    );
+    expect(
+      find.text(LocaleKeys.printerSetting_agentPrinterRemove.tr),
+      findsOneWidget,
+    );
+    await pump(
+      t,
+      const AgentPrinterDetail(
+        name: 'Bếp',
+        kind: 'lan',
+        state: AgentPrinterDetailState.ready,
+        on: true,
+      ),
+    );
+    expect(
+      find.text(LocaleKeys.printerSetting_agentPrinterRemove.tr),
+      findsNothing,
+    );
+  });
 }

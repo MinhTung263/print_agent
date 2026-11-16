@@ -84,13 +84,7 @@ class _Row extends StatelessWidget {
         spacing: AppSpace.md,
         children: [
           a.active
-              ? SizedBox.square(
-                  dimension: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: color,
-                  ),
-                )
+              ? PrintAgentUi.kit.spinner(size: 22, color: color)
               : Icon(icon, color: color, size: 22),
           Expanded(
             child: AppColumn(

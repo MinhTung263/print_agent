@@ -30,6 +30,7 @@ export 'src/domain/entities/peer_built_in_printer.dart';
 export 'src/domain/ports/agent_host.dart';
 export 'src/domain/ports/agent_job_printer.dart';
 export 'src/print_agent_module.dart';
+export 'src/presentation/utils/agent_job_error_text.dart';
 export 'src/web/agent_service_web_print.dart';
 export 'src/web/agent_web_bridge.dart';
 export 'src/web/web_bridge_server.dart';

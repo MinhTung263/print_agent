@@ -62,6 +62,42 @@ void main() {
       expect(watchdog.statuses.single.note, '10.0.0.9 → 10.0.0.23');
     });
 
+    test(
+      'rút / cắm lại máy in chính: trạng thái đổi ngay, không chờ lượt 60s',
+      () async {
+        gateway
+          ..hasBuiltIn = true
+          ..builtInConnected = true
+          ..ready = true;
+        watchdog.start();
+        addTearDown(watchdog.stop);
+        AgentPrinterState? state() => watchdog.statuses
+            .where((s) => s.printer.refKind == AgentPrinterKind.builtIn)
+            .firstOrNull
+            ?.state;
+        Future<void> probe() async {
+          watchdog.watchClosely(true);
+          await Future<void>.delayed(const Duration(milliseconds: 300));
+          watchdog.watchClosely(false);
+        }
+
+        await probe();
+        expect(state(), AgentPrinterState.connected);
+
+        gateway
+          ..ready =
+              false // rút USB / tắt máy in
+          ..builtInComesBack = false;
+        await probe();
+        expect(state(), AgentPrinterState.disconnected);
+        expect(gateway.builtInRestarts, greaterThan(0));
+
+        gateway.ready = true; // cắm lại
+        await probe();
+        expect(state(), AgentPrinterState.connected);
+      },
+    );
+
     test('waitUntilReady trả máy in khi sẵn sàng', () async {
       expect(await watchdog.waitUntilReady(kitchen), kitchen);
       expect(watchdog.statuses.single.state, AgentPrinterState.connected);

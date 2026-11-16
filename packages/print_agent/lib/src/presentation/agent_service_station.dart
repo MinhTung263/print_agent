@@ -59,6 +59,10 @@ class AgentServiceStation implements AgentStation {
       _service.removeAgent(station);
 
   @override
+  Future<bool> deleteAgent(Map<Object?, Object?> station) =>
+      _service.deleteAgent(station);
+
+  @override
   RxBool get isPrimary => _service.isPrimary;
 
   @override

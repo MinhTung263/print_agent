@@ -184,10 +184,10 @@ class _AgentWifiSwitchSheetState extends State<AgentWifiSwitchSheet>
             maxLines: 3,
           ),
           if (networks == null)
-            const Center(
+            Center(
               child: AppPadding.all(
                 AppSpace.lg,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: PrintAgentUi.kit.spinner(size: 22),
               ),
             )
           else

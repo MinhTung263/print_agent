@@ -3,6 +3,7 @@ import 'package:print_agent/src/presentation/agent_widgets.dart';
 import 'package:print_agent/src/presentation/kit/kit.dart';
 
 import 'package:print_agent/src/agent_domain.dart';
+import 'package:print_agent/src/presentation/utils/agent_job_error_text.dart';
 import 'package:print_agent/src/presentation/utils/agent_time_format.dart';
 
 /// Một lệnh in hộ: hoá đơn / tem, máy in nào, máy nào gửi, giờ + kênh + thời
@@ -11,23 +12,6 @@ class AgentJobRow extends StatelessWidget {
   const AgentJobRow({super.key, required this.log});
 
   final AgentJobLog log;
-
-  static String _errorText(AgentJobError? e) => switch (e) {
-    AgentJobError.noContent => LocaleKeys.printerSetting_agentJobErrNoContent,
-    AgentJobError.otherNetwork =>
-      LocaleKeys.printerSetting_agentJobErrOtherNetwork,
-    AgentJobError.builtInNotReady =>
-      LocaleKeys.printerSetting_agentJobErrBuiltIn,
-    AgentJobError.sendFailed => LocaleKeys.printerSetting_agentJobErrSend,
-    AgentJobError.outOfPaper => LocaleKeys.printerSetting_agentJobErrOutOfPaper,
-    AgentJobError.coverOpen => LocaleKeys.printerSetting_agentJobErrCoverOpen,
-    AgentJobError.overheated => LocaleKeys.printerSetting_agentJobErrOverheated,
-    AgentJobError.busy => LocaleKeys.printerSetting_agentJobErrBusy,
-    AgentJobError.unreachable =>
-      LocaleKeys.printerSetting_agentJobErrUnreachable,
-    AgentJobError.notReady ||
-    null => LocaleKeys.printerSetting_agentJobErrNotReady,
-  }.tr;
 
   /// Biểu tượng kiểu kết nối máy in.
   static IconData _connectionIcon(String? connection) => switch (connection) {
@@ -45,9 +29,8 @@ class AgentJobRow extends StatelessWidget {
     final sender = log.sender?.isNotEmpty ?? false
         ? log.sender!
         : LocaleKeys.printerSetting_agentJobUnknownSender.tr;
-    // Chỉ thông tin khách cần: máy in nào, máy nào gửi, lúc nào, lý do lỗi dễ
-    // hiểu (IP, đường đi, thời gian in, câu lỗi gốc của máy in vẫn lưu trong
-    // nhật ký để hỗ trợ kỹ thuật).
+    // Lệnh thành công: chỉ máy in nào, máy nào gửi, lúc nào. Lệnh lỗi: thêm lý do, cách
+    // xử lý, địa chỉ máy in và câu lỗi gốc để khách / hỗ trợ biết do đâu.
     final printer = log.printerName;
     final meta = formatAgentTime(log.at);
     return AppRow(
@@ -93,12 +76,33 @@ class AgentJobRow extends StatelessWidget {
                 text: LocaleKeys.printerSetting_agentJobFromTr(sender: sender),
               ),
               _IconLine(icon: Icons.schedule_rounded, text: meta),
-              if (!log.ok)
+              if (!log.ok) ...[
+                // Vì sao in không được + cách xử lý + câu lỗi gốc + địa chỉ máy in (LAN).
                 _IconLine(
                   icon: Icons.error_outline_rounded,
-                  text: _errorText(log.error),
+                  text: AgentJobErrorText.reason(log.error),
                   color: AppColors.errorRed,
                 ),
+                _IconLine(
+                  icon: Icons.build_circle_outlined,
+                  text: AgentJobErrorText.hint(log.error),
+                ),
+                if ((log.connection ?? 'lan') == 'lan' &&
+                    (log.printerAddress ?? '').isNotEmpty)
+                  _IconLine(
+                    icon: Icons.lan_outlined,
+                    text:
+                        '${LocaleKeys.printerSetting_agentPrinterDetailIp.tr}: '
+                        '${log.printerAddress}',
+                  ),
+                if (AgentJobErrorText.detail(log.error, log.detail).isNotEmpty)
+                  _IconLine(
+                    icon: Icons.info_outline_rounded,
+                    text: LocaleKeys.printerSetting_agentJobDetailTr(
+                      detail: AgentJobErrorText.detail(log.error, log.detail),
+                    ),
+                  ),
+              ],
             ],
           ),
         ),

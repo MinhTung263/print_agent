@@ -31,10 +31,7 @@ class AgentMapHeaderAction extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
         ),
         child: busy
-            ? const SizedBox.square(
-                dimension: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
+            ? PrintAgentUi.kit.spinner(size: 20)
             : Icon(icon, size: 24, color: AppColors.primaryBlueBase),
       ),
     );

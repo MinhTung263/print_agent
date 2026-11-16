@@ -85,6 +85,14 @@ class FakeStation implements AgentStation {
   @override
   final AgentWifi wifi = FakeWifi();
 
+  final List<Object?> deleted = [];
+
+  @override
+  Future<bool> deleteAgent(Map<Object?, Object?> station) async {
+    deleted.add(station['id']);
+    return true;
+  }
+
   /// Máy in đã được bấm "In thử" (tên) và kết quả giả.
   final List<String> testPrinted = [];
   AgentTestPrintResult testResult = AgentTestPrintResult.done;

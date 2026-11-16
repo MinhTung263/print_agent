@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:print_agent/src/domain/entities/agent_test_print_result.dart';
 import 'package:print_agent/src/presentation/kit/kit.dart';
 
+import 'agent_printer_remove_button.dart';
 import 'agent_test_print_button.dart';
 
 /// Trạng thái máy in trong bảng chi tiết.
@@ -24,6 +25,8 @@ class AgentPrinterDetail {
     this.station,
     this.onToggle,
     this.onTestPrint,
+    this.onRemove,
+    this.settings,
   });
 
   final String name;
@@ -50,6 +53,12 @@ class AgentPrinterDetail {
   /// In một phiếu thử ra máy in này; `null` = không in thử được (trạm in
   /// quản lý máy in đang tắt).
   final Future<AgentTestPrintResult> Function()? onTestPrint;
+
+  /// Xoá máy in này khỏi trạm in (`true` = đã xoá); `null` = không xoá được ở đây.
+  final Future<bool> Function()? onRemove;
+
+  /// Cài đặt riêng của máy in (app chủ dựng); `null` = không có.
+  final Widget? settings;
 }
 
 /// "Chi tiết máy in" khi bấm máy in trên sơ đồ: điện thoại mở bảng trượt,
@@ -198,6 +207,7 @@ class AgentPrinterDetailSheet extends StatelessWidget {
               ],
             ),
           ),
+          if (d.settings != null) BaseCard.section(child: d.settings!),
           if (d.onTestPrint != null)
             AgentTestPrintButton(name: d.name, onTestPrint: d.onTestPrint!),
           if (d.onToggle != null)
@@ -234,6 +244,7 @@ class AgentPrinterDetailSheet extends StatelessWidget {
                 ],
               ),
             ),
+          if (d.onRemove != null) AgentPrinterRemoveButton(detail: d),
         ],
       ),
     );

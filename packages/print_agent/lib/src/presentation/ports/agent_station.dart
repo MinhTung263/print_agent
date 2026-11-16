@@ -62,6 +62,9 @@ abstract interface class AgentStation {
   /// Ngắt kết nối từ xa một trạm in khác.
   Future<bool> removeAgent(Map<Object?, Object?> station);
 
+  /// Xoá trạm in khác khỏi danh sách (xem `AgentService.deleteAgent`).
+  Future<bool> deleteAgent(Map<Object?, Object?> station);
+
   /// Máy này là trạm in chính trong mạng (không có trạm cùng mạng ưu tiên
   /// hơn).
   RxBool get isPrimary;

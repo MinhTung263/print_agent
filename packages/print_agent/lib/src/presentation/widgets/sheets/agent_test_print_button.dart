@@ -87,12 +87,7 @@ class _AgentTestPrintButtonState extends State<AgentTestPrintButton> {
                       color: AppColors.primaryBlueBase.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Center(
-                      child: SizedBox.square(
-                        dimension: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
+                    child: Center(child: PrintAgentUi.kit.spinner(size: 20)),
                   )
                 : PrintAgentUi.kit.button(
                     title: LocaleKeys.printerSetting_agentTestPrint,

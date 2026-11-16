@@ -326,6 +326,22 @@ class AgentService<P extends AgentPrinterRef> {
     return sent;
   }
 
+  /// XOÁ một máy Agent KHÁC khỏi danh sách (kể cả trạm chạy bản app cũ không
+  /// ngắt từ xa được): gỡ bản ghi trực tuyến của trạm khỏi hàng đợi + quên trên
+  /// máy này. Trạm còn bật Trạm in có thể tự báo lại. Trả `true` khi đã xoá
+  /// khỏi danh sách trên máy này.
+  Future<bool> deleteAgent(Map<Object?, Object?> station) async {
+    final id = station['id']?.toString() ?? '';
+    if (id.isEmpty) return false;
+    final removed = await relay.removeStation(station);
+    KnownAgents.forget(id);
+    PeerBuiltInPrinters.forget(id);
+    PrintAgentModule.host.log(
+      '[AGENT] Xoá trạm $id khỏi danh sách (gỡ trên hàng đợi: $removed)',
+    );
+    return true;
+  }
+
   /// Bật / tắt máy này làm Agent. Bản app khác trên cùng máy đang làm Agent →
   /// không bật, trả tên gói bản đó qua [onOtherApp].
   Future<bool> setEnabled(

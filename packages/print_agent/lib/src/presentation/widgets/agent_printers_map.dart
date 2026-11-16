@@ -68,7 +68,7 @@ class AgentPrintersMap extends StatelessWidget {
                       LocaleKeys.printerSetting_agentPrinterOffState.tr,
                       icon: Icons.block_rounded,
                     ),
-                  _printerAddress(s),
+                  ?addressLineOf(s),
                   if (_printerWifi(s, subnets) case final wifi?)
                     AgentMapLine(wifi, icon: Icons.wifi_rounded),
                 ],
@@ -87,7 +87,7 @@ class AgentPrintersMap extends StatelessWidget {
                 // Bấm máy in: xem chi tiết (IP, MAC, mã...) + công tắc nhận
                 // lệnh in (có Hoàn tác). Máy in lỗi kết nối lại ở thẻ máy in
                 // lỗi ngay dưới sơ đồ.
-                onTap: agentShowPrinterDetail(_detail(s, off)),
+                onTap: agentShowPrinterDetail(detailOf(s, off)),
                 tapIcon: Icons.info_outline_rounded,
               ),
           ],
@@ -115,15 +115,21 @@ class AgentPrintersMap extends StatelessWidget {
     return PrintAgentUi.station.wifi.ssidOf(s.printer);
   }
 
-  static AgentPrinterDetail _detail(
+  /// Chi tiết một máy in của máy này (bảng hiện khi bấm máy in trên sơ đồ).
+  @visibleForTesting
+  static AgentPrinterDetail detailOf(
     AgentPrinterStatus<AgentPrinterRef> s,
     Set<String> off,
   ) {
     final paused = off.contains(AgentPrinterSwitches.keyOf(s.printer));
     final p = s.printer;
+    final pending = PrintAgentUi.isPendingPrinter?.call(p) ?? false;
     return AgentPrinterDetail(
       name: p.nameOrNull ?? p.refAddress ?? '',
       kind: switch (p.refKind) {
+        // Máy in của Agent máy tính (IP thật): chi tiết ghi "LAN" + địa chỉ IP.
+        AgentPrinterKind.builtIn when _isIpv4(p.refAddress) => 'lan',
+        AgentPrinterKind.builtIn when _isLocalUsb(p.refAddress) => 'usb',
         AgentPrinterKind.builtIn => 'builtin',
         AgentPrinterKind.usb => 'usb',
         _ => 'lan',
@@ -136,10 +142,24 @@ class AgentPrintersMap extends StatelessWidget {
       on: !paused,
       address: p.refAddress,
       mac: p.refMac,
-      id: p.refId,
+      // Mã -1 của máy in chính Agent chỉ là mã nội bộ — không hiện cho khách.
+      id: p.refKind == AgentPrinterKind.builtIn ? null : p.refId,
       station: PrintAgentUi.station.displayName,
-      onToggle: () => unawaited(_toggle(p)),
-      onTestPrint: () => PrintAgentUi.station.testPrint(p),
+      onToggle: pending ? null : () => unawaited(_toggle(p)),
+      onTestPrint: pending || (PrintAgentUi.hasOwnTestPrint?.call(p) ?? false)
+          ? null
+          : () => PrintAgentUi.station.testPrint(p),
+      // Máy in tích hợp của máy POS (Sunmi...) không có cài đặt riêng; máy in chính của
+      // Agent máy tính (IP thật hoặc USB) thì có.
+      settings: _isDesktopOwn(p) ? PrintAgentUi.printerSettings?.call(p) : null,
+      // Máy in tích hợp của máy POS không xoá được; máy in LAN / USB đã lưu và máy in
+      // đã chọn của Agent máy tính (IP thật) thì xoá nhanh được ngay ở đây.
+      onRemove:
+          pending ||
+              PrintAgentUi.onRemovePrinter == null ||
+              (p.refKind == AgentPrinterKind.builtIn && !_isDesktopOwn(p))
+          ? null
+          : () => PrintAgentUi.onRemovePrinter!(p),
     );
   }
 
@@ -222,18 +242,45 @@ class AgentPrintersMap extends StatelessWidget {
     _ => Icons.print_rounded,
   };
 
-  /// Địa chỉ máy in kèm biểu tượng kiểu kết nối (LAN / USB / tích hợp).
-  static AgentMapLine _printerAddress(AgentPrinterStatus<AgentPrinterRef> s) =>
-      switch (s.printer.refKind) {
-        AgentPrinterKind.builtIn => AgentMapLine(
-          LocaleKeys.printerSetting_agentBuiltIn.tr,
-          icon: Icons.point_of_sale_rounded,
-        ),
-        AgentPrinterKind.usb => const AgentMapLine(
-          'USB',
-          icon: Icons.usb_rounded,
-        ),
-        // Khách chỉ cần biết là máy in LAN — IP xem ở thẻ máy in chưa kết nối.
-        _ => const AgentMapLine('LAN', icon: Icons.lan_outlined),
-      };
+  /// Dòng phụ dưới tên máy in trên sơ đồ: kiểu kết nối (LAN / USB / tích hợp);
+  /// `null` = chỉ hiện tên.
+  @visibleForTesting
+  static AgentMapLine? addressLineOf(
+    AgentPrinterStatus<AgentPrinterRef> s,
+  ) => switch (s.printer.refKind) {
+    // Máy in của Agent máy tính là máy in LAN đã chọn (địa chỉ IP thật): trên sơ đồ
+    // chỉ hiện TÊN máy in, IP xem ở chi tiết. Máy in tích hợp của máy POS thì "Có sẵn
+    // trên máy".
+    AgentPrinterKind.builtIn when _isIpv4(s.printer.refAddress) => null,
+    AgentPrinterKind.builtIn when _isLocalUsb(s.printer.refAddress) =>
+      const AgentMapLine('USB', icon: Icons.usb_rounded),
+    AgentPrinterKind.builtIn => AgentMapLine(
+      LocaleKeys.printerSetting_agentBuiltIn.tr,
+      icon: Icons.point_of_sale_rounded,
+    ),
+    AgentPrinterKind.usb => const AgentMapLine('USB', icon: Icons.usb_rounded),
+    // Khách chỉ cần biết là máy in LAN — IP xem ở thẻ máy in chưa kết nối.
+    _ => const AgentMapLine('LAN', icon: Icons.lan_outlined),
+  };
+
+  static final RegExp _ipv4 = RegExp(r'^\d{1,3}(\.\d{1,3}){3}(:\d{1,5})?$');
+
+  /// Máy in USB của máy tính: địa chỉ `usb:` (Linux) / `queue:` (Windows) / `cups:` (macOS)
+  /// hoặc máy USB mới cắm chưa dùng (`setup:`).
+  static bool _isLocalUsb(String? address) {
+    final a = (address ?? '').trim();
+    return a.startsWith('usb:') ||
+        a.startsWith('queue:') ||
+        a.startsWith('cups:') ||
+        a.startsWith('setup:');
+  }
+
+  /// Máy in chính của Agent máy tính (LAN IP thật hoặc USB), khác máy in tích hợp POS.
+  static bool _isDesktopOwn(AgentPrinterRef p) =>
+      p.refKind != AgentPrinterKind.builtIn ||
+      _isIpv4(p.refAddress) ||
+      _isLocalUsb(p.refAddress);
+
+  static bool _isIpv4(String? address) =>
+      address != null && _ipv4.hasMatch(address.trim());
 }

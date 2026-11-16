@@ -13,16 +13,36 @@ class AgentRemoveButton extends StatelessWidget {
 
   final Map<Object?, Object?> station;
 
+  /// Trạm không ngắt từ xa được (bản app cũ): hỏi rồi XOÁ khỏi danh sách.
+  Future<void> _confirmDelete(String name) async {
+    await Get.dialog<void>(
+      AppConfirmDialog(
+        title: LocaleKeys.printerSetting_agentDelete.tr,
+        content: LocaleKeys.printerSetting_agentDeleteConfirmTr(agent: name),
+        confirmText: LocaleKeys.printerSetting_agentDelete.tr,
+        onConfirm: () async {
+          Get.back<void>();
+          final ok = await PrintAgentUi.station.deleteAgent(station);
+          if (ok) Get.back<void>();
+          unawaited(
+            AppNotification.show(
+              message: ok
+                  ? LocaleKeys.printerSetting_agentDeletedTr(agent: name)
+                  : LocaleKeys.printerSetting_agentRemoveFailed.tr,
+              type: ok
+                  ? AppNotificationType.success
+                  : AppNotificationType.error,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Future<void> _confirm() async {
     final name = AgentIdentity.ofStation(station);
     if (!AgentIdentity.canStopRemotely(station)) {
-      unawaited(
-        AppNotification.show(
-          message: LocaleKeys.printerSetting_agentStopOldVersionTr(agent: name),
-          type: AppNotificationType.warning,
-          duration: const Duration(seconds: 6),
-        ),
-      );
+      await _confirmDelete(name);
       return;
     }
     await Get.dialog<void>(
@@ -58,11 +78,15 @@ class AgentRemoveButton extends StatelessWidget {
       children: [
         BaseButton(
           onPressed: () => unawaited(_confirm()),
-          title: LocaleKeys.printerSetting_agentRemove,
+          title: AgentIdentity.canStopRemotely(station)
+              ? LocaleKeys.printerSetting_agentRemove
+              : LocaleKeys.printerSetting_agentDelete,
           backgroundColor: AppColors.errorRed,
         ),
         AppText(
-          AgentIdentity.hasNoPrinters(station)
+          !AgentIdentity.canStopRemotely(station)
+              ? LocaleKeys.printerSetting_agentDeleteHint
+              : AgentIdentity.hasNoPrinters(station)
               ? LocaleKeys.printerSetting_agentRemoveHint
               : LocaleKeys.printerSetting_agentRemoveHintPrinters,
           variant: .caption,

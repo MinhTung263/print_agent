@@ -12,6 +12,12 @@ import 'kit_tokens.dart';
 /// design system EasyPOS — cho app chủ không có sds (Agent máy tính) và cho
 /// test. Không co giãn theo màn hình (máy tính dùng chuột, cỡ cố định).
 class MaterialAgentUiKit implements AgentUiKit {
+  @override
+  Widget spinner({double size = 18, Color? color}) => SizedBox.square(
+    dimension: size,
+    child: CircularProgressIndicator(strokeWidth: 2, color: color),
+  );
+
   const MaterialAgentUiKit({this.tablet = true});
 
   /// Màn rộng: bố cục 2 cột (máy tính luôn rộng).

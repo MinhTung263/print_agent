@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:print_agent/src/domain/entities/agent_printer_ref.dart';
 
 import '../../domain/ports/agent_host.dart';
 import '../ports/agent_station.dart';
@@ -66,6 +67,9 @@ class AgentTextSpec {
 /// design system của mình — màn Máy Agent trên app EasyPOS giữ nguyên giao
 /// diện, Agent máy tính dùng bộ thành phần riêng. Module chỉ ghép bố cục.
 abstract interface class AgentUiKit {
+  /// Vòng chờ (loading) cỡ [size]; [color] `null` = màu mặc định của giao diện.
+  Widget spinner({double size = 18, Color? color});
+
   /// Đổi khoảng cách thiết kế sang khoảng cách thật (app co giãn theo màn hình).
   EdgeInsets insets(EdgeInsets design);
 
@@ -151,6 +155,24 @@ abstract final class PrintAgentUi {
   /// "Thêm máy in" của app chủ (nút + trên sơ đồ, bảng trạm in này): máy tính
   /// mở hộp chọn máy in, app bán hàng mở thêm nhanh máy in. `null` = ẩn nút.
   static Future<void> Function()? onAddPrinter;
+
+  /// "Xoá máy in" của máy này (nút trong chi tiết máy in trên sơ đồ): app chủ xoá máy
+  /// in [printer] khỏi trạm in này; `true` = đã xoá. `null` = ẩn nút.
+  static Future<bool> Function(AgentPrinterRef printer)? onRemovePrinter;
+
+  /// Cài đặt riêng của một máy in của máy này (loại, khổ giấy, căn chỉnh tem...): app chủ
+  /// dựng phần giao diện, module nhúng vào chi tiết máy in trên sơ đồ. `null` hoặc trả
+  /// `null` = máy in này không có cài đặt riêng.
+  static Widget? Function(AgentPrinterRef printer)? printerSettings;
+
+  /// Máy in [printer] mới chỉ được phát hiện (VD máy USB đang cắm nhưng chưa cài / chưa
+  /// thêm vào trạm in): chi tiết chỉ hiện phần cài đặt của app chủ, không có bật / tắt,
+  /// in thử, xoá.
+  static bool Function(AgentPrinterRef printer)? isPendingPrinter;
+
+  /// App chủ tự lo nút in thử của máy in [printer] (trong phần cài đặt riêng): chi tiết
+  /// không hiện thêm nút "In thử" chung — tránh nhiều nút in thử cho cùng một máy.
+  static bool Function(AgentPrinterRef printer)? hasOwnTestPrint;
 
   /// [station]: điều khiển máy Agent của app chủ (màn Máy Agent cần).
   static void init(

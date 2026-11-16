@@ -230,7 +230,7 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
             p,
       ];
       final alive = await Future.wait([
-        for (final p in lan) isAlive(p.refAddress!.trim()),
+        for (final p in lan) _alive(p, p.refAddress!.trim()),
       ]);
       if (_printing > 0) return;
       for (var i = 0; i < lan.length; i++) {
@@ -251,6 +251,7 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
           }
         }
       }
+      await _probeBuiltIn();
       for (final p in List.of(_gateway.printers)) {
         if (p.refKind != AgentPrinterKind.usb) continue;
         _setStatus(
@@ -266,8 +267,37 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
     }
   }
 
+  /// Máy in chính của Agent (LAN / USB) còn kết nối không: rút / cắm lại USB, tắt / bật
+  /// máy in LAN phải đổi trạng thái ngay — không chờ lượt canh 60s (lượt đó chỉ nối lại
+  /// khi ĐÃ báo mất kết nối, nên rút USB mà vẫn hiện "đã kết nối" mãi). Mất kết nối thì
+  /// nối lại / tìm theo MAC MỘT lần ([_down]), các lượt sau không quét mạng nữa.
+  Future<void> _probeBuiltIn() async {
+    if (!_gateway.hasBuiltIn) return;
+    final printer = _gateway.builtInPrinter();
+    final ok = await _gateway.isReady(printer);
+    if (_printing > 0) return;
+    _setStatus(
+      printer,
+      ok ? AgentPrinterState.connected : AgentPrinterState.disconnected,
+    );
+    const key = 'builtin';
+    if (ok) {
+      if (_down.remove(key)) _log('[AGENT] Máy in của trạm in đã kết nối lại');
+    } else if (_down.add(key)) {
+      _log('[AGENT] Máy in của trạm in không trả lời');
+      await _gateway.reconnectBuiltIn();
+    }
+  }
+
   /// Máy ở [ip] còn bật: cổng in mở, hoặc từ chối kết nối (máy in đang bận phục
   /// vụ máy khác — vẫn là đang bật, không báo mất kết nối nhầm).
+  /// App chủ thay cách kiểm tra máy in LAN còn bật (mặc định [isAlive]) — VD không coi
+  /// "từ chối kết nối" của máy khác nhận IP cũ là máy in còn bật.
+  static Future<bool> Function(AgentPrinterRef printer)? aliveCheck;
+
+  static Future<bool> _alive(AgentPrinterRef printer, String ip) =>
+      (aliveCheck ?? (_) => isAlive(ip))(printer);
+
   static Future<bool> isAlive(String ip) async {
     try {
       final socket = await Socket.connect(
@@ -393,7 +423,7 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
   /// 1,5s — dò lần lượt thì càng nhiều máy càng chậm); máy không trả lời mới
   /// tìm lại theo MAC, lần lượt (quét mạng nặng, không chạy chồng).
   Future<void> _checkLans(List<(P, String)> lan, {required bool force}) async {
-    final open = await Future.wait([for (final (_, ip) in lan) isAlive(ip)]);
+    final open = await Future.wait([for (final (p, ip) in lan) _alive(p, ip)]);
     final down = <(P, String)>[];
     for (var i = 0; i < lan.length; i++) {
       final (printer, ip) = lan[i];

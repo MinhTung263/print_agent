@@ -235,9 +235,9 @@ class _StepRow extends StatelessWidget {
         SizedBox.square(
           dimension: 20,
           child: switch (state) {
-            _StepState.running => const Padding(
-              padding: EdgeInsets.all(2),
-              child: CircularProgressIndicator(strokeWidth: 2),
+            _StepState.running => Padding(
+              padding: const EdgeInsets.all(2),
+              child: PrintAgentUi.kit.spinner(size: 16),
             ),
             _StepState.done => const Icon(
               Icons.check_circle_rounded,

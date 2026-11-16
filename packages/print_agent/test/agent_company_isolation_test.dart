@@ -6,6 +6,9 @@ import 'support/fake_host.dart';
 import 'support/fake_job_printer.dart';
 
 class FakeTransport implements PrintRelayTransport {
+  @override
+  Future<bool> removeStation(Map<Object?, Object?> station) async => false;
+
   int offline = 0;
 
   @override

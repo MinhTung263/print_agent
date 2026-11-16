@@ -35,6 +35,12 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentCloudDown': "Mất kết nối",
     'printerSetting_agentCloudOk': "Đã kết nối",
     'printerSetting_agentDashboard': "Trạm in",
+    'printerSetting_agentDelete': "Xoá trạm in",
+    'printerSetting_agentDeleteConfirm':
+        "Xoá @agent khỏi danh sách của cửa hàng? Trạm này đang chạy bản app cũ nên không ngắt kết nối từ xa được.",
+    'printerSetting_agentDeleteHint':
+        "Gỡ trạm khỏi danh sách trên mọi máy. Nếu máy đó vẫn bật Trạm in thì có thể tự hiện lại — cập nhật EasyPOS hoặc tắt Trạm in ngay trên máy đó để xoá hẳn.",
+    'printerSetting_agentDeleted': "Đã xoá @agent khỏi danh sách",
     'printerSetting_agentDoctorAllGood': "Mọi thứ đều ổn",
     'printerSetting_agentDoctorInternet': "Nhận phiếu qua Internet",
     'printerSetting_agentDoctorInternetDown':
@@ -67,6 +73,7 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentGrantPermission': "Cấp quyền",
     'printerSetting_agentHasBuiltIn': "Có máy in có sẵn trên máy",
     'printerSetting_agentJobCopies': "@count bản",
+    'printerSetting_agentJobDetail': "Chi tiết: @detail",
     'printerSetting_agentJobErrBuiltIn': "Máy in có sẵn trên máy chưa sẵn sàng",
     'printerSetting_agentJobErrBusy': "Máy in đang bận (máy khác đang in)",
     'printerSetting_agentJobErrCoverOpen': "Máy in đang mở nắp",
@@ -81,6 +88,24 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentJobErrUnreachable':
         "Không kết nối được máy in lúc gửi phiếu (tắt nguồn, mất mạng hoặc sai IP)",
     'printerSetting_agentJobFrom': "Từ @sender",
+    'printerSetting_agentJobHintBuiltIn':
+        "Mở lại ứng dụng Agent hoặc khởi động lại máy in.",
+    'printerSetting_agentJobHintBusy':
+        "Máy khác đang dùng máy in này. Chờ vài giây rồi thử lại.",
+    'printerSetting_agentJobHintCoverOpen': "Đóng nắp máy in lại.",
+    'printerSetting_agentJobHintNoContent': "Gửi lại phiếu từ máy bán hàng.",
+    'printerSetting_agentJobHintNotReady':
+        "Kiểm tra máy in đã bật, có giấy và đã nối mạng / cắm USB.",
+    'printerSetting_agentJobHintOtherNetwork':
+        "Nối máy tính Agent vào cùng Wi-Fi / mạng với máy in.",
+    'printerSetting_agentJobHintOutOfPaper':
+        "Thay cuộn giấy mới. Phiếu đang chờ sẽ tự in lại.",
+    'printerSetting_agentJobHintOverheated':
+        "Để máy in nguội vài phút rồi in lại.",
+    'printerSetting_agentJobHintSend':
+        "Tắt máy in rồi bật lại, kiểm tra dây cáp rồi in lại.",
+    'printerSetting_agentJobHintUnreachable':
+        "Kiểm tra máy in đã bật, cùng mạng với máy tính Agent và đúng địa chỉ IP.",
     'printerSetting_agentJobLabel': "Tem",
     'printerSetting_agentJobLog': "Phiếu in gần đây",
     'printerSetting_agentJobLogEmpty':
@@ -159,6 +184,10 @@ const Map<String, Map<String, String>> agentTranslations = {
         "Đã gửi yêu cầu tạm ngưng in @printer trên @agent",
     'printerSetting_agentPrinterRemoteOn':
         "Đã gửi yêu cầu in lại @printer trên @agent",
+    'printerSetting_agentPrinterRemove': "Xoá máy in",
+    'printerSetting_agentPrinterRemoveConfirm':
+        "Xoá @printer khỏi trạm in này? Máy bán hàng sẽ không in tới máy in này nữa; bạn có thể thêm lại bất cứ lúc nào.",
+    'printerSetting_agentPrinterRemoved': "Đã xoá @printer",
     'printerSetting_agentPrinterTurnedOff': "Đã tạm ngưng in @printer",
     'printerSetting_agentPrinterTurnedOffBy':
         "@by đã tạm ngưng in @printer từ máy khác",
@@ -307,6 +336,12 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentCloudDown': "Disconnected",
     'printerSetting_agentCloudOk': "Connected",
     'printerSetting_agentDashboard': "Print station",
+    'printerSetting_agentDelete': "Delete print station",
+    'printerSetting_agentDeleteConfirm':
+        "Delete @agent from the shop list? It runs an old app version so it cannot be disconnected remotely.",
+    'printerSetting_agentDeleteHint':
+        "Removes the station from the list on every device. If that device still has Print Station on it may show up again — update EasyPOS or turn Print Station off on that device to remove it for good.",
+    'printerSetting_agentDeleted': "Deleted @agent from the list",
     'printerSetting_agentDoctorAllGood': "Everything looks good",
     'printerSetting_agentDoctorInternet': "Receive tickets over the Internet",
     'printerSetting_agentDoctorInternetDown':
@@ -340,6 +375,7 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentGrantPermission': "Allow",
     'printerSetting_agentHasBuiltIn': "Has built-in printer",
     'printerSetting_agentJobCopies': "@count copies",
+    'printerSetting_agentJobDetail': "Details: @detail",
     'printerSetting_agentJobErrBuiltIn': "Built-in printer is not ready",
     'printerSetting_agentJobErrBusy':
         "Printer is busy (another device is printing)",
@@ -355,6 +391,25 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentJobErrUnreachable':
         "Could not reach the printer when sending (powered off, offline or wrong IP)",
     'printerSetting_agentJobFrom': "From @sender",
+    'printerSetting_agentJobHintBuiltIn':
+        "Reopen the Agent app or restart the printer.",
+    'printerSetting_agentJobHintBusy':
+        "Another device is using this printer. Wait a few seconds and try again.",
+    'printerSetting_agentJobHintCoverOpen': "Close the printer cover.",
+    'printerSetting_agentJobHintNoContent':
+        "Send the job again from the point of sale.",
+    'printerSetting_agentJobHintNotReady':
+        "Check the printer is on, has paper and is on the network / plugged in by USB.",
+    'printerSetting_agentJobHintOtherNetwork':
+        "Connect the Agent computer to the same Wi-Fi / network as the printer.",
+    'printerSetting_agentJobHintOutOfPaper':
+        "Load a new paper roll. Waiting jobs will print automatically.",
+    'printerSetting_agentJobHintOverheated':
+        "Let the printer cool down for a few minutes and print again.",
+    'printerSetting_agentJobHintSend':
+        "Turn the printer off and on, check the cable and print again.",
+    'printerSetting_agentJobHintUnreachable':
+        "Check the printer is on, on the same network as the Agent computer and the IP is correct.",
     'printerSetting_agentJobLabel': "Label",
     'printerSetting_agentJobLog': "Recent print jobs",
     'printerSetting_agentJobLogEmpty':
@@ -435,6 +490,10 @@ const Map<String, Map<String, String>> agentTranslations = {
         "Sent: stop jobs for @printer on @agent",
     'printerSetting_agentPrinterRemoteOn':
         "Sent: resume jobs for @printer on @agent",
+    'printerSetting_agentPrinterRemove': "Delete printer",
+    'printerSetting_agentPrinterRemoveConfirm':
+        "Delete @printer from this print station? Sales devices will no longer print to it; you can add it again any time.",
+    'printerSetting_agentPrinterRemoved': "Deleted @printer",
     'printerSetting_agentPrinterTurnedOff': "Stopped taking jobs for @printer",
     'printerSetting_agentPrinterTurnedOffBy':
         "@by remotely stopped jobs for @printer",
