@@ -41,7 +41,8 @@ endif()
 # of modifying this function.
 function(APPLY_STANDARD_SETTINGS TARGET)
   target_compile_features(${TARGET} PUBLIC cxx_std_14)
-  target_compile_options(${TARGET} PRIVATE -Wall -Werror)
+  # Plugin khay hệ thống (tray_manager) dùng app_indicator_new đã bị đánh dấu deprecated: không coi là lỗi.
+  target_compile_options(${TARGET} PRIVATE -Wall -Werror -Wno-error=deprecated-declarations)
   target_compile_options(${TARGET} PRIVATE "$<$<NOT:$<CONFIG:Debug>>:-O3>")
   target_compile_definitions(${TARGET} PRIVATE "$<$<NOT:$<CONFIG:Debug>>:NDEBUG>")
 endfunction()
