@@ -13,6 +13,14 @@ class _FakeDiscovery implements PrinterDiscovery {
   final Map<String, String> models;
   final Map<String, PrinterType> types;
 
+  final List<String> beeped = [];
+
+  @override
+  Future<String?> beep(String address, {PrinterType? type}) async {
+    beeped.add('$address|${type?.name}');
+    return null;
+  }
+
   @override
   String? get setupError => null;
   final setups = <String>[];
@@ -165,6 +173,38 @@ void main() {
       await t.pumpAndSettle();
       expect(result, ['192.168.1.11', 'queue:EasyPOS_USB']);
       expect(d.setups, ['USB001']);
+    });
+
+    testWidgets('nút bíp trên thẻ máy: gửi lệnh bíp đúng loại máy, báo kết quả', (
+      t,
+    ) async {
+      await t.binding.setSurfaceSize(const Size(1000, 900));
+      final d = _FakeDiscovery([
+        PrinterOption.lan('192.168.1.10', type: PrinterType.label),
+        PrinterOption.usb(address: 'cups:Q1', name: 'Gprinter'),
+        PrinterOption.lan('192.168.1.99', warning: 'IP bị trùng'),
+      ]);
+      await t.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () =>
+                    showPrintersPickerDialog(context, discovery: d),
+                child: const Text('mở'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await t.tap(find.text('mở'));
+      await t.pumpAndSettle();
+      // Máy bị chặn (IP trùng) không có nút bíp: còn 2 nút cho 2 máy dùng được.
+      expect(find.byIcon(Icons.volume_up_rounded), findsNWidgets(2));
+      await t.tap(find.byIcon(Icons.volume_up_rounded).first);
+      await t.pumpAndSettle();
+      expect(d.beeped, ['192.168.1.10|label']);
+      expect(find.textContaining('Đã gửi lệnh bíp'), findsOneWidget);
     });
 
     Future<void> openOnly(

@@ -161,6 +161,25 @@ abstract final class AgentPrinter {
     );
   }
 
+  /// Cho máy in [address] kêu bíp ngắn (nhận ra máy nào): máy tem [label] dùng lệnh tem; `null` =
+  /// đã gửi. Máy không có còi thì không có tiếng nhưng vẫn "gửi được".
+  static Future<AgentPrintFailure?> beep(
+    String address, {
+    required bool label,
+  }) async {
+    final port = portOf(address);
+    if (port == null) {
+      return const AgentPrintFailure(
+        AgentJobError.unreachable,
+        detail: 'Chưa chọn máy in',
+      );
+    }
+    return _guard(
+      address,
+      () => port.send(PrinterBeep.bytes(label: label), checkStatus: false),
+    );
+  }
+
   /// Phiếu in thử (chữ không dấu — in thô không cần phông tiếng Việt).
   static Future<AgentPrintFailure?> printTest({
     required String address,

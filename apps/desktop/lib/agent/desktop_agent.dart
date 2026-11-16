@@ -371,6 +371,18 @@ class DesktopAgent extends ChangeNotifier {
 
   /// Nhận ra máy in [address]: model (SNMP) và loại (hoá đơn / tem). Không rõ loại thì
   /// giữ [current].
+  /// Cho máy in [address] kêu bíp ngắn để nhận ra đó là máy nào; `null` = đã gửi, ngược lại là lý
+  /// do lỗi.
+  Future<String?> beepPrinter(String address) async {
+    final failure = await AgentPrinter.beep(
+      address.trim(),
+      label: settingsOf(address).type == PrinterType.label,
+    );
+    return failure == null
+        ? null
+        : AgentJobErrorText.message(failure.error, detail: failure.detail);
+  }
+
   Future<({String name, PrinterType type, String note})> _recognize(
     String address,
     PrinterType current,
@@ -379,8 +391,18 @@ class DesktopAgent extends ChangeNotifier {
     var type = current;
     var note = '';
     if (UsbPrinters.isLocal(address)) {
-      name = UsbPrinters.label(address);
-      note = 'Máy in USB: chọn loại máy in bằng tay nếu chưa đúng.';
+      // Máy USB tự báo hãng / model / lệnh hiểu (IEEE 1284): nhận ra máy tem hay hoá đơn.
+      final id = await UsbPrinters.deviceId(address);
+      final idName = id == null ? '' : Ieee1284.name(id);
+      name = idName.isNotEmpty ? idName : UsbPrinters.label(address);
+      final language = id == null
+          ? null
+          : PrinterLanguageProbe.fromIeee1284(id);
+      final guess = PrinterTypeDetector.decide(language: language, model: name);
+      type = guess.type ?? type;
+      note = guess.type == null
+          ? 'Máy in USB: chưa nhận ra loại máy, giữ "${type.short}".'
+          : guess.note;
     } else {
       final parsed = parsePrinterAddress(address);
       if (parsed != null) {

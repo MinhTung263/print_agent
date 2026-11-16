@@ -19,6 +19,10 @@ abstract interface class PrinterDiscovery {
   /// in gì); `null` khi chưa rõ. [model] (nếu đã biết) giúp đoán khi máy không trả lời.
   Future<PrinterType?> typeOf(String address, {String? model});
 
+  /// Cho máy in [address] kêu bíp ngắn để người dùng nhận ra đó là máy nào (không in gì ra giấy);
+  /// máy tem dùng lệnh tem, còn lại lệnh hoá đơn. Trả lý do lỗi hoặc `null` khi đã gửi.
+  Future<String?> beep(String address, {PrinterType? type});
+
   /// Cài máy in USB chưa cài ([PrinterOption.setupPort]); trả địa chỉ hoặc
   /// `null` khi không cài được (thiếu quyền quản trị).
   Future<String?> setupUsb(String setupPort);

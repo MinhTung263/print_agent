@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:print_agent/print_agent.dart' show AgentJobErrorText;
 import 'package:printer_label/desktop.dart';
 import 'package:printer_label/printer_label.dart' show PrinterLabel;
 
+import '../../agent/agent_printer.dart';
 import '../../agent/printer_type.dart';
 import '../printer_discovery.dart';
 import '../printer_option.dart';
@@ -67,8 +69,19 @@ class DesktopPrinterDiscovery implements PrinterDiscovery {
 
   @override
   Future<PrinterType?> typeOf(String address, {String? model}) async {
+    // Máy USB: loại máy tự báo trong chuỗi định danh IEEE 1284 (`CMD:TSPL2` / `CMD:ESC/POS`).
+    if (UsbPrinters.isLocal(address)) {
+      final id = await UsbPrinters.deviceId(address);
+      final language = id == null
+          ? null
+          : PrinterLanguageProbe.fromIeee1284(id);
+      return PrinterTypeDetector.decide(
+        language: language,
+        model: model ?? (id == null ? null : Ieee1284.name(id)),
+      ).type;
+    }
     final parsed = parsePrinterAddress(address);
-    if (parsed == null || UsbPrinters.isLocal(address)) return null;
+    if (parsed == null) return null;
     PrinterLanguage? language;
     try {
       language = await PrinterLanguageProbe.probeLan(
@@ -77,6 +90,17 @@ class DesktopPrinterDiscovery implements PrinterDiscovery {
       );
     } catch (_) {}
     return PrinterTypeDetector.decide(language: language, model: model).type;
+  }
+
+  @override
+  Future<String?> beep(String address, {PrinterType? type}) async {
+    final failure = await AgentPrinter.beep(
+      address,
+      label: type == PrinterType.label,
+    );
+    return failure == null
+        ? null
+        : AgentJobErrorText.message(failure.error, detail: failure.detail);
   }
 
   @override

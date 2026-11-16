@@ -15,6 +15,7 @@ class PrinterOptionTile extends StatelessWidget {
     required this.current,
     required this.onTap,
     this.multi = false,
+    this.onBeep,
   });
 
   final PrinterOption option;
@@ -24,6 +25,9 @@ class PrinterOptionTile extends StatelessWidget {
 
   /// Chọn nhiều máy: hộp tick vuông thay cho nút tròn.
   final bool multi;
+
+  /// Bấm để máy in kêu bíp (nhận ra đó là máy nào); `null` = không có nút.
+  final VoidCallback? onBeep;
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +113,15 @@ class PrinterOptionTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              if (onBeep != null)
+                IconButton(
+                  tooltip: 'Kêu bíp để nhận ra máy in này',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: onBeep,
+                  icon: const Icon(Icons.volume_up_rounded, size: 22),
+                  color: AgentColors.primary,
+                ),
+              const SizedBox(width: 4),
               Icon(
                 multi
                     ? (selected

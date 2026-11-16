@@ -64,8 +64,6 @@ abstract final class PrinterPickerList {
     PrinterType? type,
   ) => [
     for (final o in all)
-      o.kind == PrinterOptionKind.lan && o.address == address
-          ? o.withType(type)
-          : o,
+      o.address.isNotEmpty && o.address == address ? o.withType(type) : o,
   ];
 }

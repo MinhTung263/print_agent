@@ -57,6 +57,7 @@ class PrinterSettingsPanel extends StatelessWidget {
             tone: .secondary,
             maxLines: 3,
           ),
+          if (connected) _BeepButton(agent: agent, address: address),
           const AppDivider(),
           if (isLabel)
             LabelCalibrationPanel(
@@ -177,5 +178,52 @@ class _OfflineNote extends StatelessWidget {
     variant: .caption,
     tone: .secondary,
     maxLines: 3,
+  );
+}
+
+/// "Kêu bíp để nhận ra máy in": máy in kêu ngắn một lần — biết đang xem máy nào (nhiều máy cắm
+/// cùng lúc). Máy không có còi thì không có tiếng.
+class _BeepButton extends StatefulWidget {
+  const _BeepButton({required this.agent, required this.address});
+
+  final DesktopAgent agent;
+  final String address;
+
+  @override
+  State<_BeepButton> createState() => _BeepButtonState();
+}
+
+class _BeepButtonState extends State<_BeepButton> {
+  bool _busy = false;
+
+  Future<void> _beep() async {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busy = true);
+    final error = await widget.agent.beepPrinter(widget.address);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    messenger.showSnackBar(
+      SnackBar(
+        backgroundColor: error == null ? null : AppColors.errorRed,
+        duration: Duration(seconds: error == null ? 4 : 10),
+        content: Text(
+          error ??
+              'Đã gửi lệnh bíp. Nghe thấy tiếng bíp là đúng máy in này; không nghe '
+                  'thấy có thể máy không có còi.',
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.centerLeft,
+    child: TextButton.icon(
+      onPressed: _busy ? null : () => unawaited(_beep()),
+      icon: _busy
+          ? AgentSpinner(size: 16)
+          : const Icon(Icons.volume_up_rounded, size: 18),
+      label: const Text('Kêu bíp để nhận ra máy in'),
+    ),
   );
 }

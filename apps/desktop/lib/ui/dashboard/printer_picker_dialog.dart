@@ -98,6 +98,12 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
     for (final o in found.where((o) => o.kind == PrinterOptionKind.lan)) {
       unawaited(_identify(o.address));
     }
+    // Máy USB tự báo loại (tem / hoá đơn) qua chuỗi định danh IEEE 1284.
+    for (final o in found.where(
+      (o) => o.kind == PrinterOptionKind.usb && o.address.isNotEmpty,
+    )) {
+      unawaited(_identifyUsb(o));
+    }
   }
 
   /// Đọc model (không gửi gì vào cổng in) rồi hỏi trạng thái để biết máy in tem hay hoá
@@ -129,6 +135,30 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
         for (final m in _manual) m.address == address ? m.withType(type) : m,
       ]);
     });
+  }
+
+  Future<void> _identifyUsb(PrinterOption o) async {
+    final type = await widget.discovery.typeOf(o.address, model: o.title);
+    if (!mounted || type == null) return;
+    setState(
+      () => _options = PrinterPickerList.withType(_options, o.address, type),
+    );
+  }
+
+  /// Cho máy in [o] kêu bíp để nhận ra đó là máy nào.
+  Future<void> _beep(PrinterOption o) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final error = await widget.discovery.beep(o.address, type: o.type);
+    messenger.showSnackBar(
+      SnackBar(
+        duration: Duration(seconds: error == null ? 4 : 8),
+        content: Text(
+          error ??
+              'Đã gửi lệnh bíp tới "${o.title}". Nghe thấy tiếng bíp là đúng máy in '
+                  'đó; không nghe thấy có thể máy không có còi.',
+        ),
+      ),
+    );
   }
 
   List<PrinterOption> get _all => PrinterPickerList.merge(
@@ -268,6 +298,9 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
                                 : all[i].key == _selected,
                             current: _isCurrent(all[i]),
                             multi: widget.multi,
+                            onBeep: all[i].address.isNotEmpty && !all[i].blocked
+                                ? () => unawaited(_beep(all[i]))
+                                : null,
                             // Máy đang dùng không thêm lại được.
                             onTap:
                                 all[i].blocked ||
