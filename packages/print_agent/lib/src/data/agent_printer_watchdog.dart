@@ -74,8 +74,30 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
   /// Kiểm tra ngay (nút "Kiểm tra lại" trên màn quản lý).
   Future<void> checkNow() => _checkAll(force: true);
 
+  /// Lần cuối mỗi máy in được xác nhận kết nối (mọi lượt dò, kể cả không đổi trạng thái).
+  final Map<String, DateTime> _okAt = {};
+
+  /// Máy in vừa được xác nhận kết nối trong chừng này thì lệnh in tới KHÔNG hỏi lại — in ngay
+  /// (vòng dò nền chạy mỗi 3–15 giây). Nếu thực tế máy đã mất, lệnh in lỗi và chạy lại đường chờ
+  /// đầy đủ ([waitUntilReady] với `allowFresh: false`).
+  static const Duration freshFor = Duration(seconds: 10);
+
+  /// Máy in [printer] vừa được xác nhận kết nối gần đây.
+  bool isFresh(P printer) {
+    final at = _okAt[_keyOf(printer)];
+    return at != null && DateTime.now().difference(at) < freshFor;
+  }
+
+  /// Bỏ xác nhận gần đây của [printer] (lệnh in vừa lỗi: không tin kết quả dò cũ).
+  void forgetFresh(P printer) => _okAt.remove(_keyOf(printer));
+
   void _setStatus(P printer, AgentPrinterState state, {String? note}) {
     final key = _keyOf(printer);
+    if (state == AgentPrinterState.connected) {
+      _okAt[key] = DateTime.now();
+    } else {
+      _okAt.remove(key);
+    }
     final list = List<AgentPrinterStatus<P>>.of(statuses);
     final i = list.indexWhere((e) => _keyOf(e.printer) == key);
     // Không đổi gì: không phát lại (màn sơ đồ khỏi dựng lại mỗi lượt canh).
@@ -187,6 +209,7 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
     unawaited(_netSub?.cancel());
     _netSub = null;
     _down.clear();
+    _okAt.clear();
     statuses.clear();
   }
 
@@ -331,7 +354,10 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
   Future<P?> waitUntilReady(
     P printer, {
     Duration timeout = const Duration(seconds: 14),
+    bool allowFresh = true,
   }) async {
+    // Vừa dò xong và máy in khoẻ: không hỏi lại (tiết kiệm 0,2–1,5s mỗi lệnh).
+    if (allowFresh && isFresh(printer)) return printer;
     final deadline = DateTime.now().add(timeout);
     var target = printer;
     var relocated = false;

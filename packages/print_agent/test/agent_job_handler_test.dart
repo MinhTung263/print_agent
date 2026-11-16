@@ -41,6 +41,48 @@ void main() {
     expect(printer.printed, hasLength(1));
   });
 
+  test(
+    'đường nhanh: máy in vừa khoẻ → in ngay không hỏi lại; in lỗi "không kết nối" → hỏi đầy đủ rồi in lại một lần',
+    () async {
+      final gateway = FakeGateway();
+      final dog = AgentPrinterWatchdog<FakePrinter>(gateway);
+      final handler = AgentJobHandler<FakePrinter>(
+        watchdog: dog,
+        printer: printer,
+      );
+      const lan = FakePrinter(
+        refKind: AgentPrinterKind.lan,
+        refAddress: '10.0.0.9',
+        refName: 'Bếp',
+      );
+      dog.report(lan, AgentPrinterState.connected);
+      gateway.readyChecks = 0;
+      expect(await handler.handle(receipt('10.0.0.9', key: 'fast')), isTrue);
+      expect(gateway.readyChecks, 0, reason: 'vừa khoẻ → không hỏi lại');
+      expect(printer.printed, hasLength(1));
+
+      // Thực tế máy mất: lần in đầu báo không kết nối → hỏi đầy đủ rồi in lại đúng một lần.
+      dog.report(lan, AgentPrinterState.connected);
+      printer.failuresFirst.add(
+        const AgentPrintFailure(AgentJobError.unreachable),
+      );
+      expect(await handler.handle(receipt('10.0.0.9', key: 'retry')), isTrue);
+      expect(gateway.readyChecks, 1);
+      expect(printer.printed.map((j) => j.key), ['fast', 'retry']);
+
+      // Đã gửi rồi mà "không phản hồi": KHÔNG in lại (tránh hai bản).
+      dog.report(lan, AgentPrinterState.connected);
+      printer.failuresFirst.add(
+        const AgentPrintFailure(AgentJobError.notReady),
+      );
+      expect(
+        await handler.handle(receipt('10.0.0.9', key: 'noretry')),
+        isFalse,
+      );
+      expect(printer.printed.map((j) => j.key), ['fast', 'retry']);
+    },
+  );
+
   test('hết giấy: giữ lệnh, báo held, thay giấy xong tự in', () async {
     printer.failuresFirst.addAll(const [
       AgentPrintFailure(AgentJobError.outOfPaper),

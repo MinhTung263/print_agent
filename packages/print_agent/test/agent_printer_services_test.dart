@@ -98,6 +98,29 @@ void main() {
       },
     );
 
+    test(
+      'máy in vừa báo kết nối: lệnh in không hỏi lại (đường nhanh)',
+      () async {
+        watchdog.report(kitchen, AgentPrinterState.connected);
+        gateway.readyChecks = 0;
+        expect(await watchdog.waitUntilReady(kitchen), kitchen);
+        expect(gateway.readyChecks, 0);
+        // allowFresh: false → vẫn hỏi lại đầy đủ.
+        expect(
+          await watchdog.waitUntilReady(kitchen, allowFresh: false),
+          kitchen,
+        );
+        expect(gateway.readyChecks, 1);
+        // Mất kết nối / quên xác nhận: không còn đường nhanh.
+        watchdog.forgetFresh(kitchen);
+        expect(watchdog.isFresh(kitchen), isFalse);
+        watchdog.report(kitchen, AgentPrinterState.disconnected);
+        gateway.readyChecks = 0;
+        await watchdog.waitUntilReady(kitchen);
+        expect(gateway.readyChecks, 1);
+      },
+    );
+
     test('waitUntilReady trả máy in khi sẵn sàng', () async {
       expect(await watchdog.waitUntilReady(kitchen), kitchen);
       expect(watchdog.statuses.single.state, AgentPrinterState.connected);

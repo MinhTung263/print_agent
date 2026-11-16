@@ -199,6 +199,7 @@ class AgentJobHandler<P extends AgentPrinterRef> {
       return record(AgentPrintFailure(await _notReadyReason(found)));
     }
     // Máy in vừa tắt nguồn / mất mạng / bật lại nhận IP mới: chờ sẵn sàng.
+    final fast = _watchdog.isFresh(found);
     final ready = await _watchdog.printing(
       () => _watchdog
           .waitUntilReady(found)
@@ -211,6 +212,22 @@ class AgentJobHandler<P extends AgentPrinterRef> {
     _downAt.remove(key);
     printedIp = ready.refAddress;
     var failure = await _attempt(ready, job);
+    // Đi đường nhanh (không hỏi lại máy in) mà máy in thực ra đã mất: chờ sẵn sàng đầy đủ rồi in lại
+    // một lần — như trước đây khi chưa có đường nhanh.
+    if (fast && _retryable(failure)) {
+      _watchdog.forgetFresh(found);
+      final again = await _watchdog.printing(
+        () => _watchdog
+            .waitUntilReady(found, allowFresh: false)
+            .timeout(readyTimeout, onTimeout: () => null),
+      );
+      if (again == null) {
+        _downAt[key] = DateTime.now();
+        return record(AgentPrintFailure(await _notReadyReason(found)));
+      }
+      printedIp = again.refAddress;
+      failure = await _attempt(again, job);
+    }
     if (_holdable(failure)) failure = await _hold(ready, job, key, failure!);
     return record(failure);
   }
@@ -227,6 +244,12 @@ class AgentJobHandler<P extends AgentPrinterRef> {
               ),
             ),
       );
+
+  /// Lỗi chưa gửi được dữ liệu tới máy in (không kết nối / bị từ chối) — an toàn để thử lại. KHÔNG
+  /// gồm "không phản hồi" sau khi đã gửi (có thể đã in rồi → in lại sẽ thành hai bản).
+  static bool _retryable(AgentPrintFailure? f) =>
+      f != null &&
+      (f.error == AgentJobError.unreachable || f.error == AgentJobError.busy);
 
   /// Lỗi máy in báo TRƯỚC khi nhận dữ liệu (chưa in gì) — an toàn để giữ lệnh
   /// rồi in lại.

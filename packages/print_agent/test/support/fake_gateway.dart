@@ -16,6 +16,7 @@ class FakeGateway implements AgentPrinterGateway<FakePrinter> {
   bool usbAttached = false;
   bool usbConnects = true;
   bool ready = true;
+  int readyChecks = 0;
   FakePrinter? relocated;
   int builtInRestarts = 0;
   bool builtInComesBack = true;
@@ -43,7 +44,11 @@ class FakeGateway implements AgentPrinterGateway<FakePrinter> {
   @override
   Future<bool> connectUsb(FakePrinter printer) async => usbConnects;
   @override
-  Future<bool> isReady(FakePrinter printer) async => ready;
+  Future<bool> isReady(FakePrinter printer) async {
+    readyChecks++;
+    return ready;
+  }
+
   @override
   Future<FakePrinter?> relocate(
     FakePrinter printer, {
