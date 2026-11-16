@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
@@ -35,21 +37,31 @@ abstract final class PeerBuiltInPrinters {
         stationName: AgentIdentity.label(p.agentName, p.stationId),
       );
 
-  /// Đọc danh sách của công ty đang đăng nhập (đổi công ty thì đọc lại). Gọi
-  /// NGOÀI lúc dựng giao diện (đổi [items] lúc build làm Obx báo lỗi).
+  /// Đọc danh sách của công ty đang đăng nhập (đổi công ty thì đọc lại).
+  ///
+  /// Có thể bị gọi NGAY TRONG lúc dựng giao diện (qua [all] trong `Obx`): đổi
+  /// [items] lúc đó làm Obx báo "setState() called during build". Nên gán
+  /// thẳng vào danh sách bên trong (không báo) rồi báo thay đổi ngay sau khi
+  /// dựng xong — widget đang dựng đã đọc đúng dữ liệu mới, widget khác dựng lại.
   static void ensureLoaded() {
     final key = _storageKey;
     if (_loadedFor == key) return;
     _loadedFor = key;
+    List<PeerBuiltInPrinter> loaded;
     try {
       final raw = PrintAgentModule.host.storage.get(key);
-      items.assignAll([
+      loaded = [
         if (raw is List)
           for (final e in raw) ?PeerBuiltInPrinter.fromMap(e, defaultTemplates),
-      ]);
+      ];
     } catch (_) {
-      items.clear();
+      loaded = const [];
     }
+    // ignore: invalid_use_of_protected_member
+    items.value
+      ..clear()
+      ..addAll(loaded);
+    unawaited(Future<void>.microtask(items.refresh));
   }
 
   static List<PeerBuiltInPrinter> get all {
