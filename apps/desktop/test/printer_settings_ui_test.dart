@@ -11,8 +11,6 @@ import 'package:print_agent_desktop/agent/agent_printer.dart';
 import 'package:print_agent_desktop/agent/agent_store.dart';
 import 'package:print_agent_desktop/agent/desktop_agent.dart';
 import 'package:print_agent_desktop/agent/printer_settings.dart';
-import 'package:print_agent_desktop/store/printer_auto_add_plan.dart'
-    show FoundPrinter;
 import 'package:print_agent_desktop/ui/dashboard/offset_preview_pad.dart';
 import 'package:print_agent_desktop/ui/dashboard/label_offset_text.dart';
 import 'package:print_agent_desktop/ui/dashboard/printer_settings_panel.dart';
@@ -149,33 +147,19 @@ void main() {
     },
   );
 
-  test(
-    'quét mạng tìm thấy máy in: tự thành máy in của trạm, máy đã xoá không thêm lại',
-    () async {
-      final agent = DesktopAgent(const AgentConfig(printer: '10.0.0.5'));
-      final found = [
-        const FoundPrinter(address: '10.0.0.5'), // máy in chính: bỏ qua
-        const FoundPrinter(address: '10.0.0.6', mac: 'AA:BB:CC:DD:EE:01'),
-        const FoundPrinter(address: '10.0.1.7', model: 'XP-420B'),
-      ];
-      expect(agent.registerScanned(found), 2);
-      expect(
-        agent.gateway.extras.byAddress('10.0.0.6')!.mac,
-        'AA:BB:CC:DD:EE:01',
-      );
-      expect(agent.gateway.extras.byAddress('10.0.1.7')!.name, 'XP-420B');
-      // Quét lại: không thêm trùng.
-      expect(agent.registerScanned(found), 0);
-      // Người dùng xoá máy 10.0.0.6: quét lần sau không tự thêm lại.
-      expect(agent.removeExtraPrinter('10.0.0.6'), isTrue);
-      expect(agent.registerScanned(found), 0);
-      expect(agent.gateway.extras.contains('10.0.0.6'), isFalse);
-      // Chủ động thêm lại thì được.
-      await agent.addPrinter('10.0.0.6');
-      expect(agent.gateway.extras.contains('10.0.0.6'), isTrue);
-      agent.dispose();
-    },
-  );
+  test('không tự thêm máy in vào trạm: chỉ có máy khi người dùng thêm', () async {
+    final agent = DesktopAgent(const AgentConfig(printer: '10.0.0.5'));
+    // Mới vào: chưa có máy in nào ngoài máy in chính.
+    expect(agent.gateway.printers, isEmpty);
+    expect(agent.gateway.extras.items, isEmpty);
+    // Người dùng chọn thêm: có máy; thêm trùng không được; xoá được và thêm lại được.
+    expect(await agent.addPrinter('10.0.0.6'), isTrue);
+    expect(await agent.addPrinter('10.0.0.6'), isFalse);
+    expect(agent.removeExtraPrinter('10.0.0.6'), isTrue);
+    expect(agent.gateway.printers, isEmpty);
+    expect(await agent.addPrinter('10.0.0.6'), isTrue);
+    agent.dispose();
+  });
 
   test('khe lẻ lưu riêng từng máy', () async {
     final agent = DesktopAgent(const AgentConfig(printer: '10.0.0.5'));

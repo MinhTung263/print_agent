@@ -119,33 +119,6 @@ class DesktopExtraPrinters {
     return true;
   }
 
-  String get _dismissedKey => 'extraDismissed.${_companyKey()}';
-
-  Set<String> _dismissed() {
-    try {
-      final raw = AgentStore.get(_dismissedKey);
-      if (raw == null) return {};
-      return {for (final a in jsonDecode(raw) as List) '$a'};
-    } catch (_) {
-      return {};
-    }
-  }
-
-  /// Máy [address] người dùng đã xoá khỏi trạm: quét mạng không tự thêm lại.
-  void dismiss(String address) => AgentStore.set(
-    _dismissedKey,
-    jsonEncode(({..._dismissed(), address.trim()}).toList()),
-  );
-
-  void undismiss(String address) {
-    final d = _dismissed();
-    if (d.remove(address.trim())) {
-      AgentStore.set(_dismissedKey, jsonEncode(d.toList()));
-    }
-  }
-
-  bool isDismissed(String address) => _dismissed().contains(address.trim());
-
   ExtraPrinter? byAddress(String address) {
     _load();
     final a = address.trim();

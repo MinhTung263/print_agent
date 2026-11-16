@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:print_agent/print_agent.dart';
 import 'package:printer_label/desktop.dart';
@@ -37,50 +36,6 @@ class DesktopPrinterGateway implements AgentPrinterGateway<DesktopPrinter> {
   static Future<String?> _scanByMac(String mac, int port) =>
       LanPrinterScanner.findByMac(mac, port: port);
 
-  /// Địa chỉ giả của máy USB đang cắm mà trạm in chưa dùng: `setup:<cổng hoặc địa chỉ>`.
-  static const String pendingPrefix = 'setup:';
-
-  static bool isPending(String address) => address.startsWith(pendingPrefix);
-
-  List<UsbPrinterInfo> _detectedUsb = const [];
-
-  /// Máy USB đang cắm nhưng chưa là máy in của trạm in (chưa cài hoặc chưa thêm).
-  List<UsbPrinterInfo> get pendingUsb {
-    final own = _config().printer.trim();
-    return [
-      for (final u in _detectedUsb)
-        if (u.needsSetup || (u.address != own && !extras.contains(u.address)))
-          u,
-    ];
-  }
-
-  /// Địa chỉ giả trên sơ đồ của máy USB chưa dùng [u].
-  static String pendingAddress(UsbPrinterInfo u) =>
-      '$pendingPrefix${u.needsSetup ? u.setupPort : u.address}';
-
-  /// Máy USB chưa dùng ứng với địa chỉ giả [address].
-  UsbPrinterInfo? pendingByAddress(String address) {
-    for (final u in pendingUsb) {
-      if (pendingAddress(u) == address) return u;
-    }
-    return null;
-  }
-
-  /// Dò lại máy USB đang cắm (cắm / rút cáp): đổi thì báo lại sơ đồ.
-  Future<void> refreshUsb() async {
-    final all = await UsbPrinters.list();
-    // Chỉ máy USB (Mac còn liệt kê cả hàng in mạng / PDF).
-    final usb = [
-      for (final u in all)
-        if (u.needsSetup || u.detail == 'USB' || !Platform.isMacOS) u,
-    ];
-    String key(List<UsbPrinterInfo> l) =>
-        l.map((u) => '${u.address}|${u.setupPort}|${u.name}').join(';');
-    if (key(usb) == key(_detectedUsb)) return;
-    _detectedUsb = usb;
-    _printers.add(null);
-  }
-
   bool _connected = false;
   final _builtIn = StreamController<bool>.broadcast();
   final _printers = StreamController<void>.broadcast();
@@ -108,12 +63,6 @@ class DesktopPrinterGateway implements AgentPrinterGateway<DesktopPrinter> {
     return [
       for (final e in extras.items)
         if (e.address != own) e.toPrinter(),
-      for (final u in pendingUsb)
-        DesktopPrinter(
-          kind: AgentPrinterKind.usb,
-          address: pendingAddress(u),
-          name: '${u.name} · ${u.needsSetup ? 'chưa cài đặt' : 'chưa thêm'}',
-        ),
     ];
   }
 
@@ -169,11 +118,8 @@ class DesktopPrinterGateway implements AgentPrinterGateway<DesktopPrinter> {
   }
 
   @override
-  Future<bool> isUsbAttached(DesktopPrinter printer) async =>
-      // Máy USB chưa dùng: còn cắm = còn trong lượt dò gần nhất.
-      isPending(printer.address)
-      ? pendingByAddress(printer.address) != null
-      : AgentPrinter.reachable(printer.address, mac: printer.mac);
+  Future<bool> isUsbAttached(DesktopPrinter printer) =>
+      AgentPrinter.reachable(printer.address, mac: printer.mac);
 
   @override
   Future<bool> connectUsb(DesktopPrinter printer) =>
@@ -181,7 +127,6 @@ class DesktopPrinterGateway implements AgentPrinterGateway<DesktopPrinter> {
 
   @override
   Future<bool> isReady(DesktopPrinter printer) async {
-    if (isPending(printer.address)) return false;
     final ok = await AgentPrinter.reachable(printer.address, mac: printer.mac);
     if (printer.kind == AgentPrinterKind.builtIn) _setConnected(ok);
     return ok;

@@ -17,8 +17,6 @@ import 'ui/agent_theme.dart';
 import 'ui/dashboard/add_printer_action.dart';
 import 'ui/dashboard/agent_settings_card.dart';
 import 'ui/dashboard/printer_settings_panel.dart';
-import 'ui/dashboard/usb_setup_panel.dart';
-import 'agent/desktop_printer_gateway.dart';
 import 'ui/login_page.dart';
 
 /// EasyPOS Print Agent (Windows / Linux / macOS): nhận lệnh in của công ty qua
@@ -51,19 +49,13 @@ Future<void> main(List<String> args) async {
   // Nút in thử nằm trong phần cài đặt riêng của máy (máy tem: "In tem thử"): không hiện
   // thêm nút "In thử" chung.
   PrintAgentUi.hasOwnTestPrint = (printer) =>
-      !DesktopPrinterGateway.isPending(printer.refAddress ?? '') &&
       (printer.refAddress ?? '').isNotEmpty;
-  PrintAgentUi.isPendingPrinter = (printer) =>
-      DesktopPrinterGateway.isPending(printer.refAddress ?? '');
   // Cài đặt riêng từng máy in (loại, khổ giấy, căn chỉnh tem): hiện trong chi tiết máy in
   // khi bấm máy đó trên sơ đồ.
   PrintAgentUi.printerSettings = (printer) {
     final address = printer.refAddress ?? '';
     if (address.isEmpty) return null;
-    // Máy USB mới cắm (chưa cài / chưa thêm): nút "Cài đặt máy in".
-    return DesktopPrinterGateway.isPending(address)
-        ? UsbSetupPanel(agent: agent, address: address)
-        : PrinterSettingsPanel(agent: agent, address: address);
+    return PrinterSettingsPanel(agent: agent, address: address);
   };
   // Máy in LAN chỉ hiện xanh khi mở được cổng in (hoặc từ chối nhưng đúng máy theo MAC).
   AgentPrinterWatchdog.aliveCheck = (p) =>

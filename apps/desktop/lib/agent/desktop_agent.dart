@@ -22,7 +22,6 @@ import 'desktop_web_print.dart';
 import 'desktop_printer_auto_add.dart';
 import '../auth/auth_session.dart';
 import '../store/printer_auto_add.dart';
-import '../store/printer_auto_add_plan.dart' show FoundPrinter;
 import '../ui/dashboard/desktop_header.dart';
 import 'desktop_wifi.dart';
 
@@ -170,7 +169,6 @@ class DesktopAgent extends ChangeNotifier {
   Future<void> start() async {
     if (!_config.ready) return;
     await service.init();
-    _startUsbWatch();
     autoAdd.start();
     _autoAddNet ??= gateway.networkChanges.listen(
       (_) => autoAdd.networkChanged(),
@@ -187,7 +185,6 @@ class DesktopAgent extends ChangeNotifier {
 
   /// Thoát ứng dụng: rút khỏi danh sách Agent, thôi chặn máy ngủ.
   Future<void> shutdown() async {
-    _usbTimer?.cancel();
     _wake.stop();
     _stopAutoAdd();
     await web.stop();
@@ -242,8 +239,6 @@ class DesktopAgent extends ChangeNotifier {
       await update(_config.copyWith(printer: a, printerName: ''));
       return true;
     }
-    // Người dùng chủ động thêm lại: bỏ khỏi danh sách đã xoá.
-    gateway.extras.undismiss(a);
     if (!gateway.extras.add(a)) return false;
     notifyListeners();
     gateway.extrasChanged();
@@ -302,36 +297,6 @@ class DesktopAgent extends ChangeNotifier {
     }
   }
 
-  /// Cài đặt (nếu cần) rồi thêm máy USB [address] (địa chỉ giả `setup:...` trên sơ đồ)
-  /// vào trạm in. `null` = xong, ngược lại là lý do lỗi để hiện cho người dùng.
-  Future<String?> setupUsbPrinter(String address) async {
-    final info = gateway.pendingByAddress(address);
-    if (info == null) return 'Không thấy máy in USB này — hãy cắm lại cáp USB';
-    var queue = info.address;
-    if (info.needsSetup) {
-      final created = await UsbPrinters.setup(info.setupPort!);
-      if (created == null) {
-        return UsbPrinters.lastSetupError ??
-            'Chưa cài được máy in USB này — máy tính cần quyền quản trị';
-      }
-      queue = created;
-    }
-    await addPrinter(queue);
-    await gateway.refreshUsb();
-    return null;
-  }
-
-  Timer? _usbTimer;
-
-  /// Dò máy USB đang cắm định kỳ để hiện trên sơ đồ (chỉ khi đang làm Agent).
-  void _startUsbWatch() {
-    _usbTimer?.cancel();
-    unawaited(gateway.refreshUsb());
-    _usbTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      if (isOn) unawaited(gateway.refreshUsb());
-    });
-  }
-
   /// Thêm nhiều máy in một lúc; trả số máy thật sự được thêm (bỏ máy đã có).
   Future<int> addPrinters(Iterable<String> addresses) async {
     var added = 0;
@@ -344,35 +309,10 @@ class DesktopAgent extends ChangeNotifier {
   /// Bỏ máy in thêm [address]; `false` khi không phải máy in thêm.
   bool removeExtraPrinter(String address) {
     if (!gateway.extras.remove(address)) return false;
-    // Người dùng chủ động xoá: lần quét mạng sau không tự thêm lại máy này.
-    gateway.extras.dismiss(address);
     notifyListeners();
     gateway.extrasChanged();
     unawaited(service.relay.refreshStationInfo());
     return true;
-  }
-
-  /// Máy in LAN vừa tìm thấy khi quét mạng: thêm vào trạm này (hiện trên sơ đồ, nhận lệnh
-  /// in) — trừ máy in chính, máy đã có và máy người dùng đã xoá. Trả số máy mới thêm.
-  int registerScanned(List<FoundPrinter> found) {
-    var added = 0;
-    for (final f in found) {
-      final a = f.address.trim();
-      if (a == _config.printer.trim() ||
-          gateway.extras.contains(a) ||
-          gateway.extras.isDismissed(a)) {
-        continue;
-      }
-      if (!gateway.extras.add(a, name: f.model ?? '', mac: f.mac ?? '')) break;
-      added++;
-      unawaited(_identifyExtra(a));
-    }
-    if (added > 0) {
-      notifyListeners();
-      gateway.extrasChanged();
-      unawaited(service.relay.refreshStationInfo());
-    }
-    return added;
   }
 
   /// Máy in LAN vừa thêm chưa biết MAC: đọc từ bảng ARP (sau khi mở được cổng in) — để
@@ -503,7 +443,6 @@ class DesktopAgent extends ChangeNotifier {
 
   @override
   void dispose() {
-    _usbTimer?.cancel();
     _wake.stop();
     _stopAutoAdd();
     super.dispose();

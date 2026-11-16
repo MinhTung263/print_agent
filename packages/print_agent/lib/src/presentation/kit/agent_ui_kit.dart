@@ -165,11 +165,6 @@ abstract final class PrintAgentUi {
   /// `null` = máy in này không có cài đặt riêng.
   static Widget? Function(AgentPrinterRef printer)? printerSettings;
 
-  /// Máy in [printer] mới chỉ được phát hiện (VD máy USB đang cắm nhưng chưa cài / chưa
-  /// thêm vào trạm in): chi tiết chỉ hiện phần cài đặt của app chủ, không có bật / tắt,
-  /// in thử, xoá.
-  static bool Function(AgentPrinterRef printer)? isPendingPrinter;
-
   /// App chủ tự lo nút in thử của máy in [printer] (trong phần cài đặt riêng): chi tiết
   /// không hiện thêm nút "In thử" chung — tránh nhiều nút in thử cho cùng một máy.
   static bool Function(AgentPrinterRef printer)? hasOwnTestPrint;

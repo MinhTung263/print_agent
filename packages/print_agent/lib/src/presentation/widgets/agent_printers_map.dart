@@ -123,7 +123,6 @@ class AgentPrintersMap extends StatelessWidget {
   ) {
     final paused = off.contains(AgentPrinterSwitches.keyOf(s.printer));
     final p = s.printer;
-    final pending = PrintAgentUi.isPendingPrinter?.call(p) ?? false;
     return AgentPrinterDetail(
       name: p.nameOrNull ?? p.refAddress ?? '',
       kind: switch (p.refKind) {
@@ -145,8 +144,8 @@ class AgentPrintersMap extends StatelessWidget {
       // Mã -1 của máy in chính Agent chỉ là mã nội bộ — không hiện cho khách.
       id: p.refKind == AgentPrinterKind.builtIn ? null : p.refId,
       station: PrintAgentUi.station.displayName,
-      onToggle: pending ? null : () => unawaited(_toggle(p)),
-      onTestPrint: pending || (PrintAgentUi.hasOwnTestPrint?.call(p) ?? false)
+      onToggle: () => unawaited(_toggle(p)),
+      onTestPrint: (PrintAgentUi.hasOwnTestPrint?.call(p) ?? false)
           ? null
           : () => PrintAgentUi.station.testPrint(p),
       // Máy in tích hợp của máy POS (Sunmi...) không có cài đặt riêng; máy in chính của
@@ -155,8 +154,7 @@ class AgentPrintersMap extends StatelessWidget {
       // Máy in tích hợp của máy POS không xoá được; máy in LAN / USB đã lưu và máy in
       // đã chọn của Agent máy tính (IP thật) thì xoá nhanh được ngay ở đây.
       onRemove:
-          pending ||
-              PrintAgentUi.onRemovePrinter == null ||
+          PrintAgentUi.onRemovePrinter == null ||
               (p.refKind == AgentPrinterKind.builtIn && !_isDesktopOwn(p))
           ? null
           : () => PrintAgentUi.onRemovePrinter!(p),
@@ -266,13 +264,12 @@ class AgentPrintersMap extends StatelessWidget {
   static final RegExp _ipv4 = RegExp(r'^\d{1,3}(\.\d{1,3}){3}(:\d{1,5})?$');
 
   /// Máy in USB của máy tính: địa chỉ `usb:` (Linux) / `queue:` (Windows) / `cups:` (macOS)
-  /// hoặc máy USB mới cắm chưa dùng (`setup:`).
+
   static bool _isLocalUsb(String? address) {
     final a = (address ?? '').trim();
     return a.startsWith('usb:') ||
         a.startsWith('queue:') ||
-        a.startsWith('cups:') ||
-        a.startsWith('setup:');
+        a.startsWith('cups:');
   }
 
   /// Máy in chính của Agent máy tính (LAN IP thật hoặc USB), khác máy in tích hợp POS.

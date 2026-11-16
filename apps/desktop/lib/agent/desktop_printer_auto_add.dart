@@ -15,12 +15,7 @@ PrinterAutoAdd desktopPrinterAutoAdd(DesktopAgent agent) => PrinterAutoAdd(
     agent.auth,
     companyId: () => agent.config.companyId,
   ),
-  scan: () async {
-    final found = await _scan();
-    // Máy in tìm thấy thành máy in của trạm này (hiện trên sơ đồ, nhận lệnh in).
-    agent.registerScanned(found);
-    return found;
-  },
+  scan: _scan,
   enabled: () =>
       agent.config.ready && agent.isOn && agent.service.isPrimary.value,
   companyKey: () => agent.config.companyId?.toString(),
