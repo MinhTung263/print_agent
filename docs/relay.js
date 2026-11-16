@@ -138,6 +138,19 @@
     return out;
   }
 
-  g.PrintRelay = { PREFIX, replacedStationIds, stationFresh, STATION_MAX_AGE_MS, randomHex, normalizeEnv, shopKey, parseShopKey, channel, encrypt, decrypt, receiptJob, labelJob };
+  /**
+   * Mục tiêu (0..1) của thanh tiến trình in: mỗi bước có một mốc, trong bước nhích dần tới mốc kế
+   * (nhanh lúc đầu rồi chậm lại) nhưng KHÔNG chạm mốc kế — chỉ khi sang bước mới mới tới. Tăng
+   * đều theo bước và theo thời gian, không bao giờ đứng yên, không lùi.
+   */
+  const PROGRESS_MARKS = [0.04, 0.22, 0.5, 0.78, 1];
+  function progressTarget(step, msInStep, etaMs = 1500) {
+    const i = Math.max(0, Math.min(PROGRESS_MARKS.length - 2, step | 0));
+    const from = PROGRESS_MARKS[i], to = PROGRESS_MARKS[i + 1];
+    const frac = 1 - Math.exp(-Math.max(0, msInStep) / Math.max(300, etaMs / 2));
+    return from + (to - from) * 0.85 * frac;
+  }
+
+  g.PrintRelay = { PREFIX, progressTarget, replacedStationIds, stationFresh, STATION_MAX_AGE_MS, randomHex, normalizeEnv, shopKey, parseShopKey, channel, encrypt, decrypt, receiptJob, labelJob };
   if (typeof module !== 'undefined') module.exports = g.PrintRelay;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

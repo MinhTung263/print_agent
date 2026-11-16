@@ -98,3 +98,20 @@ test('replacedStationIds: gom mã cũ mà trạm mới báo đã thay', () => {
   assert.deepEqual([...r].sort(), ['old1', 'old2']);
   assert.equal(R.replacedStationIds(new Map()).size, 0);
 });
+
+test('progressTarget: tăng đều theo bước và theo thời gian, không lùi, không chạm 100% trước khi xong', () => {
+  let prev = -1;
+  for (let step = 0; step < 4; step++) {
+    for (const ms of [0, 100, 400, 1500, 10000]) {
+      const v = R.progressTarget(step, ms);
+      assert.ok(v >= prev, `lùi ở bước ${step}, ${ms}ms: ${v} < ${prev}`);
+      assert.ok(v < 1);
+      prev = v;
+    }
+  }
+  // Bước sau luôn cao hơn bước trước dù bước trước đã chờ rất lâu.
+  assert.ok(R.progressTarget(1, 0) > R.progressTarget(0, 60000));
+  assert.ok(R.progressTarget(3, 0) > R.progressTarget(2, 60000));
+  // Vừa vào bước: nhích ngay (không đứng yên).
+  assert.ok(R.progressTarget(2, 300) > R.progressTarget(2, 0));
+});

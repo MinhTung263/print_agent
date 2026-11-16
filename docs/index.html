@@ -31,7 +31,7 @@
   .spin { display:inline-block; width:16px; height:16px; border:2.5px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .8s linear infinite; vertical-align:-3px; margin-right:8px; }
   .prog { margin-top:12px; }
   .prog .bar { height:6px; border-radius:3px; background:var(--primary-soft); overflow:hidden; }
-  .prog .bar > i { display:block; height:100%; width:0; background:var(--primary); transition:width .25s linear; }
+  .prog .bar > i { display:block; height:100%; width:0; background:var(--primary); }
   .prog.ok .bar > i { background:var(--ok); } .prog.err .bar > i { background:var(--err); } .prog.warn .bar > i { background:var(--warn); }
   .steps { display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:var(--muted); }
   .steps span.on { color:var(--primary); font-weight:700; } .steps span.done { color:var(--ok); }
@@ -339,27 +339,38 @@ const STEPS = ['Chuẩn bị', 'Gửi lệnh', 'Trạm in nhận', 'Đang in'];
 const hist = () => { try { return JSON.parse(localStorage.getItem('printMs') || '[]'); } catch (_) { return []; } };
 const medianMs = () => { const h = hist().slice().sort((a, b) => a - b); return h.length ? h[Math.floor(h.length / 2)] : 0; };
 const printUi = {
-  t0: 0, step: 0, timer: null, label: 'In thử',
+  t0: 0, tStep: 0, step: 0, timer: null, raf: 0, cur: 0, target: 0, label: 'In thử',
   start() {
-    this.label = $('btnPrint').textContent; this.t0 = performance.now(); this.step = 0;
+    this.label = $('btnPrint').textContent; this.t0 = this.tStep = performance.now(); this.step = 0; this.cur = 0; this.target = 0;
     $('btnPrint').disabled = true; $('prog').hidden = false; $('prog').className = 'prog';
     $('progSteps').innerHTML = STEPS.map((t, i) => `<span data-i="${i}">${t}</span>`).join('');
-    clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 100); this.tick();
+    clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 100); this.tick(); this.animate();
   },
-  go(i) { this.step = Math.max(this.step, i); this.tick(); },
+  go(i) { if (i > this.step) { this.step = i; this.tStep = performance.now(); } this.tick(); },
+  // Thanh chạy mượt theo từng khung hình (làm mượt kiểu mũ về mục tiêu): không giật theo từng sự kiện.
+  animate() {
+    cancelAnimationFrame(this.raf);
+    const frame = () => {
+      this.cur += (this.target - this.cur) * 0.14;
+      $('progBar').style.width = (Math.min(1, this.cur) * 100).toFixed(2) + '%';
+      if (this.timer) this.raf = requestAnimationFrame(frame);
+    };
+    this.raf = requestAnimationFrame(frame);
+  },
   tick() {
     const el = (performance.now() - this.t0) / 1000, eta = medianMs() / 1000;
     $('btnPrint').innerHTML = `<span class="spin"></span>${STEPS[this.step]}… ${el.toFixed(1)}s`;
-    // Thanh tiến trình: theo bước, và nhích dần trong bước đang chạy (không bao giờ đứng yên).
-    const base = this.step / STEPS.length, inStep = Math.min(0.95, el / Math.max(eta || 6, 1) / STEPS.length);
-    $('progBar').style.width = Math.min(97, (base + inStep * (1 - base) * 0.6) * 100) + '%';
+    this.target = PrintRelay.progressTarget(this.step, performance.now() - this.tStep, (eta || 2) * 1000 / STEPS.length);
     document.querySelectorAll('#progSteps span').forEach((sp) => { const i = +sp.dataset.i; sp.className = i < this.step ? 'done' : i === this.step ? 'on' : ''; });
     $('progEta').textContent = eta ? `Đã chờ ${el.toFixed(1)}s · thường mất khoảng ${eta.toFixed(1)}s` : `Đã chờ ${el.toFixed(1)}s`;
   },
   finish(kind, text) {   // kind: ok | err | warn
-    clearInterval(this.timer); const el = performance.now() - this.t0;
+    clearInterval(this.timer); this.timer = null; cancelAnimationFrame(this.raf); const el = performance.now() - this.t0;
     $('btnPrint').disabled = false; $('btnPrint').textContent = this.label;
-    $('prog').className = 'prog ' + kind; $('progBar').style.width = '100%';
+    $('prog').className = 'prog ' + kind;
+    // Về 100% bằng chuyển động ngắn (không nhảy vọt).
+    const bar = $('progBar'); bar.style.transition = 'width .3s ease-out'; bar.style.width = '100%';
+    setTimeout(() => { bar.style.transition = ''; }, 400);
     document.querySelectorAll('#progSteps span').forEach((sp) => { sp.className = kind === 'ok' ? 'done' : ''; });
     $('progEta').textContent = `${text} · ${(el / 1000).toFixed(1)}s`;
     if (kind === 'ok') { const h = hist(); h.push(Math.round(el)); try { localStorage.setItem('printMs', JSON.stringify(h.slice(-7))); } catch (_) {} }
