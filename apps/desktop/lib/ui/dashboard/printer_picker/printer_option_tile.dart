@@ -16,11 +16,15 @@ class PrinterOptionTile extends StatelessWidget {
     required this.onTap,
     this.multi = false,
     this.onBeep,
+    this.added = false,
   });
 
   final PrinterOption option;
   final bool selected;
   final bool current;
+
+  /// Máy đã được thêm vào trạm in này rồi (không chọn lại): hiện nhãn "Đã thêm" + dấu V.
+  final bool added;
   final VoidCallback? onTap;
 
   /// Chọn nhiều máy: hộp tick vuông thay cho nút tròn.
@@ -92,9 +96,9 @@ class PrinterOptionTile extends StatelessWidget {
                           const SizedBox(width: 6),
                           _PaperPill(PaperSizeDetector.guess(option.title)),
                         ],
-                        if (current) ...[
+                        if (current || added) ...[
                           const SizedBox(width: 8),
-                          const _Badge('Đang dùng'),
+                          _Badge(current ? 'Đang dùng' : 'Đã thêm'),
                         ],
                       ],
                     ),
@@ -123,14 +127,18 @@ class PrinterOptionTile extends StatelessWidget {
                 ),
               const SizedBox(width: 4),
               Icon(
-                multi
+                current || added
+                    ? Icons.check_circle_rounded
+                    : multi
                     ? (selected
                           ? Icons.check_box_rounded
                           : Icons.check_box_outline_blank_rounded)
                     : (selected
                           ? Icons.check_circle_rounded
                           : Icons.radio_button_unchecked_rounded),
-                color: onTap == null
+                color: current || added
+                    ? AgentColors.success
+                    : onTap == null
                     ? AgentColors.border
                     : (selected ? AgentColors.primary : AgentColors.muted),
                 size: 22,

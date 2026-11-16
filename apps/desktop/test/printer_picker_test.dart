@@ -207,6 +207,46 @@ void main() {
       expect(find.textContaining('Đã gửi lệnh bíp'), findsOneWidget);
     });
 
+    testWidgets(
+      'máy đã thêm vào trạm: hiện "Đã thêm" + dấu V, không chọn lại được',
+      (t) async {
+        await t.binding.setSurfaceSize(const Size(1000, 900));
+        final d = _FakeDiscovery([
+          PrinterOption.usb(address: 'cups:Main', name: 'Máy chính'),
+          PrinterOption.usb(address: 'cups:Added', name: 'Gprinter'),
+          PrinterOption.usb(address: 'cups:Free', name: 'Máy mới'),
+        ]);
+        await t.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => TextButton(
+                  onPressed: () => showPrintersPickerDialog(
+                    context,
+                    current: 'cups:Main',
+                    added: {'cups:Added'},
+                    discovery: d,
+                  ),
+                  child: const Text('mở'),
+                ),
+              ),
+            ),
+          ),
+        );
+        await t.tap(find.text('mở'));
+        await t.pumpAndSettle();
+        expect(find.text('Đang dùng'), findsOneWidget);
+        expect(find.text('Đã thêm'), findsOneWidget);
+        // Hai máy đã có → dấu V xanh; máy mới (chưa có duy nhất) được tick sẵn.
+        expect(find.byIcon(Icons.check_circle_rounded), findsNWidgets(2));
+        expect(find.byIcon(Icons.check_box_rounded), findsOneWidget);
+        // Bấm máy đã thêm: không tick, nút vẫn "Thêm 1 máy in" (chỉ còn máy mới được tự tick vì là máy duy nhất chưa có).
+        await t.tap(find.text('Gprinter'));
+        await t.pumpAndSettle();
+        expect(find.text('Thêm 1 máy in'), findsOneWidget);
+      },
+    );
+
     Future<void> openOnly(
       WidgetTester t,
       PrinterDiscovery d,

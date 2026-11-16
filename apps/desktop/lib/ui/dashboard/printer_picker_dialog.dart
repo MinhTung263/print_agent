@@ -36,22 +36,31 @@ Future<String?> showPrinterPickerDialog(
 Future<List<String>?> showPrintersPickerDialog(
   BuildContext context, {
   String current = '',
+  Set<String> added = const {},
   PrinterDiscovery discovery = const DesktopPrinterDiscovery(),
 }) => showDialog<List<String>>(
   context: context,
-  builder: (_) =>
-      _PrinterPickerDialog(current: current, discovery: discovery, multi: true),
+  builder: (_) => _PrinterPickerDialog(
+    current: current,
+    added: added,
+    discovery: discovery,
+    multi: true,
+  ),
 );
 
 class _PrinterPickerDialog extends StatefulWidget {
   const _PrinterPickerDialog({
     required this.current,
+    this.added = const {},
     required this.discovery,
     this.multi = false,
   });
 
   final bool multi;
   final String current;
+
+  /// Địa chỉ các máy đã thêm vào trạm (ngoài máy in chính): hiện "Đã thêm", không chọn lại.
+  final Set<String> added;
   final PrinterDiscovery discovery;
 
   @override
@@ -87,7 +96,9 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
       _scanning = false;
       if (widget.multi) {
         // Chỉ có một máy chưa dùng thì tick sẵn.
-        final free = _all.where((o) => !_isCurrent(o)).toList();
+        final free = _all
+            .where((o) => !_isCurrent(o) && !_isAdded(o) && !o.blocked)
+            .toList();
         if (_checked.isEmpty && free.length == 1) _checked.add(free.first.key);
       } else {
         _selected = PrinterPickerList.preselect(_all, _selected);
@@ -171,6 +182,10 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
   bool _isCurrent(PrinterOption o) =>
       o.address.isNotEmpty && o.address == widget.current;
 
+  /// Máy [o] đã có trong trạm (máy in chính hoặc máy đã thêm) — thêm lại không được.
+  bool _isAdded(PrinterOption o) =>
+      o.address.isNotEmpty && widget.added.contains(o.address);
+
   void _toggle(PrinterOption o) => setState(() {
     if (!_checked.remove(o.key)) _checked.add(o.key);
   });
@@ -181,7 +196,9 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
         _manual.insert(0, PrinterOption.lan(address, manual: true));
       }
       if (widget.multi) {
-        if (address != widget.current) _checked.add(address);
+        if (address != widget.current && !widget.added.contains(address)) {
+          _checked.add(address);
+        }
       } else {
         _selected = address;
       }
@@ -297,6 +314,7 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
                                 ? _checked.contains(all[i].key)
                                 : all[i].key == _selected,
                             current: _isCurrent(all[i]),
+                            added: _isAdded(all[i]),
                             multi: widget.multi,
                             onBeep: all[i].address.isNotEmpty && !all[i].blocked
                                 ? () => unawaited(_beep(all[i]))
@@ -304,7 +322,9 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
                             // Máy đang dùng không thêm lại được.
                             onTap:
                                 all[i].blocked ||
-                                    (widget.multi && _isCurrent(all[i]))
+                                    (widget.multi &&
+                                        (_isCurrent(all[i]) ||
+                                            _isAdded(all[i])))
                                 ? null
                                 : () => widget.multi
                                       ? _toggle(all[i])

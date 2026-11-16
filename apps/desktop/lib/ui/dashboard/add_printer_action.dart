@@ -14,6 +14,7 @@ Future<void> desktopAddPrinter(DesktopAgent agent) async {
   final picked = await showPrintersPickerDialog(
     context,
     current: agent.config.printer,
+    added: {for (final e in agent.gateway.extras.items) e.address},
   );
   if (picked != null && picked.isNotEmpty) await agent.addPrinters(picked);
   unawaited(agent.autoAdd.runOnce());
