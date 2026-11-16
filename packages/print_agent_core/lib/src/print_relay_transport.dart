@@ -53,6 +53,11 @@ abstract class PrintRelayTransport {
   /// Đưa lệnh lên hàng đợi, trả mã lệnh.
   Future<String> submitJob(Map<String, Object?> data);
 
+  /// Gỡ bản ghi trực tuyến của trạm [station] (một mục [watchStations]) khỏi
+  /// hàng đợi — dùng khi trạm không tự ngắt được (app bản cũ, máy hỏng). Trạm
+  /// còn chạy thì có thể tự báo lại. `true` khi đã gửi lệnh gỡ.
+  Future<bool> removeStation(Map<Object?, Object?> station) async => false;
+
   /// Trạng thái lệnh [id] ([PrintRelayStatus]), phát mỗi khi thay đổi.
   Stream<String?> watchJobStatus(String id);
 

@@ -55,4 +55,32 @@ void main() {
     },
     timeout: const Timeout(Duration(seconds: 60)),
   );
+
+  test(
+    'MQTT: máy mở SAU vẫn thấy trạm (hỏi ping, không trông vào tin retained)',
+    () async {
+      final secret = 'late-${DateTime.now().microsecondsSinceEpoch}';
+      final stationT = MqttPrintRelayTransport(secret: secret);
+      final station = PrintRelayStation(
+        transport: stationT,
+        onJob: (_) async => true,
+        stationId: 'agent-late',
+      );
+      expect(await station.start(), isTrue);
+      // Trạm đã lên mạng từ lâu; máy gửi mới mở sau.
+      await Future<void>.delayed(const Duration(seconds: 2));
+      final lateT = MqttPrintRelayTransport(secret: secret);
+      final stations = await lateT
+          .watchStations()
+          .firstWhere((list) => list.isNotEmpty)
+          .timeout(const Duration(seconds: 8));
+      expect(stations.single['id'], 'agent-late');
+      expect(stations.single['at'], isA<int>());
+
+      await station.stop();
+      await stationT.dispose();
+      await lateT.dispose();
+    },
+    timeout: const Timeout(Duration(seconds: 60)),
+  );
 }

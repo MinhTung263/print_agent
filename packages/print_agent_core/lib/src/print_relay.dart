@@ -371,6 +371,20 @@ class PrintRelay {
     return sent;
   }
 
+  /// Gỡ trạm [station] khỏi mọi kênh (MQTT, Firebase...). `true` khi ít nhất
+  /// một kênh đã gỡ.
+  Future<bool> removeStation(Map<Object?, Object?> station) async {
+    var removed = false;
+    for (final t in await queues()) {
+      try {
+        if (await t.removeStation(station)) removed = true;
+      } catch (e) {
+        _log('[PRINT-RELAY] Gỡ trạm lỗi: $e');
+      }
+    }
+    return removed;
+  }
+
   Future<void> _stop() async {
     for (final sub in _controlSubs) {
       await sub.cancel();

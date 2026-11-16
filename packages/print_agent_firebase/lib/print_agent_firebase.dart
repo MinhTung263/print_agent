@@ -200,6 +200,30 @@ class FirebasePrintRelayTransport implements PrintRelayTransport {
   int _serverOffset = 0;
   StreamSubscription<DatabaseEvent>? _offsetSub;
 
+  /// Xoá mọi nút trạm có mã Agent trùng [station] (khoá có thể là mã Agent hoặc
+  /// khoá `push()` của app bản cũ).
+  @override
+  Future<bool> removeStation(Map<Object?, Object?> station) async {
+    final id = station['id']?.toString() ?? '';
+    if (id.isEmpty) return false;
+    try {
+      final snap = await _stations.get();
+      final value = snap.value;
+      if (value is! Map) return false;
+      var removed = false;
+      for (final e in value.entries) {
+        final v = e.value;
+        if (e.key == id || (v is Map && v['id']?.toString() == id)) {
+          await _stations.child('${e.key}').remove();
+          removed = true;
+        }
+      }
+      return removed;
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Stream<List<Map<Object?, Object?>>> watchStations() {
     _offsetSub ??= _db.ref('.info/serverTimeOffset').onValue.listen((e) {

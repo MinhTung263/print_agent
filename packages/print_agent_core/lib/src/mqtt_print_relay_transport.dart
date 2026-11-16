@@ -292,6 +292,33 @@ class MqttPrintRelayTransport implements PrintRelayTransport {
   /// Thông tin trạm đang báo (để báo lại sau khi nối lại broker).
   Map<String, Object?>? _onlineInfo;
 
+  /// Báo lại trạng thái trực tuyến định kỳ: broker công cộng là một CỤM nhiều máy
+  /// chủ, tin retained lúc có lúc không tới người vào sau — máy mở app sau (hoặc
+  /// trang web) có thể không thấy trạm cho tới khi trạm báo lại.
+  static const Duration presenceEvery = Duration(seconds: 45);
+  Timer? _presenceTimer;
+  StreamSubscription<(String, Object?)>? _pingSub;
+
+  /// Báo lại ngay thông tin trạm (retained) — gọi định kỳ và khi có người hỏi
+  /// ("ping") ai đang trực tuyến.
+  Future<void> _announce() async {
+    final info = _onlineInfo;
+    if (info == null) return;
+    await _publish('$_topic/stations/$_stationId', {
+      ...info,
+      'at': DateTime.now().millisecondsSinceEpoch,
+    }, retain: true);
+  }
+
+  /// Máy gửi / trang web hỏi "ai đang trực tuyến": trạm trả lời bằng cách báo lại
+  /// (chờ ngẫu nhiên ≤ 600ms để nhiều trạm không dồn một lúc).
+  void _listenPing() {
+    _pingSub ??= _watch('$_topic/ping').listen((_) {
+      final delay = Duration(milliseconds: Random().nextInt(600));
+      Timer(delay, () => unawaited(_announce().catchError((Object _) {})));
+    });
+  }
+
   @override
   Future<void> goOnline(Map<String, Object?> info) async {
     _onlineInfo = info;
@@ -300,6 +327,12 @@ class MqttPrintRelayTransport implements PrintRelayTransport {
       'at': DateTime.now().millisecondsSinceEpoch,
     }, retain: true);
     _listenClaims();
+    _listenPing();
+    _presenceTimer?.cancel();
+    _presenceTimer = Timer.periodic(
+      presenceEvery,
+      (_) => unawaited(_announce().catchError((Object _) {})),
+    );
     // Chờ broker xác nhận đăng ký trước khi nhận lệnh.
     await Future<void>.delayed(const Duration(milliseconds: 300));
   }
@@ -307,6 +340,10 @@ class MqttPrintRelayTransport implements PrintRelayTransport {
   @override
   Future<void> goOffline() async {
     _onlineInfo = null;
+    _presenceTimer?.cancel();
+    _presenceTimer = null;
+    unawaited(_pingSub?.cancel());
+    _pingSub = null;
     final client = _client;
     if (client == null) return;
     try {
@@ -402,6 +439,31 @@ class MqttPrintRelayTransport implements PrintRelayTransport {
   // Máy gửi
   // ---------------------------------------------------------------------------
 
+  /// Mã Agent → khoá topic `stations/{khoá}` đã thấy (để [removeStation] xoá
+  /// đúng bản ghi retained của trạm đó).
+  final Map<String, Set<String>> _stationKeys = {};
+
+  /// Xoá bản ghi retained của trạm: gửi gói retained RỖNG tới mọi topic trạm
+  /// đó từng dùng (một Agent có thể còn bản ghi của các phiên cũ).
+  @override
+  Future<bool> removeStation(Map<Object?, Object?> station) async {
+    final id = station['id']?.toString() ?? '';
+    final keys = {..._stationKeys[id] ?? const <String>{}};
+    if (keys.isEmpty) return false;
+    final client = await _connect();
+    if (client == null) return false;
+    for (final key in keys) {
+      client.publishMessage(
+        '$_topic/stations/$key',
+        MqttQos.atLeastOnce,
+        MqttClientPayloadBuilder().payload!,
+        retain: true,
+      );
+    }
+    _stationKeys.remove(id);
+    return true;
+  }
+
   @override
   Stream<List<Map<Object?, Object?>>> watchStations() {
     final stations = <String, Map<Object?, Object?>>{};
@@ -415,10 +477,25 @@ class MqttPrintRelayTransport implements PrintRelayTransport {
         empty = Timer(const Duration(milliseconds: 1500), () {
           if (stations.isEmpty) out.add(const []);
         });
+        // Tin retained không chắc tới (xem [presenceEvery]): hỏi thẳng các trạm
+        // đang trực tuyến báo lại, để máy mở sau thấy ngay.
+        unawaited(
+          Future<void>.delayed(const Duration(milliseconds: 400), () async {
+            try {
+              await _publish('$_topic/ping', {
+                'at': DateTime.now().millisecondsSinceEpoch,
+              });
+            } catch (_) {}
+          }),
+        );
         sub = _watch('$_topic/stations/+').listen((e) {
           final info = e.$2;
           if (info is Map) {
             stations[e.$1] = Map<Object?, Object?>.from(info);
+            final agent = info['id']?.toString();
+            if (agent != null && agent.isNotEmpty) {
+              (_stationKeys[agent] ??= <String>{}).add(e.$1);
+            }
           } else {
             stations.remove(e.$1);
           }

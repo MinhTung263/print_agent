@@ -8,6 +8,7 @@ export 'src/print_relay.dart';
 export 'src/print_relay_client.dart';
 export 'src/print_relay_image.dart';
 export 'src/print_relay_job.dart';
+export 'src/print_relay_label_spec.dart';
 export 'src/print_relay_lan.dart';
 export 'src/print_relay_station.dart';
 export 'src/print_relay_transport.dart';

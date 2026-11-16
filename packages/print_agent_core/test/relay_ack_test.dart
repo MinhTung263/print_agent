@@ -9,6 +9,9 @@ import 'package:print_agent_core/print_agent_core.dart';
 /// Kênh giả trong bộ nhớ: một trạm "sống" (nhận lệnh → báo nhận → in xong)
 /// hoặc "chết" (vẫn nằm trong danh sách nhưng không phản hồi).
 class _FakeTransport implements PrintRelayTransport {
+  @override
+  Future<bool> removeStation(Map<Object?, Object?> station) async => false;
+
   _FakeTransport({required this.alive, this.hold = false});
 
   final bool alive;

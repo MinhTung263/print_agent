@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:printer_label/printer_label.dart';
 import 'print_relay_image.dart';
+import 'print_relay_label_spec.dart';
 
 /// Loại lệnh in gửi qua trạm.
 enum PrintRelayJobKind {
@@ -100,6 +101,7 @@ class PrintRelayJob {
     required this.images,
     this.paperSize,
     this.labelSize,
+    this.labelSpec,
     this.copies = 1,
     this.openDrawer = false,
     this.status = PrintRelayStatus.pending,
@@ -179,6 +181,9 @@ class PrintRelayJob {
   final String? paperSize;
   final LabelPerRow? labelSize;
 
+  /// Kích thước thật của hàng tem (Agent máy tính dùng; app bản cũ bỏ qua).
+  final PrintRelayLabelSpec? labelSpec;
+
   /// Số bản (hoá đơn) / số lần lặp (tem), tối thiểu 1.
   final int copies;
   final bool openDrawer;
@@ -222,6 +227,7 @@ class PrintRelayJob {
         images: images,
         paperSize: paperSize,
         labelSize: labelSize,
+        labelSpec: labelSpec,
         copies: copies,
         openDrawer: openDrawer,
         status: status,
@@ -252,6 +258,7 @@ class PrintRelayJob {
     if (printer.mac != null) 'printerMac': printer.mac,
     if (isLabel) ...{
       'labelSize': labelSize?.name,
+      if (labelSpec != null) 'labelSpec': labelSpec!.toMap(),
       'copies': copies < 1 ? 1 : copies,
       'images': images.map(base64Encode).toList(),
     } else ...{
@@ -300,6 +307,7 @@ class PrintRelayJob {
       images: images,
       paperSize: map['size']?.toString(),
       labelSize: LabelPerRow.fromName(map['labelSize']?.toString()),
+      labelSpec: PrintRelayLabelSpec.fromMap(map['labelSpec']),
       copies: count is int && count > 0 ? count : 1,
       openDrawer: map['openDrawer'] == true,
       status: map['status']?.toString() ?? '',
