@@ -42,3 +42,30 @@ test('bẻ chữ tối đa N dòng, quá thì thêm …', () => {
   assert.ok(lines[1].endsWith('…'));
   assert.ok(lines.every((l) => l.length * 10 <= 120));
 });
+
+// Mẫu do thư viện JsBarcode 3.11.6 sinh ra (Code 128): so từng module.
+test('mã vạch Code 128 khớp mẫu chuẩn (Code C cho số chẵn, Code B cho chữ)', () => {
+  assert.equal(T.code128('12345678'), "1101001110010110011100100010110001110001011011000010100100011101101100011101011");
+  assert.equal(T.code128('20250101'), "1101001110011001001110111001011001100110110011001101100100011110101100011101011");
+  assert.equal(T.code128('SP00123'), "1101001000011011101000111011101101001110110010011101100100111001101100111001011001011100100110100001100011101011");
+  assert.equal(T.code128('Ab-9 z'), "11010010000101000110001001000011010011011100111001011001101100110011011110110110111001001100011101011");
+});
+
+test('mã vạch: bắt đầu START, kết thúc STOP 13 module, chỉ có 0/1', () => {
+  const c = T.code128('12345678');
+  assert.ok(c.startsWith('11010011100'), 'START C');
+  assert.ok(c.endsWith('1100011101011'), 'STOP');
+  assert.match(c, /^[01]+$/);
+  // START(11) + 4 cặp số(44) + kiểm tra(11) + STOP(13).
+  assert.equal(c.length, 11 + 44 + 11 + 13);
+  assert.ok(T.code128('SP00123').startsWith('11010010000'), 'START B');
+});
+
+test('tem sản phẩm: rows dùng hàng hoá mẫu, 2 tem/hàng', () => {
+  const two = T.bySize('double');
+  const r = T.rows(3, two, 'product');
+  assert.deepEqual(r.map((x) => x.length), [2, 1]);
+  assert.equal(r[0][0].name, 'Áo Dài Truyền Thống');
+  assert.equal(r[0][0].code, '12345678');
+  assert.deepEqual(T.TEMPLATES.map((t) => t.id), ['tea', 'product']);
+});
