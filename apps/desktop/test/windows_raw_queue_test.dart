@@ -39,6 +39,25 @@ void main() {
     if (f.existsSync()) f.deleteSync();
   });
 
+  test(
+    'liệt kê máy USB cắm trực tiếp (usbprint): xong nhanh, không treo',
+    () async {
+      final sw = Stopwatch()..start();
+      final direct = await WindowsUsbPrint.list();
+      // ignore: avoid_print
+      print(
+        'usbprint: ${direct.length} máy, ${sw.elapsedMilliseconds}ms: '
+        '${direct.map((e) => '${e.address} | ${e.name}').toList()}',
+      );
+      expect(sw.elapsed, lessThan(const Duration(seconds: 12)));
+      expect(
+        direct.every((e) => e.address.startsWith(WindowsUsbPrint.prefix)),
+        isTrue,
+      );
+    },
+    skip: Platform.isWindows ? false : 'chỉ Windows',
+  );
+
   test('liệt kê thấy hàng in, hàng in "có mặt"', () async {
     final address = '${WindowsRawPrinters.prefix}$queue';
     expect(await UsbPrinters.present(address), isTrue);
