@@ -51,6 +51,58 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
   bool get standby => _standby;
   Timer? _probeTimer;
   bool _probing = false;
+
+  /// Máy in NÀO được dò rất nhanh ([fastEvery]) — máy USB: rút / cắm lại hiện ngay (kiểm tra máy in
+  /// USB chỉ hỏi hệ điều hành, không mở kết nối nên dò dày được; máy LAN dò dày sẽ chen cổng 9100).
+  /// App chủ đặt (mặc định không máy nào).
+  static bool Function(AgentPrinterRef printer)? fastProbe;
+
+  /// Chu kỳ dò nhanh.
+  static Duration fastEvery = const Duration(milliseconds: 1500);
+  Timer? _fastTimer;
+  bool _fastBusy = false;
+
+  /// Dò nhanh các máy in được [fastProbe] chọn; đổi trạng thái thì cập nhật sơ đồ ngay.
+  Future<void> _probeFast() async {
+    final pick = fastProbe;
+    if (pick == null || _fastBusy || _probing || _checking || _printing > 0) {
+      return;
+    }
+    _fastBusy = true;
+    try {
+      final targets = <P>[
+        if (_gateway.hasBuiltIn && pick(_gateway.builtInPrinter()))
+          _gateway.builtInPrinter(),
+        for (final p in List.of(_gateway.printers))
+          if (pick(p) && p.refKind != AgentPrinterKind.builtIn) p,
+      ];
+      for (final p in targets) {
+        if (_printing > 0) {
+          return;
+        }
+        final ok = p.refKind == AgentPrinterKind.builtIn
+            ? await _gateway.isReady(p)
+            : await _gateway.isUsbAttached(p);
+        final was = statuses
+            .where((s) => _keyOf(s.printer) == _keyOf(p))
+            .firstOrNull
+            ?.state;
+        _setStatus(
+          p,
+          ok ? AgentPrinterState.connected : AgentPrinterState.disconnected,
+        );
+        if (was != null && was != AgentPrinterState.connected && ok) {
+          _log('[AGENT] ${p.refName} đã cắm lại');
+        } else if (was == AgentPrinterState.connected && !ok) {
+          _log('[AGENT] ${p.refName} bị rút / mất kết nối');
+        }
+      }
+    } catch (_) {
+    } finally {
+      _fastBusy = false;
+    }
+  }
+
   int _watchers = 0;
   StreamSubscription<bool>? _builtInSub;
   StreamSubscription<void>? _netSub;
@@ -177,6 +229,8 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
     _timer = Timer.periodic(_interval, (_) => unawaited(_checkAll()));
     unawaited(_checkAll());
     _restartProbe();
+    _fastTimer?.cancel();
+    _fastTimer = Timer.periodic(fastEvery, (_) => unawaited(_probeFast()));
     // Máy in tích hợp đổi trạng thái (native báo): cập nhật sơ đồ ngay.
     _builtInSub = _gateway.builtInChanges.listen((ok) {
       if (!_gateway.hasBuiltIn) return;
@@ -188,7 +242,7 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
     // Đổi Wi-Fi / mạng: kiểm tra lại ngay (chờ ~2s cho mạng mới nhận IP).
     _netSub = _gateway.networkChanges.listen((_) {
       _netDebounce?.cancel();
-      _netDebounce = Timer(const Duration(seconds: 2), () {
+      _netDebounce = Timer(const Duration(seconds: 1), () {
         if (_timer == null) return;
         _log('[AGENT] Đổi mạng — kiểm tra lại máy in');
         markAllChecking();
@@ -202,6 +256,8 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
     _timer = null;
     _probeTimer?.cancel();
     _probeTimer = null;
+    _fastTimer?.cancel();
+    _fastTimer = null;
     unawaited(_builtInSub?.cancel());
     _builtInSub = null;
     _netDebounce?.cancel();

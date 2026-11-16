@@ -170,9 +170,13 @@ class DesktopAgent extends ChangeNotifier {
     if (!_config.ready) return;
     await service.init();
     autoAdd.start();
-    _autoAddNet ??= gateway.networkChanges.listen(
-      (_) => autoAdd.networkChanged(),
-    );
+    _autoAddNet ??= gateway.networkChanges.listen((_) {
+      autoAdd.networkChanged();
+      // Mạng đổi (Wi-Fi tắt / bật lại): báo lại trạng thái trạm sau khi có IP mới.
+      Future<void>.delayed(const Duration(seconds: 3), () {
+        if (isOn) unawaited(service.relay.refreshStationInfo());
+      });
+    });
     unawaited(gateway.reconnectBuiltIn());
     unawaited(_learnPrinterMac());
     // Bản trước lưu ĐỊA CHỈ làm tên máy in và luôn coi là máy in hoá đơn: nhận ra lại.

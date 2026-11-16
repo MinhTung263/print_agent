@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:print_agent/print_agent.dart';
+import 'package:printer_label/desktop.dart' show UsbPrinters;
 
 import 'agent/agent_config.dart';
 import 'agent/agent_printer.dart';
@@ -57,6 +58,9 @@ Future<void> main(List<String> args) async {
     if (address.isEmpty) return null;
     return PrinterSettingsPanel(agent: agent, address: address);
   };
+  // Máy in USB dò rất nhanh (rút / cắm lại hiện ngay); máy LAN dò thưa hơn để khỏi chen cổng in.
+  AgentPrinterWatchdog.fastProbe = (p) =>
+      UsbPrinters.isLocal(p.refAddress ?? '');
   // Máy in LAN chỉ hiện xanh khi mở được cổng in (hoặc từ chối nhưng đúng máy theo MAC).
   AgentPrinterWatchdog.aliveCheck = (p) =>
       AgentPrinter.reachable(p.refAddress ?? '', mac: p.refMac);

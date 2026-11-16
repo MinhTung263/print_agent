@@ -167,7 +167,8 @@ class DesktopPrinterGateway implements AgentPrinterGateway<DesktopPrinter> {
   @override
   Stream<void> get networkChanges async* {
     var last = (await PrintRelayLanServer.localIpv4s()).join(',');
-    await for (final _ in Stream<void>.periodic(const Duration(seconds: 15))) {
+    // Chỉ đọc danh sách IP (nhẹ) mỗi 2s: ngắt / bật lại Wi-Fi, cắm / rút dây mạng hiện trong vài giây.
+    await for (final _ in Stream<void>.periodic(const Duration(seconds: 2))) {
       final now = (await PrintRelayLanServer.localIpv4s()).join(',');
       if (now == last) continue;
       last = now;

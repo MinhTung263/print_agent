@@ -121,6 +121,39 @@ void main() {
       },
     );
 
+    test(
+      'máy USB rút / cắm lại: trạng thái đổi trong vài trăm ms (dò nhanh), không chờ vòng 3–15s',
+      () async {
+        AgentPrinterWatchdog.fastProbe = (p) =>
+            p.refKind == AgentPrinterKind.usb;
+        AgentPrinterWatchdog.fastEvery = const Duration(milliseconds: 60);
+        addTearDown(() {
+          AgentPrinterWatchdog.fastProbe = null;
+          AgentPrinterWatchdog.fastEvery = const Duration(milliseconds: 1500);
+          watchdog.stop();
+        });
+        gateway
+          ..printers = [usb]
+          ..usbAttached = true;
+        watchdog.start();
+        AgentPrinterState? state() => watchdog.statuses
+            .where((s) => s.printer.refAddress == usb.refAddress)
+            .firstOrNull
+            ?.state;
+        Future<void> settle() =>
+            Future<void>.delayed(const Duration(milliseconds: 250));
+
+        await settle();
+        expect(state(), AgentPrinterState.connected);
+        gateway.usbAttached = false; // rút cáp
+        await settle();
+        expect(state(), AgentPrinterState.disconnected);
+        gateway.usbAttached = true; // cắm lại
+        await settle();
+        expect(state(), AgentPrinterState.connected);
+      },
+    );
+
     test('waitUntilReady trả máy in khi sẵn sàng', () async {
       expect(await watchdog.waitUntilReady(kitchen), kitchen);
       expect(watchdog.statuses.single.state, AgentPrinterState.connected);
