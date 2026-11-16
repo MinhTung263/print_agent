@@ -13,6 +13,7 @@ class PrinterOption {
     this.setupPort,
     this.type,
     this.warning,
+    this.hardBlock = false,
   });
 
   factory PrinterOption.lan(
@@ -21,6 +22,7 @@ class PrinterOption {
     String? model,
     PrinterType? type,
     String? warning,
+    bool hardBlock = false,
   }) => PrinterOption(
     kind: PrinterOptionKind.lan,
     address: address,
@@ -30,6 +32,7 @@ class PrinterOption {
     subtitle: address,
     type: type,
     warning: warning,
+    hardBlock: hardBlock,
   );
 
   /// Máy in USB; [setupPort] khác `null` = chưa cài đặt (cài một lần).
@@ -65,7 +68,11 @@ class PrinterOption {
   /// chọn được.
   final String? warning;
 
-  bool get blocked => warning != null;
+  /// Chặn cứng: KHÔNG chọn được (VD IP đang bị thiết bị khác dùng — thêm vào sẽ in nhầm máy khác).
+  /// Cảnh báo mềm (VD chưa kết nối được) vẫn cho thêm và cho bíp thử.
+  final bool hardBlock;
+
+  bool get blocked => hardBlock;
 
   PrinterOption withType(PrinterType? type) => PrinterOption(
     kind: kind,
@@ -75,6 +82,7 @@ class PrinterOption {
     setupPort: setupPort,
     type: type,
     warning: warning,
+    hardBlock: hardBlock,
   );
 
   bool get needsSetup => setupPort != null;

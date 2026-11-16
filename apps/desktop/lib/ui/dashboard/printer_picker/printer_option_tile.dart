@@ -104,16 +104,29 @@ class PrinterOptionTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      option.warning ?? option.subtitle,
+                      option.subtitle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
-                        color: option.needsSetup || option.blocked
+                        color: option.needsSetup
                             ? AgentColors.warning
                             : AgentColors.textSecondary,
                       ),
                     ),
+                    // Cảnh báo (IP trùng / chưa kết nối được) ở dòng riêng, màu cam.
+                    if (option.warning != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        option.warning!,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AgentColors.warning,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

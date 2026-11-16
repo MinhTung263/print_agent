@@ -36,12 +36,13 @@ class DesktopPrinterDiscovery implements PrinterDiscovery {
       for (final p in lan)
         PrinterOption.lan(
           p.address,
+          hardBlock: p.issue == LanPrinterIssue.ipConflict,
           warning: switch (p.issue) {
             LanPrinterIssue.none => null,
             LanPrinterIssue.ipConflict =>
               'IP đang bị thiết bị khác dùng — cần đổi IP máy in',
             LanPrinterIssue.unreachable =>
-              'Khác dải mạng hoặc bị chặn — chưa kết nối được',
+              'Chưa kết nối được (khác dải mạng hoặc bị chặn) — bấm loa để thử bíp, vẫn thêm được',
           },
         ),
     ];

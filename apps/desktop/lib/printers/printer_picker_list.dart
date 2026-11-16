@@ -53,6 +53,7 @@ abstract final class PrinterPickerList {
               model: model,
               type: o.type,
               warning: o.warning,
+              hardBlock: o.hardBlock,
             )
           : o,
   ];

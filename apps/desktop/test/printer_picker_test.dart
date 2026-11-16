@@ -182,7 +182,11 @@ void main() {
       final d = _FakeDiscovery([
         PrinterOption.lan('192.168.1.10', type: PrinterType.label),
         PrinterOption.usb(address: 'cups:Q1', name: 'Gprinter'),
-        PrinterOption.lan('192.168.1.99', warning: 'IP bị trùng'),
+        PrinterOption.lan(
+          '192.168.1.99',
+          warning: 'IP bị trùng',
+          hardBlock: true,
+        ),
       ]);
       await t.pumpWidget(
         MaterialApp(
@@ -244,6 +248,55 @@ void main() {
         await t.tap(find.text('Gprinter'));
         await t.pumpAndSettle();
         expect(find.text('Thêm 1 máy in'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'máy chưa kết nối được (cảnh báo mềm): vẫn bíp thử và thêm được; IP trùng thì chặn cứng',
+      (t) async {
+        await t.binding.setSurfaceSize(const Size(1000, 900));
+        final d = _FakeDiscovery([
+          PrinterOption.lan(
+            '192.168.1.100',
+            warning: 'Chưa kết nối được — vẫn thêm được',
+          ),
+          PrinterOption.lan(
+            '192.168.1.99',
+            warning: 'IP trùng',
+            hardBlock: true,
+          ),
+        ]);
+        List<String>? result;
+        await t.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => TextButton(
+                  onPressed: () async => result =
+                      await showPrintersPickerDialog(context, discovery: d),
+                  child: const Text('mở'),
+                ),
+              ),
+            ),
+          ),
+        );
+        await t.tap(find.text('mở'));
+        await t.pumpAndSettle();
+        // Hiện cả địa chỉ lẫn cảnh báo.
+        expect(find.text('192.168.1.100'), findsOneWidget);
+        expect(find.textContaining('Chưa kết nối được'), findsOneWidget);
+        // Chỉ máy cảnh báo mềm có nút bíp.
+        expect(find.byIcon(Icons.volume_up_rounded), findsOneWidget);
+        await t.tap(find.byIcon(Icons.volume_up_rounded));
+        await t.pumpAndSettle();
+        expect(d.beeped, ['192.168.1.100|null']);
+        // Máy cảnh báo mềm là máy duy nhất chọn được nên được tick sẵn; bấm máy IP trùng không thêm gì.
+        await t.tap(find.text('192.168.1.99'));
+        await t.pumpAndSettle();
+        expect(find.text('Thêm 1 máy in'), findsOneWidget);
+        await t.tap(find.text('Thêm 1 máy in'));
+        await t.pumpAndSettle();
+        expect(result, ['192.168.1.100']);
       },
     );
 
