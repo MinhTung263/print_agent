@@ -11,12 +11,10 @@ import 'printer_picker_dialog.dart';
 Future<void> desktopAddPrinter(DesktopAgent agent) async {
   final context = Get.context;
   if (context == null) return;
-  final picked = await showPrinterPickerDialog(
+  final picked = await showPrintersPickerDialog(
     context,
     current: agent.config.printer,
   );
-  if (picked != null) {
-    await agent.update(agent.config.copyWith(printer: picked));
-  }
+  if (picked != null && picked.isNotEmpty) await agent.addPrinters(picked);
   unawaited(agent.autoAdd.runOnce());
 }

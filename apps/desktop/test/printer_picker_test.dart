@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:print_agent_desktop/agent/printer_type.dart';
 import 'package:print_agent_desktop/printers/printer_discovery.dart';
 import 'package:print_agent_desktop/printers/printer_option.dart';
 import 'package:print_agent_desktop/printers/printer_picker_list.dart';
 import 'package:print_agent_desktop/ui/dashboard/printer_picker_dialog.dart';
 
 class _FakeDiscovery implements PrinterDiscovery {
-  _FakeDiscovery(this.found, {this.models = const {}});
+  _FakeDiscovery(this.found, {this.models = const {}, this.types = const {}});
 
   final List<PrinterOption> found;
   final Map<String, String> models;
+  final Map<String, PrinterType> types;
+
+  @override
+  String? get setupError => null;
   final setups = <String>[];
+  final reachableCalls = <String>[];
 
   @override
   Future<List<PrinterOption>> find() async => found;
@@ -22,7 +28,17 @@ class _FakeDiscovery implements PrinterDiscovery {
   Future<String?> modelOf(String address) async => models[address];
 
   @override
-  Future<bool> reachable(String ip) async => true;
+  Future<PrinterType?> typeOf(String address, {String? model}) async =>
+      types[address];
+
+  @override
+  Future<bool> reachable(String address) async {
+    reachableCalls.add(address);
+    return true;
+  }
+
+  @override
+  Future<List<String>> scannedNetworks() async => const ['192.168.1.x'];
 
   @override
   Future<String?> localIp() async => '192.168.1.20';
@@ -109,6 +125,175 @@ void main() {
       ]);
       expect(await open(t, d), 'queue:EasyPOS_USB');
       expect(d.setups, ['USB001']);
+    });
+
+    testWidgets('chọn nhiều máy: tick từng máy, máy đang dùng không chọn lại', (
+      t,
+    ) async {
+      await t.binding.setSurfaceSize(const Size(1000, 900));
+      final d = _FakeDiscovery([
+        PrinterOption.lan('192.168.1.10'),
+        PrinterOption.lan('192.168.1.11'),
+        PrinterOption.usb(address: '', name: 'XP-58', setupPort: 'USB001'),
+      ]);
+      List<String>? result;
+      await t.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () async => result = await showPrintersPickerDialog(
+                context,
+                current: '192.168.1.10',
+                discovery: d,
+              ),
+              child: const Text('mở'),
+            ),
+          ),
+        ),
+      );
+      await t.tap(find.text('mở'));
+      await t.pumpAndSettle();
+      // Máy đang dùng bấm không có tác dụng; chưa tick máy nào thì nút bị khoá.
+      await t.tap(find.text('Máy in mạng (LAN)').first);
+      await t.pumpAndSettle();
+      expect(find.text('Thêm 0 máy in'), findsOneWidget);
+      await t.tap(find.text('192.168.1.11'));
+      await t.tap(find.text('XP-58'));
+      await t.pumpAndSettle();
+      expect(find.text('Thêm 2 máy in'), findsOneWidget);
+      await t.tap(find.text('Thêm 2 máy in'));
+      await t.pumpAndSettle();
+      expect(result, ['192.168.1.11', 'queue:EasyPOS_USB']);
+      expect(d.setups, ['USB001']);
+    });
+
+    Future<void> openOnly(
+      WidgetTester t,
+      PrinterDiscovery d,
+      void Function(String?) done,
+    ) async {
+      await t.binding.setSurfaceSize(const Size(1000, 900));
+      await t.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () async =>
+                  done(await showPrinterPickerDialog(context, discovery: d)),
+              child: const Text('mở'),
+            ),
+          ),
+        ),
+      );
+      await t.tap(find.text('mở'));
+      await t.pumpAndSettle();
+    }
+
+    testWidgets(
+      'không thấy máy in: hiện dải mạng đã quét + gợi ý máy bận / cổng khác',
+      (t) async {
+        await openOnly(t, _FakeDiscovery(const []), (_) {});
+        expect(find.text('Chưa thấy máy in nào'), findsOneWidget);
+        expect(find.textContaining('Đã quét mạng 192.168.1.x'), findsOneWidget);
+        expect(find.textContaining('MỘT kết nối'), findsOneWidget);
+        expect(find.textContaining('kèm cổng'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'nhập IP thủ công kèm cổng 9101: kiểm tra và dùng đúng ip:cổng',
+      (t) async {
+        String? result;
+        final d = _FakeDiscovery(const []);
+        await openOnly(t, d, (r) => result = r);
+        await t.ensureVisible(find.textContaining('Nhập IP thủ công'));
+        await t.pumpAndSettle();
+        await t.tap(find.textContaining('Nhập IP thủ công'));
+        await t.pumpAndSettle();
+        // Ô IP: 3 ô đầu điền sẵn theo mạng máy này (192.168.1), gõ ô cuối.
+        final boxes = find.byType(TextField);
+        await t.enterText(boxes.at(3), '100');
+        // Ô cuối cùng là ô cổng.
+        await t.enterText(boxes.last, '9101');
+        await t.pump();
+        await t.ensureVisible(find.text('Kiểm tra kết nối'));
+        await t.pumpAndSettle();
+        await t.tap(find.text('Kiểm tra kết nối'));
+        await t.pumpAndSettle();
+        expect(d.reachableCalls, ['192.168.1.100:9101']);
+        await t.tap(find.text('Dùng máy in này'));
+        await t.pumpAndSettle();
+        expect(result, '192.168.1.100:9101');
+      },
+    );
+
+    testWidgets('cổng để trống / mặc định 9100: địa chỉ không kèm cổng', (
+      t,
+    ) async {
+      String? result;
+      final d = _FakeDiscovery(const []);
+      await openOnly(t, d, (r) => result = r);
+      await t.ensureVisible(find.textContaining('Nhập IP thủ công'));
+      await t.pumpAndSettle();
+      await t.tap(find.textContaining('Nhập IP thủ công'));
+      await t.pumpAndSettle();
+      await t.enterText(find.byType(TextField).at(3), '100');
+      await t.pump();
+      await t.ensureVisible(find.text('Kiểm tra kết nối'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('Kiểm tra kết nối'));
+      await t.pumpAndSettle();
+      expect(d.reachableCalls, ['192.168.1.100']);
+      await t.tap(find.text('Dùng máy in này'));
+      await t.pumpAndSettle();
+      expect(result, '192.168.1.100');
+    });
+
+    testWidgets('mỗi máy in mạng hiện nhãn loại: máy in tem / máy in hoá đơn', (
+      t,
+    ) async {
+      final d = _FakeDiscovery(
+        [PrinterOption.lan('192.168.1.10'), PrinterOption.lan('192.168.1.11')],
+        models: {
+          '192.168.1.10': 'Xprinter XP-420B',
+          '192.168.1.11': 'Xprinter XP-80C',
+        },
+        types: {
+          '192.168.1.10': PrinterType.label,
+          '192.168.1.11': PrinterType.receipt,
+        },
+      );
+      await openOnly(t, d, (_) {});
+      expect(find.text('Máy in tem'), findsOneWidget);
+      expect(find.text('Máy in hoá đơn'), findsOneWidget);
+      expect(find.text('Xprinter XP-420B'), findsOneWidget);
+    });
+
+    testWidgets('máy chưa nhận ra loại: không hiện nhãn (không đoán bừa)', (
+      t,
+    ) async {
+      final d = _FakeDiscovery([PrinterOption.lan('192.168.1.10')]);
+      await openOnly(t, d, (_) {});
+      expect(find.text('Máy in tem'), findsNothing);
+      expect(find.text('Máy in hoá đơn'), findsNothing);
+    });
+
+    testWidgets('máy nhập tay cũng được nhận ra loại', (t) async {
+      final d = _FakeDiscovery(
+        const [],
+        types: {'192.168.1.100': PrinterType.label},
+      );
+      await openOnly(t, d, (_) {});
+      await t.ensureVisible(find.textContaining('Nhập IP thủ công'));
+      await t.pumpAndSettle();
+      await t.tap(find.textContaining('Nhập IP thủ công'));
+      await t.pumpAndSettle();
+      await t.enterText(find.byType(TextField).at(3), '100');
+      await t.pump();
+      await t.ensureVisible(find.text('Kiểm tra kết nối'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('Kiểm tra kết nối'));
+      await t.pumpAndSettle();
+      expect(find.text('Máy in tem'), findsOneWidget);
     });
   });
 }

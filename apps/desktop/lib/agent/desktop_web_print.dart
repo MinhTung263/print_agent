@@ -37,12 +37,12 @@ class DesktopWebPrint implements WebPrintPort {
         if (c.hasPrinter)
           {
             'id': const WebPrintTarget.builtIn().id,
-            'name': DesktopPrinter.builtInName,
+            'name': DesktopPrinter.nameFor(c),
             'ready': _agent.gateway.connected,
           },
-        for (final p in _agent.gateway.lanPrinters.printers)
+        for (final p in _agent.gateway.extras.items)
           if (p.address != own)
-            {'id': WebPrintTarget.lan(p.address).id, 'name': p.name},
+            {'id': WebPrintTarget.lan(p.address).id, 'name': p.title},
       ],
     };
   }
@@ -120,17 +120,14 @@ class DesktopWebPrint implements WebPrintPort {
     if (lan == null) {
       return PrintRelayPrinter.stationBuiltIn(
         stationId: _agent.service.stationId,
-        name: DesktopPrinter.builtInName,
+        name: DesktopPrinter.nameFor(_agent.config),
       );
     }
-    final known = _agent.gateway.lanPrinters.printers
-        .where((p) => p.address == lan)
-        .firstOrNull;
+    final known = _agent.gateway.extras.byAddress(lan);
     return PrintRelayPrinter(
       address: lan,
-      name: known?.name,
-      id: known?.id,
-      mac: known?.mac,
+      name: known?.title,
+      mac: (known?.mac ?? '').isEmpty ? null : known!.mac,
     );
   }
 }

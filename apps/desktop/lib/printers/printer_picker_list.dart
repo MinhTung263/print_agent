@@ -1,3 +1,4 @@
+import '../agent/printer_type.dart';
 import 'printer_option.dart';
 
 /// Logic danh sách hộp chọn máy in (thuần — test được): gộp máy dò thấy với máy
@@ -36,7 +37,8 @@ abstract final class PrinterPickerList {
 
   /// Khoá chọn sẵn: giữ [selected]; chưa chọn mà chỉ có một máy → máy đó.
   static String? preselect(List<PrinterOption> all, String? selected) =>
-      selected ?? (all.length == 1 ? all.first.key : null);
+      selected ??
+      (all.length == 1 && !all.first.blocked ? all.first.key : null);
 
   /// Đổi tiêu đề máy in mạng [address] thành tên model [model].
   static List<PrinterOption> withModel(
@@ -46,7 +48,24 @@ abstract final class PrinterPickerList {
   ) => [
     for (final o in all)
       o.kind == PrinterOptionKind.lan && o.address == address
-          ? PrinterOption.lan(address, model: model)
+          ? PrinterOption.lan(
+              address,
+              model: model,
+              type: o.type,
+              warning: o.warning,
+            )
+          : o,
+  ];
+
+  /// Gắn loại máy in (tem / hoá đơn) đã nhận ra cho máy ở [address].
+  static List<PrinterOption> withType(
+    List<PrinterOption> all,
+    String address,
+    PrinterType? type,
+  ) => [
+    for (final o in all)
+      o.kind == PrinterOptionKind.lan && o.address == address
+          ? o.withType(type)
           : o,
   ];
 }

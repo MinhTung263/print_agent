@@ -15,7 +15,12 @@ PrinterAutoAdd desktopPrinterAutoAdd(DesktopAgent agent) => PrinterAutoAdd(
     agent.auth,
     companyId: () => agent.config.companyId,
   ),
-  scan: _scan,
+  scan: () async {
+    final found = await _scan();
+    // Máy in tìm thấy thành máy in của trạm này (hiện trên sơ đồ, nhận lệnh in).
+    agent.registerScanned(found);
+    return found;
+  },
   enabled: () =>
       agent.config.ready && agent.isOn && agent.service.isPrimary.value,
   companyKey: () => agent.config.companyId?.toString(),
@@ -33,7 +38,12 @@ PrinterAutoAdd desktopPrinterAutoAdd(DesktopAgent agent) => PrinterAutoAdd(
 );
 
 Future<List<FoundPrinter>> _scan() async {
-  final found = await LanPrinterScanner.scan();
+  // Quét RỘNG: cả khối 4 dải /24 quanh mạng của máy + các máy trong bảng ARP.
+  // Máy in có vấn đề (IP bị thiết bị khác dùng, không kết nối được) không tự thêm.
+  final found = [
+    for (final f in await LanPrinterScanner.scan())
+      if (f.issue == LanPrinterIssue.none) f,
+  ];
   if (found.isEmpty) return const [];
   // Vừa mở kết nối tới từng máy in: bảng ARP đã có MAC.
   final arp = await ArpTable.read();
@@ -46,7 +56,7 @@ Future<List<FoundPrinter>> _scan() async {
     for (var i = 0; i < found.length; i++)
       FoundPrinter(
         address: found[i].address,
-        mac: arp[found[i].host],
+        mac: found[i].mac ?? arp[found[i].host],
         model: models[i],
       ),
   ];

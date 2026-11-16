@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:printer_label/desktop.dart';
 import 'package:printer_label/printer_label.dart' show PrinterLabel;
 
+import '../../agent/printer_type.dart';
 import '../printer_discovery.dart';
 import '../printer_option.dart';
+import '../printer_type_detector.dart';
 
 /// [PrinterDiscovery] bằng plugin printer_label: quét cổng 9100 trong các dải
 /// mạng của máy, máy in USB theo hệ điều hành (Linux usblp, Windows hàng in
@@ -29,7 +31,17 @@ class DesktopPrinterDiscovery implements PrinterDiscovery {
           name: p.name,
           setupPort: p.setupPort,
         ),
-      for (final p in lan) PrinterOption.lan(p.address),
+      for (final p in lan)
+        PrinterOption.lan(
+          p.address,
+          warning: switch (p.issue) {
+            LanPrinterIssue.none => null,
+            LanPrinterIssue.ipConflict =>
+              'IP đang bị thiết bị khác dùng — cần đổi IP máy in',
+            LanPrinterIssue.unreachable =>
+              'Khác dải mạng hoặc bị chặn — chưa kết nối được',
+          },
+        ),
     ];
   }
 
@@ -54,11 +66,53 @@ class DesktopPrinterDiscovery implements PrinterDiscovery {
   }
 
   @override
+  Future<PrinterType?> typeOf(String address, {String? model}) async {
+    final parsed = parsePrinterAddress(address);
+    if (parsed == null || UsbPrinters.isLocal(address)) return null;
+    PrinterLanguage? language;
+    try {
+      language = await PrinterLanguageProbe.probeLan(
+        parsed.$1,
+        port: parsed.$2,
+      );
+    } catch (_) {}
+    return PrinterTypeDetector.decide(language: language, model: model).type;
+  }
+
+  @override
   Future<String?> setupUsb(String setupPort) => UsbPrinters.setup(setupPort);
 
   @override
-  Future<bool> reachable(String ip) =>
-      LanPrinterScanner.probe(ip, timeout: const Duration(seconds: 2));
+  String? get setupError => UsbPrinters.lastSetupError;
+
+  /// [address] là `ip` hoặc `ip:cổng` (máy in tem hay dùng cổng khác 9100).
+  @override
+  Future<bool> reachable(String address) {
+    final parsed = parsePrinterAddress(address);
+    if (parsed == null) return Future.value(false);
+    return LanPrinterScanner.probe(
+      parsed.$1,
+      port: parsed.$2,
+      timeout: const Duration(seconds: 2),
+    );
+  }
+
+  @override
+  Future<List<String>> scannedNetworks() async {
+    final out = <String>{};
+    try {
+      for (final nic in await NetworkInterface.list(
+        type: InternetAddressType.IPv4,
+      )) {
+        for (final a in nic.addresses) {
+          if (a.isLoopback || a.isLinkLocal) continue;
+          final p = a.address.split('.');
+          if (p.length == 4) out.add('${p.take(3).join('.')}.x');
+        }
+      }
+    } catch (_) {}
+    return out.toList()..sort();
+  }
 
   @override
   Future<String?> localIp() async {

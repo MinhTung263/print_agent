@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../widgets/agent_spinner.dart';
 
+import '../../../network/local_network_banner.dart';
 import '../../agent_theme.dart';
 
 /// Đầu hộp chọn máy in: biểu tượng, tiêu đề, trạng thái dò, nút tìm lại.
@@ -51,10 +53,7 @@ class PrinterPickerHeader extends StatelessWidget {
       scanning
           ? const Padding(
               padding: EdgeInsets.all(12),
-              child: SizedBox.square(
-                dimension: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
+              child: AgentSpinner(size: 18),
             )
           : IconButton(
               tooltip: 'Tìm lại',
@@ -67,12 +66,29 @@ class PrinterPickerHeader extends StatelessWidget {
 
 /// Chưa thấy máy in nào (đang dò / hướng dẫn).
 class PrinterPickerEmpty extends StatelessWidget {
-  const PrinterPickerEmpty({super.key, required this.scanning});
+  const PrinterPickerEmpty({
+    super.key,
+    required this.scanning,
+    this.networks = const [],
+  });
 
   final bool scanning;
 
+  /// Các dải mạng đã quét (VD `192.168.1.x`).
+  final List<String> networks;
+
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      // Không thấy máy in vì macOS chặn quyền Mạng cục bộ: nói rõ + nút mở cài đặt.
+      if (!scanning) const LocalNetworkBanner(),
+      _empty(),
+    ],
+  );
+
+  Widget _empty() => Container(
     padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
     decoration: BoxDecoration(
       color: AgentColors.card,
@@ -99,6 +115,23 @@ class PrinterPickerEmpty extends StatelessWidget {
             'USB rồi bấm tìm lại.',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 13, color: AgentColors.textSecondary),
+          ),
+          if (networks.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              'Đã quét mạng ${networks.join(', ')} (cổng in 9100). Máy in phải '
+              'nằm trong dải này.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ],
+          const SizedBox(height: 6),
+          const Text(
+            'Không thấy? Máy in tem thường chỉ nhận MỘT kết nối: tắt kết nối từ '
+            'điện thoại / máy khác rồi tìm lại. Máy dùng cổng khác 9100 thì '
+            'nhập IP thủ công kèm cổng.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: AgentColors.textSecondary),
           ),
         ],
       ],

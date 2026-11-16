@@ -89,6 +89,37 @@ void main() {
   );
 
   test(
+    'tắt còi báo của máy in: phiếu báo bếp in ra nhưng máy không kêu',
+    () async {
+      final out = Directory.systemTemp.createTempSync('fake_printer_mute');
+      final (p, lines) = await _startFake(19107, out);
+      try {
+        final job = PrintRelayJob(
+          kind: PrintRelayJobKind.receipt,
+          printer: const PrintRelayPrinter(address: '127.0.0.1:19107'),
+          images: [await _receiptPng()],
+          beep: true,
+        );
+        final failure = await AgentPrinter.printJob(
+          job,
+          '127.0.0.1:19107',
+          allowBeep: false,
+        );
+        expect(failure, isNull, reason: failure?.detail);
+        for (var i = 0; i < 50; i++) {
+          if (out.listSync().isNotEmpty) break;
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        }
+        expect(out.listSync().whereType<File>(), hasLength(1));
+        expect(lines.any((l) => l.contains('CÒI BÁO BẾP')), isFalse);
+      } finally {
+        await killProcessTree(p);
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
     'máy in hết giấy: Agent không gửi phiếu, báo outOfPaper',
     () async {
       final out = Directory.systemTemp.createTempSync('fake_printer_paper');

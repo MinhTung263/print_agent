@@ -31,9 +31,7 @@ void main() {
     await t.binding.setSurfaceSize(const Size(1280, 900));
     final agent = DesktopAgent(const AgentConfig(printer: '10.0.0.5'));
     await t.pumpWidget(
-      GetMaterialApp(
-        home: AgentPage(side: [AgentSettingsCard(agent: agent)]),
-      ),
+      GetMaterialApp(home: AgentPage(side: [const AgentSettingsCard()])),
     );
     await t.pump(const Duration(milliseconds: 100));
     expect(find.byType(AgentPage), findsOneWidget);

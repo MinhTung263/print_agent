@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../widgets/agent_spinner.dart';
 import 'package:print_agent/print_agent.dart';
 
 import '../../agent/desktop_agent.dart';
@@ -12,6 +13,11 @@ class DesktopAgentUiKit extends MaterialAgentUiKit {
   const DesktopAgentUiKit(this.agent);
 
   final DesktopAgent agent;
+
+  /// Vòng chờ kiểu Cupertino cho mọi bảng của module Agent chạy trên máy tính.
+  @override
+  Widget spinner({double size = 18, Color? color}) =>
+      AgentSpinner(size: size, color: color);
 
   @override
   Widget page({required String title, required Widget body}) => Scaffold(

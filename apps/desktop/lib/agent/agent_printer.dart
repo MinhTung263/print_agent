@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:print_agent/print_agent.dart';
 import 'package:printer_label/desktop.dart';
+import 'package:printer_label/printer_label.dart'
+    show LabelCalibration, LabelPerRow;
 
 /// In ra máy in của Agent máy tính bằng ESC/POS — không qua driver: máy in LAN
 /// (TCP 9100) hoặc máy cắm USB ([UsbPrinters]: Linux `/dev/usb/lp*`, Windows
@@ -19,7 +21,9 @@ abstract final class AgentPrinter {
   }
 
   /// Máy in [address] có kết nối được từ máy này không.
-  static Future<bool> reachable(String address) async {
+  /// Máy in LAN chỉ tính là bật khi mở được cổng in, hoặc từ chối kết nối nhưng đúng máy
+  /// ([mac] khớp bảng ARP) — xem `LanPrinterScanner.isPrinterAlive`.
+  static Future<bool> reachable(String address, {String? mac}) async {
     try {
       if (UsbPrinters.isLocal(address)) {
         return await UsbPrinters.present(
@@ -28,8 +32,11 @@ abstract final class AgentPrinter {
       }
       final parsed = parsePrinterAddress(address);
       if (parsed == null) return false;
-      // Máy in đang phục vụ máy khác (từ chối kết nối) vẫn là đang bật.
-      return await LanPrinterScanner.isAlive(parsed.$1, port: parsed.$2);
+      return await LanPrinterScanner.isPrinterAlive(
+        parsed.$1,
+        port: parsed.$2,
+        mac: mac,
+      );
     } catch (_) {
       return false;
     }
@@ -38,8 +45,9 @@ abstract final class AgentPrinter {
   /// In ảnh hoá đơn của [job] ra [address]; `null` = in được.
   static Future<AgentPrintFailure?> printJob(
     PrintRelayJob job,
-    String address,
-  ) async {
+    String address, {
+    bool allowBeep = true,
+  }) async {
     if (job.images.isEmpty) {
       return const AgentPrintFailure(AgentJobError.noContent);
     }
@@ -57,7 +65,98 @@ abstract final class AgentPrinter {
         job.images.first,
         copies: job.copies,
         openDrawer: job.openDrawer,
-        beep: job.beep,
+        beep: job.beep && allowBeep,
+      ),
+    );
+  }
+
+  /// Khổ hàng tem của [job]: kích thước thật kèm lệnh ([PrintRelayJob.labelSpec])
+  /// nếu có, không thì theo tên khổ của app ([PrintRelayJob.labelSize], mặc định
+  /// 2 tem/hàng 35×22mm).
+  static TsplLabelSpec labelSpecOf(PrintRelayJob job) {
+    final base = TsplLabelSpec.fromLabelPerRow(
+      job.labelSize ?? LabelPerRow.doubleLabels,
+    )!;
+    final spec = job.labelSpec;
+    if (spec == null) return base;
+    return TsplLabelSpec(
+      widthMm: spec.widthMm,
+      heightMm: spec.heightMm,
+      gapMm: spec.gapMm,
+      home: base.home,
+      shiftXDots: spec.shiftXDots ?? base.shiftXDots,
+    );
+  }
+
+  /// Khe thật của cuộn tem trên máy này ([gapMm] > 0) thay cho khe trong lệnh.
+  static TsplLabelSpec withGap(TsplLabelSpec spec, num gapMm) => gapMm <= 0
+      ? spec
+      : TsplLabelSpec(
+          widthMm: spec.widthMm,
+          heightMm: spec.heightMm,
+          gapMm: gapMm,
+          home: spec.home,
+          shiftXDots: spec.shiftXDots,
+        );
+
+  /// In các hàng tem (TSPL) của [job] ra [address]; `null` = in được.
+  /// [calibration]: chỉnh tem in lệch của máy tính này.
+  static Future<AgentPrintFailure?> printLabelJob(
+    PrintRelayJob job,
+    String address, {
+    LabelCalibration calibration = LabelCalibration.none,
+    num gapOverrideMm = 0,
+  }) async {
+    if (job.images.isEmpty) {
+      return const AgentPrintFailure(AgentJobError.noContent);
+    }
+    final port = portOf(address);
+    if (port == null) {
+      return const AgentPrintFailure(
+        AgentJobError.unreachable,
+        detail: 'Chưa chọn máy in',
+      );
+    }
+    return _guard(
+      address,
+      () => TsplPrinter.printImages(
+        port,
+        job.images,
+        spec: withGap(labelSpecOf(job), gapOverrideMm),
+        copies: job.copies,
+        calibration: calibration,
+      ),
+    );
+  }
+
+  /// In MỘT tem thử căn chỉnh đúng khổ
+  /// [spec] với độ chỉnh [calibration]; `null` = in được. [labelsPerRow] (kèm [temWidthMm]):
+  /// in tem mẫu như ngoài thị trường — tên hàng, giá, mã vạch EAN-13 trong khung sát mép.
+  static Future<AgentPrintFailure?> printLabelCalibration({
+    required String address,
+    required TsplLabelSpec spec,
+    LabelCalibration calibration = LabelCalibration.none,
+    num gapOverrideMm = 0,
+    int? labelsPerRow,
+    int? temWidthMm,
+    int repeat = 1,
+  }) async {
+    final port = portOf(address);
+    if (port == null) {
+      return const AgentPrintFailure(
+        AgentJobError.unreachable,
+        detail: 'Chưa chọn máy in',
+      );
+    }
+    return _guard(
+      address,
+      () => TsplPrinter.printCalibration(
+        port,
+        spec: withGap(spec, gapOverrideMm),
+        calibration: calibration,
+        labelsPerRow: labelsPerRow,
+        temWidthMm: temWidthMm,
+        repeat: repeat,
       ),
     );
   }

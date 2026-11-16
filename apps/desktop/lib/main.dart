@@ -6,14 +6,19 @@ import 'package:get/get.dart';
 import 'package:print_agent/print_agent.dart';
 
 import 'agent/agent_config.dart';
+import 'agent/agent_printer.dart';
 import 'agent/agent_store.dart';
 import 'agent/desktop_agent.dart';
 import 'desktop/autostart.dart';
 import 'desktop/desktop_shell.dart';
 import 'desktop/single_instance.dart';
+import 'network/local_network_banner.dart';
 import 'ui/agent_theme.dart';
 import 'ui/dashboard/add_printer_action.dart';
 import 'ui/dashboard/agent_settings_card.dart';
+import 'ui/dashboard/printer_settings_panel.dart';
+import 'ui/dashboard/usb_setup_panel.dart';
+import 'agent/desktop_printer_gateway.dart';
 import 'ui/login_page.dart';
 
 /// EasyPOS Print Agent (Windows / Linux / macOS): nhận lệnh in của công ty qua
@@ -34,6 +39,35 @@ Future<void> main(List<String> args) async {
   final agent = DesktopAgent(config);
   // Nút "Thêm máy in" trên sơ đồ / bảng trạm in này.
   PrintAgentUi.onAddPrinter = () => desktopAddPrinter(agent);
+  // Nút "Xoá máy in" trong chi tiết máy in trên sơ đồ: bỏ máy in đã chọn để chọn lại.
+  PrintAgentUi.onRemovePrinter = (printer) async {
+    final address = (printer.refAddress ?? '').trim();
+    if (agent.removeExtraPrinter(address)) return true;
+    // Chỉ xoá máy in chính khi đúng là nó (không xoá nhầm máy khác).
+    if (address != agent.config.printer.trim()) return false;
+    await agent.removePrinter();
+    return true;
+  };
+  // Nút in thử nằm trong phần cài đặt riêng của máy (máy tem: "In tem thử"): không hiện
+  // thêm nút "In thử" chung.
+  PrintAgentUi.hasOwnTestPrint = (printer) =>
+      !DesktopPrinterGateway.isPending(printer.refAddress ?? '') &&
+      (printer.refAddress ?? '').isNotEmpty;
+  PrintAgentUi.isPendingPrinter = (printer) =>
+      DesktopPrinterGateway.isPending(printer.refAddress ?? '');
+  // Cài đặt riêng từng máy in (loại, khổ giấy, căn chỉnh tem): hiện trong chi tiết máy in
+  // khi bấm máy đó trên sơ đồ.
+  PrintAgentUi.printerSettings = (printer) {
+    final address = printer.refAddress ?? '';
+    if (address.isEmpty) return null;
+    // Máy USB mới cắm (chưa cài / chưa thêm): nút "Cài đặt máy in".
+    return DesktopPrinterGateway.isPending(address)
+        ? UsbSetupPanel(agent: agent, address: address)
+        : PrinterSettingsPanel(agent: agent, address: address);
+  };
+  // Máy in LAN chỉ hiện xanh khi mở được cổng in (hoặc từ chối nhưng đúng máy theo MAC).
+  AgentPrinterWatchdog.aliveCheck = (p) =>
+      AgentPrinter.reachable(p.refAddress ?? '', mac: p.refMac);
   // Chưa đăng nhập thì luôn hiện cửa sổ (chạy ẩn cũng không làm được gì).
   final startHidden = args.contains(Autostart.backgroundArg) && config.ready;
   await DesktopShell.initWindow(startHidden: startHidden);
@@ -54,7 +88,9 @@ Future<void> main(List<String> args) async {
       home: ListenableBuilder(
         listenable: agent,
         builder: (_, _) => agent.config.ready
-            ? AgentPage(side: [AgentSettingsCard(agent: agent)])
+            ? AgentPage(
+                side: [const LocalNetworkBanner(), const AgentSettingsCard()],
+              )
             : LoginPage(agent: agent),
       ),
     ),

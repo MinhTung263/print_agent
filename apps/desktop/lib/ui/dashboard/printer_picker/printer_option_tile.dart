@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../agent/printer_type.dart';
+import '../../../printers/paper_size_detector.dart';
 import '../../agent_theme.dart';
 import '../../../printers/printer_option.dart';
 
@@ -12,12 +14,16 @@ class PrinterOptionTile extends StatelessWidget {
     required this.selected,
     required this.current,
     required this.onTap,
+    this.multi = false,
   });
 
   final PrinterOption option;
   final bool selected;
   final bool current;
   final VoidCallback? onTap;
+
+  /// Chọn nhiều máy: hộp tick vuông thay cho nút tròn.
+  final bool multi;
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +80,14 @@ class PrinterOptionTile extends StatelessWidget {
                             ),
                           ),
                         ),
+                        if (option.type != null) ...[
+                          const SizedBox(width: 8),
+                          _TypePill(option.type!),
+                        ],
+                        if (option.type != PrinterType.label) ...[
+                          const SizedBox(width: 6),
+                          _PaperPill(PaperSizeDetector.guess(option.title)),
+                        ],
                         if (current) ...[
                           const SizedBox(width: 8),
                           const _Badge('Đang dùng'),
@@ -82,12 +96,12 @@ class PrinterOptionTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      option.subtitle,
-                      maxLines: 1,
+                      option.warning ?? option.subtitle,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
-                        color: option.needsSetup
+                        color: option.needsSetup || option.blocked
                             ? AgentColors.warning
                             : AgentColors.textSecondary,
                       ),
@@ -97,14 +111,48 @@ class PrinterOptionTile extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Icon(
-                selected
-                    ? Icons.check_circle_rounded
-                    : Icons.radio_button_unchecked_rounded,
-                color: selected ? AgentColors.primary : AgentColors.muted,
+                multi
+                    ? (selected
+                          ? Icons.check_box_rounded
+                          : Icons.check_box_outline_blank_rounded)
+                    : (selected
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded),
+                color: onTap == null
+                    ? AgentColors.border
+                    : (selected ? AgentColors.primary : AgentColors.muted),
                 size: 22,
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Nhãn loại máy in đã nhận ra: "Máy in tem" (tím) / "Máy in hoá đơn" (xanh).
+class _TypePill extends StatelessWidget {
+  const _TypePill(this.type);
+
+  final PrinterType type;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = type == PrinterType.label;
+    final color = label ? AgentColors.agent : AgentColors.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        type.title,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
         ),
       ),
     );
@@ -129,6 +177,32 @@ class _Badge extends StatelessWidget {
         fontSize: 11,
         fontWeight: FontWeight.w600,
         color: AgentColors.success,
+      ),
+    ),
+  );
+}
+
+/// Khổ giấy: "80mm" (đoán được từ tên máy) hoặc "80mm · gợi ý" (mặc định, mờ hơn).
+class _PaperPill extends StatelessWidget {
+  const _PaperPill(this.guess);
+
+  final PaperSizeGuess guess;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+    decoration: BoxDecoration(
+      border: Border.all(
+        color: guess.detected ? AgentColors.primary : AgentColors.border,
+      ),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Text(
+      guess.pill,
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: guess.detected ? AgentColors.primary : AgentColors.textSecondary,
       ),
     ),
   );

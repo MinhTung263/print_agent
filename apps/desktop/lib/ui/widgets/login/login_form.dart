@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../agent_spinner.dart';
 
 import '../../agent_theme.dart';
 
@@ -101,13 +102,7 @@ class _LoginFormState extends State<LoginForm> {
                 ),
               ),
               child: widget.loading
-                  ? const SizedBox.square(
-                      dimension: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.4,
-                        color: Colors.white,
-                      ),
-                    )
+                  ? AgentSpinner(size: 20, color: Colors.white)
                   : const Text(
                       'Đăng nhập',
                       style: TextStyle(

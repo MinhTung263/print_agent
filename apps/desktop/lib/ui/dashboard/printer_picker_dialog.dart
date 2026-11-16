@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:print_agent/print_agent.dart'
+    show AgentNoticeLevel, PrintAgentModule;
+import '../widgets/agent_spinner.dart';
 
 import '../agent_theme.dart';
 import 'printer_picker/manual_ip_field.dart';
@@ -27,9 +30,27 @@ Future<String?> showPrinterPickerDialog(
   builder: (_) => _PrinterPickerDialog(current: current, discovery: discovery),
 );
 
-class _PrinterPickerDialog extends StatefulWidget {
-  const _PrinterPickerDialog({required this.current, required this.discovery});
+/// Chọn NHIỀU máy in một lúc (thêm nhanh vào trạm in): tick các máy muốn thêm rồi bấm
+/// "Thêm N máy in". Máy [current] (đang dùng) hiện nhưng không chọn lại được. Trả danh
+/// sách địa chỉ (đã cài đặt xong với máy USB chưa cài), `null` khi đóng.
+Future<List<String>?> showPrintersPickerDialog(
+  BuildContext context, {
+  String current = '',
+  PrinterDiscovery discovery = const DesktopPrinterDiscovery(),
+}) => showDialog<List<String>>(
+  context: context,
+  builder: (_) =>
+      _PrinterPickerDialog(current: current, discovery: discovery, multi: true),
+);
 
+class _PrinterPickerDialog extends StatefulWidget {
+  const _PrinterPickerDialog({
+    required this.current,
+    required this.discovery,
+    this.multi = false,
+  });
+
+  final bool multi;
   final String current;
   final PrinterDiscovery discovery;
 
@@ -41,41 +62,73 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
   List<PrinterOption> _options = const [];
   final List<PrinterOption> _manual = [];
   String? _selected;
+
+  /// Chế độ nhiều máy: các khoá đã tick.
+  final Set<String> _checked = {};
   bool _scanning = false;
   bool _settingUp = false;
+  List<String> _networks = const [];
 
   @override
   void initState() {
     super.initState();
-    _selected = widget.current.isEmpty ? null : widget.current;
+    _selected = widget.multi || widget.current.isEmpty ? null : widget.current;
     unawaited(_scan());
   }
 
   Future<void> _scan() async {
     setState(() => _scanning = true);
     final found = await widget.discovery.find();
+    final networks = await widget.discovery.scannedNetworks();
     if (!mounted) return;
     setState(() {
+      _networks = networks;
       _options = found;
       _scanning = false;
-      _selected = PrinterPickerList.preselect(_all, _selected);
+      if (widget.multi) {
+        // Chỉ có một máy chưa dùng thì tick sẵn.
+        final free = _all.where((o) => !_isCurrent(o)).toList();
+        if (_checked.isEmpty && free.length == 1) _checked.add(free.first.key);
+      } else {
+        _selected = PrinterPickerList.preselect(_all, _selected);
+      }
     });
-    // Tên model máy in mạng (không gửi gì vào cổng in): thẻ hiện "Xprinter
-    // XP-80C" thay vì "Máy in mạng".
+    // Tên model rồi loại máy in (tem / hoá đơn) của từng máy mạng: thẻ hiện "Xprinter
+    // XP-420B · Máy in tem" ngay lúc chọn, khỏi chọn nhầm.
     for (final o in found.where((o) => o.kind == PrinterOptionKind.lan)) {
-      unawaited(
-        widget.discovery.modelOf(o.address).then((model) {
-          if (!mounted || model == null) return;
-          setState(
-            () => _options = PrinterPickerList.withModel(
-              _options,
-              o.address,
-              model,
-            ),
-          );
-        }),
-      );
+      unawaited(_identify(o.address));
     }
+  }
+
+  /// Đọc model (không gửi gì vào cổng in) rồi hỏi trạng thái để biết máy in tem hay hoá
+  /// đơn; cập nhật thẻ máy in ở [address].
+  Future<void> _identify(String address) async {
+    final model = await widget.discovery.modelOf(address);
+    if (!mounted) return;
+    if (model != null) {
+      setState(() {
+        _options = PrinterPickerList.withModel(_options, address, model);
+        _manual.replaceRange(0, _manual.length, [
+          for (final m in _manual)
+            m.address == address
+                ? PrinterOption.lan(
+                    address,
+                    manual: true,
+                    model: model,
+                    type: m.type,
+                  )
+                : m,
+        ]);
+      });
+    }
+    final type = await widget.discovery.typeOf(address, model: model);
+    if (!mounted || type == null) return;
+    setState(() {
+      _options = PrinterPickerList.withType(_options, address, type);
+      _manual.replaceRange(0, _manual.length, [
+        for (final m in _manual) m.address == address ? m.withType(type) : m,
+      ]);
+    });
   }
 
   List<PrinterOption> get _all => PrinterPickerList.merge(
@@ -85,14 +138,69 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
     missing: widget.discovery.missing,
   );
 
-  void _addManual(String address) => setState(() {
-    if (!_all.any((o) => o.address == address)) {
-      _manual.insert(0, PrinterOption.lan(address, manual: true));
-    }
-    _selected = address;
+  bool _isCurrent(PrinterOption o) =>
+      o.address.isNotEmpty && o.address == widget.current;
+
+  void _toggle(PrinterOption o) => setState(() {
+    if (!_checked.remove(o.key)) _checked.add(o.key);
   });
 
+  void _addManual(String address) {
+    setState(() {
+      if (!_all.any((o) => o.address == address)) {
+        _manual.insert(0, PrinterOption.lan(address, manual: true));
+      }
+      if (widget.multi) {
+        if (address != widget.current) _checked.add(address);
+      } else {
+        _selected = address;
+      }
+    });
+    // Máy nhập tay cũng nhận ra model + loại như máy dò thấy.
+    unawaited(_identify(address));
+  }
+
+  /// Nhiều máy: cài đặt máy USB chưa cài, trả địa chỉ các máy dùng được.
+  Future<void> _confirmMany() async {
+    final picked = [
+      for (final o in _all)
+        if (_checked.contains(o.key)) o,
+    ];
+    if (picked.isEmpty) return;
+    setState(() => _settingUp = true);
+    final addresses = <String>[];
+    final failed = <String>[];
+    for (final o in picked) {
+      if (!o.needsSetup) {
+        addresses.add(o.address);
+        continue;
+      }
+      final address = await widget.discovery.setupUsb(o.setupPort!);
+      if (address != null) {
+        addresses.add(address);
+      } else {
+        failed.add(o.title);
+      }
+    }
+    if (!mounted) return;
+    setState(() => _settingUp = false);
+    if (failed.isNotEmpty) {
+      final why = widget.discovery.setupError ?? 'máy tính cần quyền quản trị';
+      final text = 'Chưa cài được máy in USB ${failed.join(', ')} — $why';
+      if (addresses.isEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(text)));
+        await _scan();
+        return;
+      }
+      PrintAgentModule.host.notify(text, level: AgentNoticeLevel.warning);
+    }
+    Navigator.of(context).pop(addresses);
+  }
+
   Future<void> _confirm() async {
+    if (widget.multi) return _confirmMany();
     final option = _all.where((o) => o.key == _selected).firstOrNull;
     if (option == null) return;
     if (!option.needsSetup) {
@@ -108,9 +216,10 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text(
-          'Chưa cài được máy in USB này — máy tính cần quyền quản trị',
+          widget.discovery.setupError ??
+              'Chưa cài được máy in USB này — máy tính cần quyền quản trị',
         ),
       ),
     );
@@ -136,29 +245,52 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
                 onRescan: () => unawaited(_scan()),
               ),
               const SizedBox(height: 16),
+              // Danh sách + nhập IP tay cuộn chung: nội dung cao (gợi ý, ô nhập IP) không
+              // làm hộp tràn khỏi cửa sổ, nút "Dùng máy in này" luôn thấy.
               Flexible(
-                child: all.isEmpty
-                    ? PrinterPickerEmpty(scanning: _scanning)
-                    : ListView.separated(
-                        shrinkWrap: true,
-                        itemCount: all.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 8),
-                        itemBuilder: (_, i) => PrinterOptionTile(
-                          option: all[i],
-                          selected: all[i].key == _selected,
-                          current:
-                              all[i].address.isNotEmpty &&
-                              all[i].address == widget.current,
-                          onTap: () => setState(() => _selected = all[i].key),
-                        ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (all.isEmpty)
+                        PrinterPickerEmpty(
+                          scanning: _scanning,
+                          networks: _networks,
+                        )
+                      else
+                        for (var i = 0; i < all.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 8),
+                          PrinterOptionTile(
+                            option: all[i],
+                            selected: widget.multi
+                                ? _checked.contains(all[i].key)
+                                : all[i].key == _selected,
+                            current: _isCurrent(all[i]),
+                            multi: widget.multi,
+                            // Máy đang dùng không thêm lại được.
+                            onTap:
+                                all[i].blocked ||
+                                    (widget.multi && _isCurrent(all[i]))
+                                ? null
+                                : () => widget.multi
+                                      ? _toggle(all[i])
+                                      : setState(() => _selected = all[i].key),
+                          ),
+                        ],
+                      const SizedBox(height: 12),
+                      ManualIpField(
+                        discovery: widget.discovery,
+                        onFound: _addManual,
                       ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 12),
-              ManualIpField(discovery: widget.discovery, onFound: _addManual),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  if (widget.current.isNotEmpty)
+                  if (widget.current.isNotEmpty && !widget.multi)
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(''),
                       style: TextButton.styleFrom(
@@ -173,18 +305,18 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
-                    onPressed: _selected == null || _settingUp
+                    onPressed:
+                        (widget.multi ? _checked.isEmpty : _selected == null) ||
+                            _settingUp
                         ? null
                         : () => unawaited(_confirm()),
                     child: _settingUp
-                        ? const SizedBox.square(
-                            dimension: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text('Dùng máy in này'),
+                        ? AgentSpinner(size: 16, color: Colors.white)
+                        : Text(
+                            widget.multi
+                                ? 'Thêm ${_checked.length} máy in'
+                                : 'Dùng máy in này',
+                          ),
                   ),
                 ],
               ),
