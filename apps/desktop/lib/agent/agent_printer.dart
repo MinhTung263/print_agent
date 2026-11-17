@@ -209,6 +209,7 @@ abstract final class AgentPrinter {
   static Future<AgentPrintFailure?> beep(
     String address, {
     required bool label,
+    BeepStyle? style,
   }) async {
     final port = portOf(address);
     if (port == null) {
@@ -219,7 +220,12 @@ abstract final class AgentPrinter {
     }
     return _guard(
       address,
-      () => port.send(PrinterBeep.bytes(label: label), checkStatus: false),
+      () => port.send(
+        style == null
+            ? PrinterBeep.bytes(label: label)
+            : PrinterBeep.style(style),
+        checkStatus: false,
+      ),
     );
   }
 

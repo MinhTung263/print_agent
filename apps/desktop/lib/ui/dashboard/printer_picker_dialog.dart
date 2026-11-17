@@ -11,6 +11,7 @@ import 'printer_picker/manual_ip_field.dart';
 import 'printer_picker/printer_picker_parts.dart';
 import '../../printers/data/desktop_printer_discovery.dart';
 import '../../agent/printer_type.dart';
+import '../../printers/printer_beep_plan.dart';
 import '../../printers/printer_discovery.dart';
 import '../../printers/printer_option.dart';
 import '../../printers/printer_picker_list.dart';
@@ -201,16 +202,36 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
   }
 
   /// Cho máy in [o] kêu bíp để nhận ra đó là máy nào.
+  /// Lần bíp thứ mấy của từng máy trong chuỗi "không nghe thấy → bấm loa lần nữa" (hết 30 giây không bấm
+  /// thì về cách đầu).
+  final Map<String, (int, DateTime)> _beeps = {};
+
+  /// Bíp máy [o]. Bấm lại (trong 30 giây) khi không nghe thấy thì thử cách khác ([PrinterBeepPlan]) — máy
+  /// chưa rõ loại hay nhận sai loại vẫn có cách bíp được. (Thông báo hiện dưới hộp thoại nên không đặt nút
+  /// bấm trong thông báo được — khách bấm lại chính nút loa.)
   Future<void> _beep(PrinterOption o) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final error = await widget.discovery.beep(o.address, type: o.type);
+    final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
+    final prev = _beeps[o.address];
+    final attempt =
+        prev != null &&
+            DateTime.now().difference(prev.$2) < const Duration(seconds: 30)
+        ? prev.$1
+        : 0;
+    final error = await widget.discovery.beep(
+      o.address,
+      type: o.type,
+      attempt: attempt,
+    );
+    if (error == null) _beeps[o.address] = (attempt + 1, DateTime.now());
+    final style = PrinterBeepPlan.styleFor(o.type, attempt);
+    final more = PrinterBeepPlan.hasMore(o.type, attempt);
     messenger.showSnackBar(
       SnackBar(
-        duration: Duration(seconds: error == null ? 4 : 8),
+        duration: Duration(seconds: error == null ? 7 : 8),
         content: Text(
           error ??
-              'Đã gửi lệnh bíp tới "${o.title}". Nghe thấy tiếng bíp là đúng máy in '
-                  'đó; không nghe thấy có thể máy không có còi.',
+              'Đã gửi ${PrinterBeepPlan.describe(style)} tới "${o.title}". Nghe thấy '
+                  'tiếng bíp là đúng máy in đó. ${more ? 'Không nghe thấy: bấm loa lần nữa để thử cách khác.' : 'Vẫn không nghe thấy: máy có thể không có còi.'}',
         ),
       ),
     );

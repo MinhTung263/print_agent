@@ -27,6 +27,7 @@ import '../auth/auth_session.dart';
 import '../store/printer_auto_add.dart';
 import '../ui/dashboard/desktop_header.dart';
 import 'desktop_wifi.dart';
+import '../printers/printer_beep_plan.dart';
 
 /// Agent máy tính (Windows / Linux / macOS): dùng chung [AgentService] + màn
 /// Máy Agent với app EasyPOS — nhận lệnh như Agent Android (giành lệnh, đường
@@ -479,10 +480,15 @@ class DesktopAgent extends ChangeNotifier {
   /// giữ [current].
   /// Cho máy in [address] kêu bíp ngắn để nhận ra đó là máy nào; `null` = đã gửi, ngược lại là lý
   /// do lỗi.
-  Future<String?> beepPrinter(String address) async {
+  ///
+  /// [attempt]: lần thử (0 = cách đúng với loại máy đã biết; bấm lại khi không nghe thấy thì thử cách khác —
+  /// xem [PrinterBeepPlan]).
+  Future<String?> beepPrinter(String address, {int attempt = 0}) async {
+    final type = settingsOf(address).type;
     final failure = await AgentPrinter.beep(
       address.trim(),
-      label: settingsOf(address).type == PrinterType.label,
+      label: type == PrinterType.label,
+      style: PrinterBeepPlan.styleFor(type, attempt),
     );
     return failure == null
         ? null

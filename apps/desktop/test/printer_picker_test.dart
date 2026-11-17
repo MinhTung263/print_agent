@@ -18,8 +18,12 @@ class _FakeDiscovery implements PrinterDiscovery {
   final List<String> beeped = [];
 
   @override
-  Future<String?> beep(String address, {PrinterType? type}) async {
-    beeped.add('$address|${type?.name}');
+  Future<String?> beep(
+    String address, {
+    PrinterType? type,
+    int attempt = 0,
+  }) async {
+    beeped.add('$address|${type?.name}${attempt == 0 ? '' : '|$attempt'}');
     return null;
   }
 
@@ -221,8 +225,53 @@ void main() {
       await t.tap(find.byIcon(Icons.volume_up_rounded).first);
       await t.pumpAndSettle();
       expect(d.beeped, ['192.168.1.10|label']);
-      expect(find.textContaining('Đã gửi lệnh bíp'), findsOneWidget);
+      expect(find.textContaining('Đã gửi lệnh máy in tem'), findsOneWidget);
     });
+
+    testWidgets(
+      'bíp không nghe thấy: "Thử cách khác" bíp bằng lệnh khác (máy chưa rõ loại thử ESC/POS trước, rồi TSPL)',
+      (t) async {
+        await t.binding.setSurfaceSize(const Size(1000, 900));
+        // Máy USB chưa rõ loại (không khai lệnh nào): vẫn phải có cách bíp.
+        final d = _FakeDiscovery([
+          PrinterOption.usb(address: 'usb:1:2:3', name: 'Máy lạ'),
+        ]);
+        await t.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => TextButton(
+                  onPressed: () =>
+                      showPrintersPickerDialog(context, discovery: d),
+                  child: const Text('mở'),
+                ),
+              ),
+            ),
+          ),
+        );
+        await t.tap(find.text('mở'));
+        await t.pumpAndSettle();
+        await t.tap(find.byIcon(Icons.volume_up_rounded).first);
+        await t.pumpAndSettle();
+        expect(d.beeped, ['usb:1:2:3|null']);
+        expect(
+          find.textContaining('lệnh máy in hoá đơn (ESC/POS)'),
+          findsOneWidget,
+        );
+        // Không nghe thấy → bấm loa lần nữa: thử cách khác (lần 1: lệnh tem kêu còi).
+        expect(find.textContaining('bấm loa lần nữa'), findsOneWidget);
+        await t.tap(find.byIcon(Icons.volume_up_rounded).first);
+        await t.pumpAndSettle();
+        expect(d.beeped.last, 'usb:1:2:3|null|1');
+        expect(find.textContaining('kêu còi'), findsOneWidget);
+        // Lần 2: nhích cuộn tem; hết cách → không còn gợi ý bấm tiếp.
+        await t.tap(find.byIcon(Icons.volume_up_rounded).first);
+        await t.pumpAndSettle();
+        expect(d.beeped.last, 'usb:1:2:3|null|2');
+        expect(find.textContaining('bấm loa lần nữa'), findsNothing);
+        expect(find.textContaining('máy có thể không có còi'), findsOneWidget);
+      },
+    );
 
     testWidgets(
       'máy đã thêm vào trạm: hiện "Đã thêm" + dấu V, không chọn lại được',

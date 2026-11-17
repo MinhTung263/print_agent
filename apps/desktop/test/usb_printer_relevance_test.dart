@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:print_agent_desktop/printers/usb_printer_relevance.dart';
 
 void main() {
+  _variantTests();
   bool ok(String name, {String? id}) =>
       UsbPrinterRelevance.isUsable(name, deviceId: id);
 
@@ -98,4 +99,29 @@ void main() {
     );
     expect(UsbPrinterRelevance.decidedByName('Máy lạ'), isNull);
   });
+}
+
+void _variantTests() {
+  test(
+    'lệnh máy tự báo viết kiểu nào cũng nhận: ESC POS, ESC_POS, EPSON, ZPL II, EZPL',
+    () {
+      bool ok(String cmd) => UsbPrinterRelevance.isUsable(
+        'Máy lạ',
+        deviceId: 'MFG:ACME;MDL:Z;CMD:$cmd;CLS:PRINTER;',
+      );
+      for (final c in [
+        'ESC POS',
+        'ESC_POS',
+        'EPSON',
+        'ZPL II',
+        'EZPL',
+        'tspl2',
+      ]) {
+        expect(ok(c), isTrue, reason: c);
+      }
+      for (final c in ['PCL', 'ESC/P', 'ESCPR', 'PCL,PJL,POSTSCRIPT']) {
+        expect(ok(c), isFalse, reason: c);
+      }
+    },
+  );
 }

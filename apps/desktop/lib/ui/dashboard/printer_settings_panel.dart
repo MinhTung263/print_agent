@@ -9,6 +9,7 @@ import 'package:print_agent/print_agent.dart'
     show AgentJobErrorText, AgentPrintFailure, AgentSwitch;
 
 import '../../agent/agent_config.dart' show PaperSize, PrinterType;
+import '../../printers/printer_beep_plan.dart';
 import '../../agent/agent_printer.dart';
 import '../../agent/last_label.dart';
 import '../../agent/printer_settings.dart' show PrinterSettings, RibbonMode;
@@ -166,11 +167,26 @@ class _BeepButton extends StatefulWidget {
 class _BeepButtonState extends State<_BeepButton> {
   bool _busy = false;
 
+  /// Lần bấm thứ mấy trong chuỗi "không nghe thấy → bấm lại" (hết 30 giây không bấm thì về cách đầu).
+  int _attempt = 0;
+  DateTime _last = DateTime.fromMillisecondsSinceEpoch(0);
+
   Future<void> _beep() async {
     final messenger = ScaffoldMessenger.of(context);
+    if (DateTime.now().difference(_last) > const Duration(seconds: 30)) {
+      _attempt = 0;
+    }
+    final type = widget.agent.settingsOf(widget.address).type;
+    final style = PrinterBeepPlan.styleFor(type, _attempt);
+    final attempt = _attempt;
     setState(() => _busy = true);
-    final error = await widget.agent.beepPrinter(widget.address);
+    final error = await widget.agent.beepPrinter(
+      widget.address,
+      attempt: attempt,
+    );
     if (!mounted) return;
+    _last = DateTime.now();
+    _attempt = attempt + 1;
     setState(() => _busy = false);
     messenger.showSnackBar(
       SnackBar(
@@ -178,8 +194,8 @@ class _BeepButtonState extends State<_BeepButton> {
         duration: Duration(seconds: error == null ? 4 : 10),
         content: Text(
           error ??
-              'Đã gửi lệnh bíp. Nghe thấy tiếng bíp là đúng máy in này; không nghe '
-                  'thấy có thể máy không có còi.',
+              'Đã gửi ${PrinterBeepPlan.describe(style)}. Nghe thấy tiếng bíp là đúng máy in này.'
+                  '${PrinterBeepPlan.hasMore(type, attempt) ? ' Không nghe thấy: bấm lại để thử cách khác.' : ' Vẫn không nghe thấy: máy có thể không có còi.'}',
         ),
       ),
     );

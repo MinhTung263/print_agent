@@ -11,6 +11,7 @@ import '../../agent/agent_printer.dart';
 import '../../agent/printer_type.dart';
 import '../printer_discovery.dart';
 import '../printer_option.dart';
+import '../printer_beep_plan.dart';
 import '../printer_type_detector.dart';
 import '../usb_printer_relevance.dart';
 
@@ -175,10 +176,16 @@ class DesktopPrinterDiscovery implements ProgressivePrinterDiscovery {
   }
 
   @override
-  Future<String?> beep(String address, {PrinterType? type}) async {
+  Future<String?> beep(
+    String address, {
+    PrinterType? type,
+    int attempt = 0,
+  }) async {
+    final style = PrinterBeepPlan.styleFor(type, attempt);
     final failure = await AgentPrinter.beep(
       address,
       label: type == PrinterType.label,
+      style: style,
     );
     if (failure == null) return null;
     // Máy LAN không bíp được: nói đúng vì sao (IP đang do thiết bị khác dùng, cổng in

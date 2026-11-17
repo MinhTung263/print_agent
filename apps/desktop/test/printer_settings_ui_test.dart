@@ -522,5 +522,30 @@ void main() {
       agent.dispose();
       await t.runAsync(server.close);
     });
+
+    testWidgets(
+      'nút bíp: bấm lại khi không nghe thấy → máy nhận lệnh khác (SOUND → HOME → ESC/POS)',
+      (t) async {
+        final (server, received) = await fakePrinter(t);
+        final address = '127.0.0.1:${server.port}';
+        final agent = await showLabelPanel(t, address);
+        final beep = find.text('Kêu bíp để nhận ra máy in');
+        expect(beep, findsOneWidget);
+        for (var i = 0; i < 3; i++) {
+          await t.ensureVisible(beep);
+          await t.tap(beep);
+          await t.pump();
+          await waitFor(t, () => received.length > i);
+          await t.pump(const Duration(milliseconds: 200));
+        }
+        expect(received, hasLength(3));
+        expect(received[0], contains('SOUND'));
+        expect(received[1], contains('HOME'));
+        expect(received[2].codeUnits.take(2), [0x1B, 0x42]);
+        await t.pumpWidget(const SizedBox());
+        agent.dispose();
+        await t.runAsync(server.close);
+      },
+    );
   });
 }

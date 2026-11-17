@@ -21,7 +21,10 @@ abstract interface class PrinterDiscovery {
 
   /// Cho máy in [address] kêu bíp ngắn để người dùng nhận ra đó là máy nào (không in gì ra giấy);
   /// máy tem dùng lệnh tem, còn lại lệnh hoá đơn. Trả lý do lỗi hoặc `null` khi đã gửi.
-  Future<String?> beep(String address, {PrinterType? type});
+  ///
+  /// [attempt]: lần thử thứ mấy (0 = cách đúng với loại máy; khách bấm lại khi không nghe thấy thì tăng dần,
+  /// xem [PrinterBeepPlan]).
+  Future<String?> beep(String address, {PrinterType? type, int attempt = 0});
 
   /// Cài máy in USB chưa cài ([PrinterOption.setupPort]); trả địa chỉ hoặc
   /// `null` khi không cài được (thiếu quyền quản trị).

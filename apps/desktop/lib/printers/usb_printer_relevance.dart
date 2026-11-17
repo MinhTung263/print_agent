@@ -1,4 +1,4 @@
-import 'package:printer_label/desktop.dart' show Ieee1284;
+import 'package:printer_label/desktop.dart' show Ieee1284, PrinterLanguageProbe;
 
 /// Lọc "USB rác" khỏi danh sách máy in USB để thêm vào trạm in: chỉ giữ máy in có thể in phiếu
 /// (hoá đơn / tem), bỏ máy in văn phòng và khổ lớn (HP Designjet, LaserJet, Canon PIXMA...), hàng in
@@ -36,23 +36,15 @@ abstract final class UsbPrinterRelevance {
 
   /// Ngôn ngữ máy in phiếu / tem (trong `CMD:` của chuỗi IEEE 1284).
   static final RegExp _posCmd = RegExp(
-    r'^(ESC/?_?POS|ESCPOS|STAR|TSPL|ZPL|EPL|CPCL|DPL|TSC|BPLA|BPLB|SBPL|ZJ)',
+    r'^(ESC/?POS|EPSON|STAR|TSPL|ZPL|EPL|EZPL|CPCL|DPL|TSC|BPLA|BPLB|SBPL|ZJ)',
     caseSensitive: false,
   );
 
   /// Ngôn ngữ máy in văn phòng.
   static final RegExp _officeCmd = RegExp(
-    r'^(PCL|POSTSCRIPT|PS$|PJL|GDI|ACL|ESCPR|ESC/P-R|HBP|SPLC|LIDIL|BJL|URF|PWG|HP-?GL)',
+    r'^(PCL|POSTSCRIPT|PS$|PJL|GDI|ACL|ESCPR|ESC/P-R|ESC/P$|ESCP$|HBP|SPLC|LIDIL|BJL|URF|PWG|HP-?GL)',
     caseSensitive: false,
   );
-
-  /// Tách `CMD:` thành từng lệnh (phân cách dấu phẩy): khớp theo ĐẦU từng lệnh — khớp chuỗi con làm
-  /// `POSTSCRIPT` (chứa "TSC") bị nhận nhầm là lệnh tem.
-  static List<String> _cmds(String cmd) => cmd
-      .split(RegExp(r'[,\s]+'))
-      .where((t) => t.isNotEmpty)
-      .map((t) => t.toUpperCase())
-      .toList();
 
   /// Máy in USB [name] (kèm [deviceId] IEEE 1284 nếu đọc được) có nên hiện để thêm không.
   static bool isUsable(String name, {String? deviceId}) {
@@ -60,14 +52,19 @@ abstract final class UsbPrinterRelevance {
         ? const <String, String>{}
         : Ieee1284.parse(deviceId);
     final text = [name, ieee['MFG'], ieee['MDL']].whereType<String>().join(' ');
-    final cmd = ieee['CMD'] ?? '';
+    // Lệnh máy tự báo, đã chuẩn hoá (một nguồn với nhận loại máy in tem / hoá đơn).
+    final cmds =
+        (deviceId == null
+            ? null
+            : PrinterLanguageProbe.ieeeCommands(deviceId)) ??
+        const <String>[];
 
     // Máy tự báo hiểu lệnh phiếu / tem: chắc chắn là máy in phiếu.
-    if (_cmds(cmd).any(_posCmd.hasMatch)) return true;
+    if (cmds.any(_posCmd.hasMatch)) return true;
     if (_virtual.hasMatch(text)) return false;
     if (_pos.hasMatch(text)) return true;
     // Máy tự báo chỉ hiểu lệnh văn phòng (PCL / PostScript...): không in được phiếu.
-    if (_cmds(cmd).any(_officeCmd.hasMatch)) return false;
+    if (cmds.any(_officeCmd.hasMatch)) return false;
     if (_office.hasMatch(text)) return false;
     // Không có gì để kết luận (máy rẻ không khai tên / lệnh): giữ — bỏ nhầm máy thật tệ hơn hiện thừa.
     return true;
