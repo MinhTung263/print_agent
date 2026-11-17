@@ -1,5 +1,6 @@
 import 'agent_store.dart';
 import 'paper_size.dart';
+import 'printer_settings.dart' show RibbonMode;
 import 'printer_type.dart';
 
 export 'paper_size.dart';
@@ -25,6 +26,8 @@ class AgentConfig {
     this.printerType = PrinterType.receipt,
     this.beep = true,
     this.autoCut = true,
+    this.labelDpi = 203,
+    this.labelRibbon = RibbonMode.auto,
   });
 
   final String env;
@@ -69,6 +72,10 @@ class AgentConfig {
   /// Máy in chính tự động cắt giấy sau mỗi phiếu không.
   final bool autoCut;
 
+  /// Máy in tem chính: độ phân giải (203 / 300) và ruy-băng mực.
+  final int labelDpi;
+  final RibbonMode labelRibbon;
+
   bool get ready => companyId != null && ownerId != null;
 
   bool get hasPrinter => printer.trim().isNotEmpty;
@@ -91,6 +98,8 @@ class AgentConfig {
     PrinterType? printerType,
     bool? beep,
     bool? autoCut,
+    int? labelDpi,
+    RibbonMode? labelRibbon,
   }) => AgentConfig(
     env: env ?? this.env,
     companyId: companyId ?? this.companyId,
@@ -112,6 +121,8 @@ class AgentConfig {
     printerType: printerType ?? this.printerType,
     beep: beep ?? this.beep,
     autoCut: autoCut ?? this.autoCut,
+    labelDpi: labelDpi ?? this.labelDpi,
+    labelRibbon: labelRibbon ?? this.labelRibbon,
   );
 
   /// Môi trường duy nhất (trạm in luôn chạy máy chủ thật).
@@ -147,6 +158,8 @@ class AgentConfig {
     printerType: PrinterType.fromName(AgentStore.get('printerType')),
     beep: AgentStore.get('beep') != '0',
     autoCut: AgentStore.get('autoCut') != '0',
+    labelDpi: AgentStore.get('labelDpi') == '300' ? 300 : 203,
+    labelRibbon: RibbonMode.fromName(AgentStore.get('labelRibbon')),
   );
 
   /// Đọc độ chỉnh (mm), giới hạn ±20mm; sai / rỗng = 0.
@@ -171,6 +184,8 @@ class AgentConfig {
     AgentStore.set('printerType', printerType.name);
     AgentStore.set('beep', beep ? '1' : '0');
     AgentStore.set('autoCut', autoCut ? '1' : '0');
+    AgentStore.set('labelDpi', '$labelDpi');
+    AgentStore.set('labelRibbon', labelRibbon.name);
   }
 
   /// Đăng xuất: bỏ công ty đã lưu (giữ mã Agent, tên, máy in, khổ giấy).
@@ -204,6 +219,8 @@ class AgentConfig {
     printerType: printerType,
     beep: beep,
     autoCut: autoCut,
+    labelDpi: labelDpi,
+    labelRibbon: labelRibbon,
   );
 
   /// Mã Agent của máy này — cố định (lưu lại), để máy bán hàng nhớ đúng "máy in

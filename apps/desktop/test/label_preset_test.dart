@@ -27,6 +27,20 @@ void main() {
     },
   );
 
+  test('có khổ tem vàng bạc 50×12mm (1 tem / hàng, khe 2mm)', () {
+    final p = LabelPreset.all.firstWhere((p) => p.title.contains('vàng bạc'));
+    expect(
+      [p.spec.widthMm, p.spec.heightMm, p.spec.gapMm, p.count],
+      [50, 12, 2, 1],
+    );
+    expect(p.temWidthMm, 50);
+    // forSize tìm đúng khổ này (không dựng khổ riêng).
+    expect(
+      identical(LabelPreset.forSize(widthMm: 50, heightMm: 12, count: 1), p),
+      isTrue,
+    );
+  });
+
   test('mọi khổ có kích thước hợp lệ và tên không trùng', () {
     for (final p in LabelPreset.all) {
       expect(p.spec.widthMm, greaterThan(0), reason: p.title);

@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 /// Giữ máy KHÔNG ngủ khi đang làm Agent (máy ngủ = không nhận lệnh in):
 /// - Windows: `SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)`
@@ -10,6 +11,7 @@ import 'package:flutter/foundation.dart';
 /// - macOS: `caffeinate -i -w <pid>` (tự hết khi app thoát);
 /// - Linux: `systemd-inhibit` chặn ngủ.
 abstract final class KeepAwake {
+  static const _power = MethodChannel('vn.softdreams.easypos.agent/power');
   static bool _on = false;
   static Process? _helper;
 
@@ -21,7 +23,29 @@ abstract final class KeepAwake {
         _setThreadExecutionState(
           on ? _esContinuous | _esSystemRequired : _esContinuous,
         );
-      } else if (on) {
+        if (on) await _disableUsbSelectiveSuspend();
+      } else {
+        if (Platform.isMacOS) await _preventAppNap(on);
+        await _setHelper(on);
+      }
+    } catch (e) {
+      debugPrint('[AGENT] Không chặn được máy ngủ: $e');
+    }
+  }
+
+  /// macOS: bật / tắt chặn App Nap (xem `MainFlutterWindow.swift`).
+  static Future<void> _preventAppNap(bool on) async {
+    try {
+      await _power.invokeMethod<bool>('preventAppNap', on);
+    } catch (e) {
+      debugPrint('[AGENT] Không chặn được App Nap: $e');
+    }
+  }
+
+  /// macOS / Linux: tiến trình phụ chặn máy ngủ.
+  static Future<void> _setHelper(bool on) async {
+    try {
+      if (on) {
         _helper = await Process.start(
           Platform.isMacOS ? 'caffeinate' : 'systemd-inhibit',
           Platform.isMacOS
@@ -40,6 +64,35 @@ abstract final class KeepAwake {
       }
     } catch (e) {
       debugPrint('[AGENT] Không chặn được máy ngủ: $e');
+    }
+  }
+
+  static bool _usbSuspendHandled = false;
+
+  /// Windows tự ngắt điện cổng USB khi vắng khách (USB selective suspend) → máy in
+  /// USB "biến mất" tới khi rút cắm lại. Tắt cho kế hoạch nguồn hiện tại (nguồn điện
+  /// và pin), một lần mỗi lần chạy app; không cần quyền quản trị.
+  static Future<void> _disableUsbSelectiveSuspend() async {
+    if (_usbSuspendHandled) return;
+    _usbSuspendHandled = true;
+    const subUsb = '2a737441-1930-4402-8d77-b2bebba308a3';
+    const setting = '48e6b7a6-50f5-4782-a5d4-53bb8f07e226';
+    try {
+      for (final mode in ['/SETACVALUEINDEX', '/SETDCVALUEINDEX']) {
+        await Process.run('powercfg', [
+          mode,
+          'SCHEME_CURRENT',
+          subUsb,
+          setting,
+          '0',
+        ]).timeout(const Duration(seconds: 5));
+      }
+      await Process.run('powercfg', [
+        '/S',
+        'SCHEME_CURRENT',
+      ]).timeout(const Duration(seconds: 5));
+    } catch (e) {
+      debugPrint('[AGENT] Không tắt được USB selective suspend: $e');
     }
   }
 

@@ -17,6 +17,7 @@ class PrinterOptionTile extends StatelessWidget {
     this.multi = false,
     this.onBeep,
     this.added = false,
+    this.connected,
   });
 
   final PrinterOption option;
@@ -25,6 +26,10 @@ class PrinterOptionTile extends StatelessWidget {
 
   /// Máy đã được thêm vào trạm in này rồi (không chọn lại): hiện nhãn "Đã thêm" + dấu V.
   final bool added;
+
+  /// Trạng thái kết nối của máy đã có trong trạm (đang dùng / đã thêm): `true` = đã kết nối,
+  /// `false` = mất kết nối, `null` = máy chưa thêm (không hiện).
+  final bool? connected;
   final VoidCallback? onTap;
 
   /// Chọn nhiều máy: hộp tick vuông thay cho nút tròn.
@@ -103,16 +108,26 @@ class PrinterOptionTile extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      option.subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: option.needsSetup
-                            ? AgentColors.warning
-                            : AgentColors.textSecondary,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            option.subtitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: option.needsSetup
+                                  ? AgentColors.warning
+                                  : AgentColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                        if (connected != null) ...[
+                          const SizedBox(width: 10),
+                          _ConnectionStatus(connected: connected!),
+                        ],
+                      ],
                     ),
                     // Cảnh báo (IP trùng / chưa kết nối được) ở dòng riêng, màu cam.
                     if (option.warning != null) ...[
@@ -188,6 +203,37 @@ class _TypePill extends StatelessWidget {
           color: color,
         ),
       ),
+    );
+  }
+}
+
+/// Chấm + chữ trạng thái kết nối của máy đã thêm: "Đã kết nối" (xanh) / "Mất kết nối" (đỏ).
+class _ConnectionStatus extends StatelessWidget {
+  const _ConnectionStatus({required this.connected});
+
+  final bool connected;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = connected ? AgentColors.success : AgentColors.error;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          connected ? 'Đã kết nối' : 'Mất kết nối',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 }

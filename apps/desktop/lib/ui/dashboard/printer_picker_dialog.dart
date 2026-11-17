@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart' show Obx;
 import 'package:print_agent/print_agent.dart'
     show AgentNoticeLevel, PrintAgentModule;
 import '../widgets/agent_spinner.dart';
@@ -37,12 +38,14 @@ Future<List<String>?> showPrintersPickerDialog(
   BuildContext context, {
   String current = '',
   Set<String> added = const {},
+  bool Function(String address)? connectedOf,
   PrinterDiscovery discovery = const DesktopPrinterDiscovery(),
 }) => showDialog<List<String>>(
   context: context,
   builder: (_) => _PrinterPickerDialog(
     current: current,
     added: added,
+    connectedOf: connectedOf,
     discovery: discovery,
     multi: true,
   ),
@@ -52,6 +55,7 @@ class _PrinterPickerDialog extends StatefulWidget {
   const _PrinterPickerDialog({
     required this.current,
     this.added = const {},
+    this.connectedOf,
     required this.discovery,
     this.multi = false,
   });
@@ -61,6 +65,9 @@ class _PrinterPickerDialog extends StatefulWidget {
 
   /// Địa chỉ các máy đã thêm vào trạm (ngoài máy in chính): hiện "Đã thêm", không chọn lại.
   final Set<String> added;
+
+  /// Máy [address] đang kết nối không (trạng thái sống của trạm in) — hiện cạnh máy đã thêm.
+  final bool Function(String address)? connectedOf;
   final PrinterDiscovery discovery;
 
   @override
@@ -186,6 +193,26 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
   bool _isAdded(PrinterOption o) =>
       o.address.isNotEmpty && widget.added.contains(o.address);
 
+  /// Hiện trạng thái kết nối cho máy đang dùng / đã thêm (khi có nguồn trạng thái).
+  bool _showsConnection(PrinterOption o) =>
+      widget.connectedOf != null && (_isCurrent(o) || _isAdded(o));
+
+  Widget _tile(PrinterOption o, bool? connected) => PrinterOptionTile(
+    option: o,
+    connected: connected,
+    selected: widget.multi ? _checked.contains(o.key) : o.key == _selected,
+    current: _isCurrent(o),
+    added: _isAdded(o),
+    multi: widget.multi,
+    onBeep: o.address.isNotEmpty && !o.blocked
+        ? () => unawaited(_beep(o))
+        : null,
+    // Máy đang dùng không thêm lại được.
+    onTap: o.blocked || (widget.multi && (_isCurrent(o) || _isAdded(o)))
+        ? null
+        : () => widget.multi ? _toggle(o) : setState(() => _selected = o.key),
+  );
+
   void _toggle(PrinterOption o) => setState(() {
     if (!_checked.remove(o.key)) _checked.add(o.key);
   });
@@ -308,28 +335,17 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
                       else
                         for (var i = 0; i < all.length; i++) ...[
                           if (i > 0) const SizedBox(height: 8),
-                          PrinterOptionTile(
-                            option: all[i],
-                            selected: widget.multi
-                                ? _checked.contains(all[i].key)
-                                : all[i].key == _selected,
-                            current: _isCurrent(all[i]),
-                            added: _isAdded(all[i]),
-                            multi: widget.multi,
-                            onBeep: all[i].address.isNotEmpty && !all[i].blocked
-                                ? () => unawaited(_beep(all[i]))
-                                : null,
-                            // Máy đang dùng không thêm lại được.
-                            onTap:
-                                all[i].blocked ||
-                                    (widget.multi &&
-                                        (_isCurrent(all[i]) ||
-                                            _isAdded(all[i])))
-                                ? null
-                                : () => widget.multi
-                                      ? _toggle(all[i])
-                                      : setState(() => _selected = all[i].key),
-                          ),
+                          // Chỉ máy đã có trong trạm mới đọc trạng thái sống (Obx): GetX báo lỗi
+                          // nếu Obx không đọc biến Rx nào.
+                          if (_showsConnection(all[i]))
+                            Obx(
+                              () => _tile(
+                                all[i],
+                                widget.connectedOf!(all[i].address),
+                              ),
+                            )
+                          else
+                            _tile(all[i], null),
                         ],
                       const SizedBox(height: 12),
                       ManualIpField(

@@ -81,6 +81,8 @@ class DesktopExtraPrinters {
     double? gapMm,
     bool? beep,
     bool? autoCut,
+    int? dpi,
+    RibbonMode? ribbon,
   }) {
     _load();
     final i = _items.indexWhere((e) => e.address == address.trim());
@@ -95,6 +97,8 @@ class DesktopExtraPrinters {
       gapMm: gapMm,
       beep: beep,
       autoCut: autoCut,
+      dpi: dpi,
+      ribbon: ribbon,
     );
     _save();
     return true;
@@ -110,6 +114,8 @@ class DesktopExtraPrinters {
     gapMm: v.gapMm,
     beep: v.beep,
     autoCut: v.autoCut,
+    dpi: v.dpi,
+    ribbon: v.ribbon,
   );
 
   /// Máy in [from] tìm lại được ở [to] (đổi IP, theo MAC).
@@ -170,6 +176,8 @@ class ExtraPrinter {
     this.gapMm = 0,
     this.beep = true,
     this.autoCut = true,
+    this.dpi = 203,
+    this.ribbon = RibbonMode.auto,
   });
 
   final String address;
@@ -189,6 +197,10 @@ class ExtraPrinter {
   final bool beep;
   final bool autoCut;
 
+  /// Máy tem: độ phân giải đầu in và ruy-băng mực.
+  final int dpi;
+  final RibbonMode ribbon;
+
   PrinterSettings get settings => PrinterSettings(
     type: type,
     paper: paper,
@@ -197,6 +209,8 @@ class ExtraPrinter {
     gapMm: gapMm,
     beep: beep,
     autoCut: autoCut,
+    dpi: dpi,
+    ribbon: ribbon,
   );
 
   ExtraPrinter copyWith({
@@ -210,6 +224,8 @@ class ExtraPrinter {
     double? gapMm,
     bool? beep,
     bool? autoCut,
+    int? dpi,
+    RibbonMode? ribbon,
   }) => ExtraPrinter(
     address: address ?? this.address,
     name: name ?? this.name,
@@ -221,6 +237,8 @@ class ExtraPrinter {
     gapMm: gapMm ?? this.gapMm,
     beep: beep ?? this.beep,
     autoCut: autoCut ?? this.autoCut,
+    dpi: dpi ?? this.dpi,
+    ribbon: ribbon ?? this.ribbon,
   );
 
   /// "Máy in tem · XP-420B" như máy in chính.
@@ -247,6 +265,8 @@ class ExtraPrinter {
     'gap': gapMm,
     'beep': beep,
     'autoCut': autoCut,
+    'dpi': dpi,
+    'ribbon': ribbon.name,
   };
 
   static ExtraPrinter? fromJson(Map<Object?, Object?> m) {
@@ -262,6 +282,8 @@ class ExtraPrinter {
       offsetYMm: _mm(m['offsetY']),
       beep: m['beep'] != false,
       autoCut: m['autoCut'] != false,
+      dpi: m['dpi'] == 300 ? 300 : 203,
+      ribbon: RibbonMode.fromName(m['ribbon']?.toString()),
       gapMm: (m['gap'] is num ? (m['gap'] as num).toDouble() : 0.0)
           .clamp(0.0, 10.0)
           .toDouble(),

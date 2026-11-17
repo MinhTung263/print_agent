@@ -11,9 +11,14 @@ import 'autostart.dart';
 /// Chạy nền như app Android: biểu tượng ở khay hệ thống, đóng cửa sổ chỉ ẩn
 /// xuống khay (Agent vẫn nhận lệnh in), chỉ thoát hẳn khi chọn "Thoát".
 class DesktopShell with TrayListener, WindowListener {
-  DesktopShell(this.agent);
+  DesktopShell(this.agent, {bool startHidden = false})
+    : visible = ValueNotifier(!startHidden);
 
   final DesktopAgent agent;
+
+  /// Cửa sổ đang hiện (không ẩn xuống khay / thu nhỏ). Ẩn thì tắt mọi animation
+  /// (`TickerMode`) để Agent chạy nền gần như 0% CPU / GPU.
+  final ValueNotifier<bool> visible;
 
   static const _keyOpen = 'open';
   static const _keyToggle = 'toggle';
@@ -53,6 +58,7 @@ class DesktopShell with TrayListener, WindowListener {
   }
 
   Future<void> showWindow() async {
+    visible.value = true;
     await windowManager.show();
     if (await windowManager.isMinimized()) await windowManager.restore();
     await windowManager.focus();
@@ -138,5 +144,14 @@ class DesktopShell with TrayListener, WindowListener {
   // --- Cửa sổ -----------------------------------------------------------------
 
   @override
-  void onWindowClose() => unawaited(windowManager.hide());
+  void onWindowClose() {
+    visible.value = false;
+    unawaited(windowManager.hide());
+  }
+
+  @override
+  void onWindowMinimize() => visible.value = false;
+
+  @override
+  void onWindowRestore() => visible.value = true;
 }

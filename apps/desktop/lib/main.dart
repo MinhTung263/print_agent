@@ -12,6 +12,7 @@ import 'agent/agent_store.dart';
 import 'agent/desktop_agent.dart';
 import 'desktop/autostart.dart';
 import 'desktop/desktop_shell.dart';
+import 'desktop/firewall_guard.dart';
 import 'desktop/single_instance.dart';
 import 'network/local_network_banner.dart';
 import 'ui/agent_theme.dart';
@@ -67,10 +68,11 @@ Future<void> main(List<String> args) async {
   // Chưa đăng nhập thì luôn hiện cửa sổ (chạy ẩn cũng không làm được gì).
   final startHidden = args.contains(Autostart.backgroundArg) && config.ready;
   await DesktopShell.initWindow(startHidden: startHidden);
-  final shell = DesktopShell(agent);
+  final shell = DesktopShell(agent, startHidden: startHidden);
   await shell.start();
   instance.showRequests.listen((_) => unawaited(shell.showWindow()));
   unawaited(Autostart.instance.init());
+  if (config.ready) unawaited(FirewallGuard.ensure());
   unawaited(agent.start());
   // Mở cả khi chưa đăng nhập: trang web báo được "Trạm in chưa đăng nhập".
   unawaited(agent.web.start());
@@ -80,6 +82,12 @@ Future<void> main(List<String> args) async {
       title: 'Agent',
       debugShowCheckedModeBanner: false,
       theme: agentTheme(),
+      // Cửa sổ ẩn xuống khay / thu nhỏ: dừng animation để về ~0% CPU.
+      builder: (context, child) => ValueListenableBuilder<bool>(
+        valueListenable: shell.visible,
+        builder: (_, visible, _) =>
+            TickerMode(enabled: visible, child: child ?? const SizedBox()),
+      ),
       locale: const Locale('vi', 'VN'),
       home: ListenableBuilder(
         listenable: agent,

@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:print_agent/print_agent.dart' show AgentJobErrorText;
+import 'package:print_agent_core/print_agent_core.dart' show PrintRelayClient;
 import 'package:printer_label/desktop.dart';
 import 'package:printer_label/printer_label.dart' show PrinterLabel;
 
@@ -42,7 +44,7 @@ class DesktopPrinterDiscovery implements PrinterDiscovery {
             LanPrinterIssue.ipConflict =>
               'IP đang bị thiết bị khác dùng — cần đổi IP máy in',
             LanPrinterIssue.unreachable =>
-              'Chưa kết nối được (khác dải mạng hoặc bị chặn) — bấm loa để thử bíp, vẫn thêm được',
+              'Chưa kết nối được tới cổng in — bấm loa để thử bíp và xem lý do (IP bị thiết bị khác dùng, máy in tắt hoặc khác mạng), vẫn thêm được',
           },
         ),
     ];
@@ -99,9 +101,64 @@ class DesktopPrinterDiscovery implements PrinterDiscovery {
       address,
       label: type == PrinterType.label,
     );
-    return failure == null
-        ? null
-        : AgentJobErrorText.message(failure.error, detail: failure.detail);
+    if (failure == null) return null;
+    // Máy LAN không bíp được: nói đúng vì sao (IP đang do thiết bị khác dùng, cổng in
+    // đóng, khác mạng...) thay vì "máy in bận" chung chung.
+    final why = await _explainLan(address);
+    return why ??
+        AgentJobErrorText.message(failure.error, detail: failure.detail);
+  }
+
+  Future<String?> _explainLan(String address) async {
+    if (UsbPrinters.isLocal(address)) return null;
+    final parsed = parsePrinterAddress(address);
+    if (parsed == null) return null;
+    final (ip, port) = parsed;
+    final open = await LanPrinterScanner.probe(
+      ip,
+      port: port,
+      timeout: const Duration(milliseconds: 800),
+    );
+    if (open) return null; // cổng in mở: lỗi khác, giữ thông báo gốc
+    final mac = await ArpTable.macOf(ip);
+    return explainUnreachableLan(
+      ip: ip,
+      port: port,
+      mac: mac,
+      sameSubnet: await PrintRelayClient.isOnSameSubnet(ip),
+    );
+  }
+
+  /// Vì sao máy in LAN [ip] không nhận lệnh (cổng [port] không mở). Thuần — kiểm thử được.
+  ///
+  /// - Khác dải mạng với máy này → "khác mạng".
+  /// - Cùng dải mà có thiết bị trả lời ARP (có [mac]) nhưng cổng in đóng: IP đang do thiết bị
+  ///   khác dùng. MAC "ngẫu nhiên" (bit 0x02 của byte đầu) là điện thoại / máy tính bảng
+  ///   dùng địa chỉ Wi-Fi riêng tư — chắc chắn không phải máy in.
+  /// - Không ai trả lời → máy in tắt / ngắt mạng.
+  @visibleForTesting
+  static String explainUnreachableLan({
+    required String ip,
+    required int port,
+    required String? mac,
+    required bool sameSubnet,
+  }) {
+    if (!sameSubnet) {
+      return 'Máy này không cùng dải mạng với $ip — nối máy tính vào cùng Wi-Fi / mạng '
+          'dây với máy in rồi thử lại.';
+    }
+    if (mac != null && mac.isNotEmpty) {
+      final first = int.tryParse(mac.split(RegExp('[:-]')).first, radix: 16);
+      final randomMac = first != null && first & 0x02 != 0;
+      return randomMac
+          ? 'Địa chỉ $ip đang do một thiết bị khác (điện thoại / máy tính bảng, MAC $mac) '
+                'dùng, không phải máy in nên không bíp được. Đổi IP của máy in sang địa chỉ '
+                'khác rồi thử lại.'
+          : 'Có thiết bị ($mac) trả lời ở $ip nhưng không nhận lệnh in (cổng $port đóng). '
+                'Có thể không phải máy in hoặc IP bị trùng — kiểm tra lại IP máy in.';
+    }
+    return 'Không có thiết bị nào trả lời ở $ip — máy in đang tắt, chưa nối mạng hoặc đã '
+        'đổi IP.';
   }
 
   @override

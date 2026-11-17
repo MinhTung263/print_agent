@@ -19,6 +19,7 @@ class OffsetPreviewPad extends StatelessWidget {
     required this.onLeft,
     required this.onRight,
     this.count = 1,
+    this.jewelry = false,
     this.onReset,
   });
 
@@ -28,6 +29,9 @@ class OffsetPreviewPad extends StatelessWidget {
 
   /// Số tem trên một hàng (vẽ đúng số tem).
   final int count;
+
+  /// Máy tem vàng bạc (300dpi / ruy-băng): hình tem vẽ kiểu vàng bạc — chữ trái, mã QR phải.
+  final bool jewelry;
   final double offsetXMm;
   final double offsetYMm;
   final VoidCallback onUp;
@@ -86,6 +90,7 @@ class OffsetPreviewPad extends StatelessWidget {
                     widthMm: widthMm,
                     heightMm: heightMm,
                     count: count,
+                    jewelry: jewelry,
                     offsetXMm: offsetXMm,
                     offsetYMm: offsetYMm,
                   ),
@@ -105,48 +110,6 @@ class OffsetPreviewPad extends StatelessWidget {
   }
 }
 
-/// Chú thích dưới hình tem: nét đứt xám = vị trí gốc, xanh = nội dung đang in.
-class OffsetPreviewLegend extends StatelessWidget {
-  const OffsetPreviewLegend({super.key});
-
-  @override
-  Widget build(BuildContext context) => const Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    spacing: 16,
-    children: [
-      _Key(color: AgentColors.muted, label: 'Vị trí gốc'),
-      _Key(color: AgentColors.primary, label: 'Nội dung đang in'),
-    ],
-  );
-}
-
-class _Key extends StatelessWidget {
-  const _Key({required this.color, required this.label});
-
-  final Color color;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    spacing: 6,
-    children: [
-      Container(
-        width: 14,
-        height: 3,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
-      Text(
-        label,
-        style: const TextStyle(fontSize: 12, color: AgentColors.textSecondary),
-      ),
-    ],
-  );
-}
-
 /// Vẽ cuộn tem + nội dung mẫu dời theo độ chỉnh.
 class OffsetPreviewPainter extends CustomPainter {
   const OffsetPreviewPainter({
@@ -155,9 +118,11 @@ class OffsetPreviewPainter extends CustomPainter {
     required this.offsetXMm,
     required this.offsetYMm,
     this.count = 1,
+    this.jewelry = false,
   });
 
   final int widthMm;
+  final bool jewelry;
   final int heightMm;
   final int count;
   final double offsetXMm;
@@ -205,7 +170,7 @@ class OffsetPreviewPainter extends CustomPainter {
     );
 
     // Bố cục dùng chung với ảnh in ra ([SchematicTemLayout]) nên hai hình luôn giống nhau.
-    final l = SchematicTemLayout.of(rect.width, rect.height);
+    final l = SchematicTemLayout.of(rect.width, rect.height, jewelry: jewelry);
     Rect r(Box b) =>
         Rect.fromLTRB(b.left, b.top, b.right, b.bottom).shift(rect.topLeft);
 
@@ -233,6 +198,11 @@ class OffsetPreviewPainter extends CustomPainter {
     );
     canvas.drawRect(r(l.bar1), ink);
     canvas.drawRect(r(l.bar2), ink);
+    final price = l.price;
+    if (price != null) canvas.drawRect(r(price), ink);
+    for (final c in l.qrCells) {
+      canvas.drawRect(r(c), ink);
+    }
     for (final (x, w) in l.bars) {
       canvas.drawRect(
         Rect.fromLTWH(
@@ -269,6 +239,7 @@ class OffsetPreviewPainter extends CustomPainter {
       old.widthMm != widthMm ||
       old.heightMm != heightMm ||
       old.count != count ||
+      old.jewelry != jewelry ||
       old.offsetXMm != offsetXMm ||
       old.offsetYMm != offsetYMm;
 }

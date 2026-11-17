@@ -143,14 +143,14 @@
   }
 
   /**
-   * Mã QR (đen trắng, mỗi module là SỐ NGUYÊN chấm cho nét sắc) vào ô vuông tối đa [size] chấm tại (x, y).
+   * Mã QR (đen trắng, mỗi module là SỐ NGUYÊN chấm cho nét sắc) vào ô vuông tối đa [size] chấm tại (x, y); [quiet] = lề trắng (module).
    * Dùng thư viện `qrcode` (qrcode-generator) nếu trang đã nạp; không có thì bỏ qua (trả 0).
    */
-  function drawQr(ctx, x, y, size, text) {
+  function drawQr(ctx, x, y, size, text, quiet = 2) {
     const make = g.qrcode;
     if (typeof make !== 'function') return 0;
     const qr = make(0, 'M'); qr.addData(String(text)); qr.make();
-    const n = qr.getModuleCount(), quiet = 2, mod = Math.floor(size / (n + quiet * 2));
+    const n = qr.getModuleCount(), mod = Math.floor(size / (n + quiet * 2));
     if (mod < 1) return 0;
     const side = mod * (n + quiet * 2), ox = x + Math.floor((size - side) / 2), oy = y + Math.floor((size - side) / 2);
     ctx.fillStyle = '#fff'; ctx.fillRect(ox, oy, side, side); ctx.fillStyle = '#000';
@@ -243,7 +243,8 @@
     if (info.qr && typeof g.qrcode === 'function') {
       // QR thay mã vạch: vuông, sát lề phải, cao hết tem.
       const q = h - m * 2;
-      drawQr(ctx, w - m - q, m, q, `${item.code}|${item.name}|${item.karat}|${item.weight}`);
+      // Tem nhỏ: chỉ mã hàng (phiên bản QR thấp, module to ≥ 3 chấm) + lề trắng 1 module — quét chắc hơn nội dung dài.
+      drawQr(ctx, w - m - q, m, q, item.code, 1);
       return;
     }
     const bx = split + m, bw = w - bx - m, bh = Math.round(h * 0.52);

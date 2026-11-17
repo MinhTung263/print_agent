@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:print_agent/print_agent.dart';
@@ -9,10 +10,12 @@ import '../printers/data/desktop_printer_discovery.dart';
 import '../printers/printer_type_detector.dart';
 import 'label_preset.dart';
 
+import '../printers/label_dpi_guess.dart';
 import '../printers/paper_size_detector.dart';
 import 'agent_config.dart';
 import 'agent_printer.dart';
 import 'printer_settings.dart';
+import 'printer_settings_memory.dart';
 import 'agent_store.dart';
 import 'desktop_agent_host.dart';
 import 'desktop_job_printer.dart';
@@ -239,16 +242,58 @@ class DesktopAgent extends ChangeNotifier {
         gateway.extras.contains(a)) {
       return false;
     }
+    // Máy từng thêm trước đây: cài đặt (tắt cắt giấy, còi, khổ giấy...) quay về.
+    final mac = await _macForRemember(a);
+    final saved = PrinterSettingsMemory.recall(
+      a,
+      const PrinterSettings(),
+      mac: mac,
+    );
     if (!_config.hasPrinter) {
-      await update(_config.copyWith(printer: a, printerName: ''));
+      await update(
+        _config.copyWith(
+          printer: a,
+          printerName: '',
+          paper: saved?.paper,
+          labelOffsetXMm: saved?.offsetXMm,
+          labelOffsetYMm: saved?.offsetYMm,
+          labelGapMm: saved?.gapMm,
+          beep: saved?.beep,
+          autoCut: saved?.autoCut,
+          labelDpi: saved?.dpi,
+          labelRibbon: saved?.ribbon,
+        ),
+      );
       return true;
     }
-    if (!gateway.extras.add(a)) return false;
+    if (!gateway.extras.add(a, paper: saved?.paper ?? PaperSize.size80)) {
+      return false;
+    }
+    // Loại máy (hoá đơn / tem) giữ nguyên như vừa thêm — chỉ khôi phục phần còn lại.
+    if (saved != null) {
+      gateway.extras.updateSettings(
+        a,
+        saved.copyWith(type: gateway.extras.byAddress(a)?.type),
+      );
+    }
     notifyListeners();
     gateway.extrasChanged();
     unawaited(_learnExtraMac(a));
     unawaited(_identifyExtra(a));
     return true;
+  }
+
+  /// MAC máy in LAN [address] đọc nhanh từ bảng ARP (để nhớ / tìm lại cài đặt theo máy,
+  /// không theo IP); rỗng khi không phải LAN hoặc chưa biết.
+  Future<String> _macForRemember(String address) async {
+    if (UsbPrinters.isLocal(address)) return '';
+    final parsed = parsePrinterAddress(address);
+    if (parsed == null) return '';
+    try {
+      return await ArpTable.macOf(parsed.$1) ?? '';
+    } catch (_) {
+      return '';
+    }
   }
 
   /// Cài đặt riêng của máy in ở [address] (máy in chính hoặc máy thêm).
@@ -264,6 +309,8 @@ class DesktopAgent extends ChangeNotifier {
       gapMm: _config.labelGapMm,
       beep: _config.beep,
       autoCut: _config.autoCut,
+      dpi: _config.labelDpi,
+      ribbon: _config.labelRibbon,
     );
   }
 
@@ -285,6 +332,10 @@ class DesktopAgent extends ChangeNotifier {
     final a = address.trim();
     // Loại máy in (hoá đơn / tem) chốt từ lúc thêm — không đổi qua cài đặt.
     final next = value.copyWith(type: settingsOf(a).type);
+    final knownMac = a == _config.printer.trim()
+        ? _config.printerMac
+        : (gateway.extras.byAddress(a)?.mac ?? '');
+    PrinterSettingsMemory.remember(a, next, mac: knownMac);
     if (a == _config.printer.trim()) {
       await update(
         _config.copyWith(
@@ -295,11 +346,17 @@ class DesktopAgent extends ChangeNotifier {
           labelGapMm: next.gapMm,
           beep: next.beep,
           autoCut: next.autoCut,
+          labelDpi: next.dpi,
+          labelRibbon: next.ribbon,
         ),
       );
     } else if (gateway.extras.updateSettings(a, next)) {
       notifyListeners();
       gateway.extrasChanged();
+    }
+    // Độ phân giải đầu in đổi: báo lại cho máy gửi (dựng ảnh tem đúng độ mịn).
+    if (service.relay.isStation.value) {
+      unawaited(service.relay.refreshStationInfo());
     }
   }
 
@@ -336,14 +393,50 @@ class DesktopAgent extends ChangeNotifier {
     gateway.extrasChanged();
   }
 
+  /// Máy tem vừa được nhận ra: tên model ghi "300" (máy 300dpi) và khách CHƯA từng chỉnh
+  /// độ phân giải của máy này (không có cài đặt đã nhớ, đang 203) thì đặt sẵn 300dpi. Trả
+  /// `null` khi không đổi.
+  int? _dpiGuessFor(
+    String address,
+    String model,
+    PrinterType type,
+    int currentDpi, [
+    String mac = '',
+  ]) {
+    if (type != PrinterType.label || currentDpi != 203) return null;
+    if (PrinterSettingsMemory.recall(
+          address,
+          const PrinterSettings(),
+          mac: mac,
+        ) !=
+        null) {
+      return null; // khách đã chỉnh máy này trước đây: tôn trọng
+    }
+    final guess = LabelDpiGuess.fromModel(model);
+    if (guess != null) {
+      PrintAgentModule.host.log(
+        '[AGENT] $address: tên model "$model" ghi 300 — đặt sẵn 300dpi',
+      );
+    }
+    return guess;
+  }
+
   Future<void> _identifyExtra(String address) async {
     final found = await _recognize(address, PrinterType.receipt);
     if (!gateway.extras.contains(address)) return; // đã xoá trong lúc dò
+    final extra = gateway.extras.byAddress(address);
     gateway.extras.update(
       address,
       name: found.name,
       type: found.type,
       paper: PaperSizeDetector.guess(found.name).size,
+      dpi: _dpiGuessFor(
+        address,
+        found.name,
+        found.type,
+        extra?.dpi ?? 203,
+        extra?.mac ?? '',
+      ),
     );
     PrintAgentModule.host.log('[AGENT] Nhận ra máy in $address: ${found.note}');
     notifyListeners();
@@ -370,6 +463,13 @@ class DesktopAgent extends ChangeNotifier {
       printerName: name,
       printerType: type,
       paper: paper.detected && type == PrinterType.receipt ? paper.size : null,
+      labelDpi: _dpiGuessFor(
+        address,
+        name,
+        type,
+        _config.labelDpi,
+        _config.printerMac,
+      ),
     )..save();
     notifyListeners();
     unawaited(service.relay.refreshStationInfo());
@@ -387,6 +487,24 @@ class DesktopAgent extends ChangeNotifier {
     return failure == null
         ? null
         : AgentJobErrorText.message(failure.error, detail: failure.detail);
+  }
+
+  /// Hàng in Windows (`queue:...`) mới có hàng đợi spooler để xả.
+  bool canPurgeQueue(String address) =>
+      Platform.isWindows &&
+      address.trim().startsWith(WindowsRawPrinters.prefix);
+
+  /// Xả mọi lệnh đang kẹt trong hàng đợi Windows của máy in [address] (máy từng tắt /
+  /// hết giấy làm lệnh cũ kẹt) — `null` = đã xả, ngược lại là lý do lỗi.
+  Future<String?> purgeQueue(String address) async {
+    if (!canPurgeQueue(address)) {
+      return 'Máy in này không có hàng đợi để làm sạch';
+    }
+    final name = address.trim().substring(WindowsRawPrinters.prefix.length);
+    final ok = await WindowsRawPrinters.purgeQueue(name);
+    return ok
+        ? null
+        : 'Không làm sạch được hàng đợi (cần quyền quản trị với máy in này)';
   }
 
   Future<({String name, PrinterType type, String note})> _recognize(
@@ -451,6 +569,8 @@ class DesktopAgent extends ChangeNotifier {
             gapOverrideMm: s.gapMm,
             labelsPerRow: LabelPreset.defaultPreset.count,
             temWidthMm: LabelPreset.defaultPreset.temWidthMm,
+            dpi: s.dpi,
+            ribbon: s.ribbon.value,
           )
         : await AgentPrinter.printTest(
             address: a,
@@ -470,8 +590,19 @@ class DesktopAgent extends ChangeNotifier {
     _autoAddNet = null;
   }
 
+  bool _disposed = false;
+
+  /// Việc chạy nền (nhận dạng máy in, dò mạng...) có thể xong SAU khi Agent đã đóng: bỏ qua
+  /// thông báo thay vì ném lỗi "dùng sau khi đóng".
+  @override
+  void notifyListeners() {
+    if (_disposed) return;
+    super.notifyListeners();
+  }
+
   @override
   void dispose() {
+    _disposed = true;
     _wake.stop();
     _stopAutoAdd();
     super.dispose();

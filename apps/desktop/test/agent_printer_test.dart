@@ -13,6 +13,8 @@ import 'package:print_agent_desktop/agent/desktop_agent_host.dart';
 import 'package:print_agent_desktop/agent/desktop_job_printer.dart';
 import 'package:print_agent_desktop/agent/desktop_printer.dart';
 import 'package:print_agent_desktop/agent/desktop_printer_gateway.dart';
+import 'package:print_agent_desktop/agent/printer_settings.dart'
+    show RibbonMode;
 import 'package:printer_label/desktop.dart';
 import 'package:printer_label/printer_label.dart' show LabelCalibration;
 
@@ -21,6 +23,18 @@ PrintRelayJob job(Map<String, Object?> map) =>
     PrintRelayJob.fromMap('j1', {'printerIp': 'builtin', ...map})!;
 
 void main() {
+  // Mọi test ghi / đọc kho cấu hình trong thư mục TẠM — không đụng cấu hình thật của Agent
+  // đang chạy trên máy (máy in thêm, cài đặt từng máy...).
+  late Directory storeDir;
+  setUp(() {
+    storeDir = Directory.systemTemp.createTempSync('agent_printer_');
+    AgentStore.debugDirectory = storeDir;
+  });
+  tearDown(() {
+    AgentStore.debugDirectory = null;
+    storeDir.deleteSync(recursive: true);
+  });
+
   var config = const AgentConfig(printer: '192.168.1.50');
   final gateway = DesktopPrinterGateway(() => config);
   final printer = DesktopJobPrinter(() => config, gateway);
@@ -183,6 +197,123 @@ void main() {
       // Chỉnh lệch dịch ngay trong ảnh, REFERENCE giữ 0,0 (nhiều máy bỏ qua giá trị âm).
       expect(sent, contains('REFERENCE 0,0'));
       expect(sent, contains('BITMAP 0,0,105,320,0,'));
+    },
+  );
+
+  /// Máy in tem giả: nhận hết byte của MỘT kết nối.
+  Future<(ServerSocket, Future<String>)> fakeLabelPrinter() async {
+    final server = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+    final received = Completer<Uint8List>();
+    unawaited(
+      server.first.then((s) async {
+        final b = BytesBuilder();
+        await for (final chunk in s) {
+          b.add(chunk);
+        }
+        received.complete(b.takeBytes());
+      }),
+    );
+    return (
+      server,
+      received.future
+          .timeout(const Duration(seconds: 10))
+          .then((bytes) => latin1.decode(bytes)),
+    );
+  }
+
+  Uint8List whitePng(int w, int h) => Uint8List.fromList(
+    img.encodePng(
+      img.Image(width: w, height: h, numChannels: 4)
+        ..clear(img.ColorRgba8(255, 255, 255, 255)),
+    ),
+  );
+
+  test(
+    'tem vàng bạc: 300dpi + ruy-băng — SET RIBBON ON, bitmap theo 11,81 chấm/mm',
+    () async {
+      final (server, sent) = await fakeLabelPrinter();
+      final address = '127.0.0.1:${server.port}';
+      final j = job({
+        'kind': 'label',
+        'printerType': 'lan',
+        'printerIp': address,
+        'labelSize': 'single',
+        'labelSpec': {'w': 50, 'h': 12, 'gap': 2, 'count': 1, 'shiftX': 0},
+        'images': [base64Encode(whitePng(400, 96))],
+      });
+      final failure = await AgentPrinter.printLabelJob(
+        j,
+        address,
+        dpi: 300,
+        ribbon: true,
+      );
+      expect(failure, isNull);
+      final text = await sent;
+      await server.close();
+      expect(text, contains('SIZE 50 mm,12 mm'));
+      expect(text, contains('SET RIBBON ON\r\n'));
+      // 50mm x 11,81 = 591 chấm → 74 byte mỗi dòng; 12mm → 142 dòng.
+      expect(text, contains('BITMAP 0,0,74,142,0,'));
+    },
+  );
+
+  test(
+    'DesktopJobPrinter: lệnh tem lấy 300dpi + ruy-băng của máy in chính',
+    () async {
+      final (server, sent) = await fakeLabelPrinter();
+      final address = '127.0.0.1:${server.port}';
+      final cfg = AgentConfig(
+        printer: address,
+        printerType: PrinterType.label,
+        labelDpi: 300,
+        labelRibbon: RibbonMode.on,
+      );
+      final jp = DesktopJobPrinter(() => cfg, DesktopPrinterGateway(() => cfg));
+      final j = job({
+        'kind': 'label',
+        'printerType': 'lan',
+        'printerIp': address,
+        'labelSize': 'single',
+        'labelSpec': {'w': 50, 'h': 12, 'gap': 2, 'count': 1, 'shiftX': 0},
+        'images': [base64Encode(whitePng(400, 96))],
+      });
+      expect(await jp.printJob(jp.resolve(j), j), isNull);
+      final text = await sent;
+      await server.close();
+      expect(text, contains('SET RIBBON ON'));
+      expect(text, contains('BITMAP 0,0,74,142,0,'));
+    },
+  );
+
+  test(
+    'Agent báo độ phân giải máy tem 300dpi cho máy gửi (máy 203dpi thì không)',
+    () {
+      final cfg = AgentConfig(
+        printer: '10.0.0.5',
+        printerType: PrinterType.label,
+        labelDpi: 300,
+      );
+      final gw = DesktopPrinterGateway(() => cfg);
+      gw.extras.add('10.0.0.6', type: PrinterType.label);
+      gw.extras.update('10.0.0.6', dpi: 300);
+      gw.extras.add('10.0.0.7', type: PrinterType.label); // 203dpi
+      final spec = DesktopJobPrinter(() => cfg, gw).builtInSpec()!;
+      expect(spec.labelDpis, {'builtin': 300, '10.0.0.6': 300});
+      // Máy in chính là máy hoá đơn: không báo `builtin` dù cấu hình có labelDpi; máy tem
+      // thêm vẫn báo riêng theo địa chỉ.
+      final receiptCfg = AgentConfig(printer: '10.0.0.5', labelDpi: 300);
+      final r = DesktopJobPrinter(
+        () => receiptCfg,
+        DesktopPrinterGateway(() => receiptCfg),
+      ).builtInSpec()!;
+      expect(r.labelDpis, {'10.0.0.6': 300});
+      // Bỏ máy tem thêm: không còn gì để báo.
+      gw.extras.remove('10.0.0.6');
+      final none = DesktopJobPrinter(
+        () => receiptCfg,
+        DesktopPrinterGateway(() => receiptCfg),
+      ).builtInSpec()!;
+      expect(none.labelDpis, isEmpty);
     },
   );
 

@@ -140,16 +140,40 @@ class DesktopPrinterGateway implements AgentPrinterGateway<DesktopPrinter> {
     DesktopPrinter printer, {
     Duration? timeout,
   }) async {
+    if (UsbPrinters.isLocal(printer.address)) return _relocateUsb(printer);
     final mac = printer.mac;
-    if (mac == null || mac.isEmpty || UsbPrinters.isLocal(printer.address)) {
-      return null;
-    }
+    if (mac == null || mac.isEmpty) return null;
     final parsed = parsePrinterAddress(printer.address);
     if (parsed == null) return null;
     final found = await _findByMac(mac, parsed.$2);
     if (found == null || found == printer.address) return null;
     PrintAgentModule.host.log(
       '[AGENT] ${printer.refName}: đổi IP ${printer.address} → $found (theo MAC)',
+    );
+    if (printer.kind == AgentPrinterKind.builtIn) {
+      await _onRelocated?.call(found);
+      _setConnected(true);
+    } else if (extras.moved(printer.address, found)) {
+      _printers.add(null);
+    }
+    return printer.withAddress(found);
+  }
+
+  /// Máy in USB rút cắm sang cổng khác (Windows đổi đường dẫn thiết bị theo cổng): tìm lại
+  /// theo VID/PID, không giành máy đã cấu hình cho vị trí khác. Máy in của Agent thì lưu
+  /// lại cấu hình luôn.
+  Future<DesktopPrinter?> _relocateUsb(DesktopPrinter printer) async {
+    final taken = {
+      for (final p in printers)
+        if (p.address != printer.address) p.address,
+      for (final e in extras.items)
+        if (e.address != printer.address) e.address,
+      if (_config().printer.trim() != printer.address) _config().printer.trim(),
+    };
+    final found = await UsbPrinters.relocate(printer.address, taken: taken);
+    if (found == null || found == printer.address) return null;
+    PrintAgentModule.host.log(
+      '[AGENT] ${printer.refName}: đổi cổng USB → $found (theo VID/PID)',
     );
     if (printer.kind == AgentPrinterKind.builtIn) {
       await _onRelocated?.call(found);

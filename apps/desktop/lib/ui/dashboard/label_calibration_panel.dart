@@ -7,21 +7,19 @@ import 'package:printer_label/printer_label.dart' show LabelCalibration;
 
 import '../../agent/agent_printer.dart';
 import '../../agent/desktop_agent.dart';
-import '../../agent/label_drift.dart';
 import '../../agent/label_preset.dart';
 import '../../agent/last_label.dart';
 import '../../agent/printer_settings.dart';
 import '../agent_theme.dart';
 import '../ds/ds.dart';
 import '../widgets/agent_spinner.dart';
-import 'calibration_stepper.dart';
 import 'offset_preview_pad.dart';
 import 'label_offset_text.dart';
 
 /// Căn chỉnh tem cho MỘT máy in tem — gọn và tự động:
 /// - khổ tem lấy từ lần in gần nhất (không phải chọn);
 /// - "In tem thử", rồi bấm mũi tên quanh hình tem cho tới khi khung nằm sát mép tem;
-/// - tem lệch dần khi in nhiều lần: in 4 tem liền, nhập độ lệch, app tự tính lại khe.
+/// - đổi cuộn tem: "Dò lại khe", máy tự đo khe thật của cuộn mới.
 class LabelCalibrationPanel extends StatefulWidget {
   const LabelCalibrationPanel({
     super.key,
@@ -33,7 +31,7 @@ class LabelCalibrationPanel extends StatefulWidget {
   final DesktopAgent agent;
   final String address;
 
-  /// Máy in đang kết nối: chưa kết nối thì ẩn các nút in (in thử, đo độ lệch).
+  /// Máy in đang kết nối: chưa kết nối thì ẩn các nút in (in thử, dò khe).
   final bool connected;
 
   @override
@@ -42,8 +40,6 @@ class LabelCalibrationPanel extends StatefulWidget {
 
 class _LabelCalibrationPanelState extends State<LabelCalibrationPanel> {
   bool _busy = false;
-  bool _measured = false; // đã in 4 tem liền để đo độ lệch
-  double _drift = 0; // hàng cuối lệch so với hàng đầu (mm, dương = xuống)
 
   PrinterSettings get _settings => widget.agent.settingsOf(widget.address);
 
@@ -59,11 +55,6 @@ class _LabelCalibrationPanelState extends State<LabelCalibrationPanel> {
   Future<void> _reset() => widget.agent.updateSettings(
     widget.address,
     _settings.withCalibration(LabelCalibration.none),
-  );
-
-  Future<void> _setGap(double mm) => widget.agent.updateSettings(
-    widget.address,
-    _settings.copyWith(gapMm: mm.clamp(0.0, 10.0).toDouble()),
   );
 
   Future<void> _run(
@@ -87,7 +78,7 @@ class _LabelCalibrationPanelState extends State<LabelCalibrationPanel> {
     );
   }
 
-  Future<AgentPrintFailure?> _slip(LabelPreset size, {int repeat = 1}) =>
+  Future<AgentPrintFailure?> _slip(LabelPreset size) =>
       AgentPrinter.printLabelCalibration(
         address: widget.address,
         spec: size.spec,
@@ -95,32 +86,41 @@ class _LabelCalibrationPanelState extends State<LabelCalibrationPanel> {
         gapOverrideMm: _settings.gapMm,
         labelsPerRow: size.count,
         temWidthMm: size.temWidthMm,
-        repeat: repeat,
+        dpi: _settings.dpi,
+        ribbon: _settings.ribbon.value,
       );
 
   Future<void> _printSlip() => _run((size) => _slip(size));
 
-  /// In [LabelDrift.rows] hàng liền nhau trong một lần: nhìn hàng cuối lệch bao nhiêu so
-  /// với hàng đầu để tính khe đúng.
-  Future<void> _printMeasure() async {
-    await _run((size) => _slip(size, repeat: LabelDrift.rows));
-    if (mounted) setState(() => _measured = true);
-  }
-
-  /// Khe hiện đang dùng (theo khổ tem nếu chưa chỉnh).
-  double get _currentGap =>
-      _settings.gapMm == 0 ? _size.spec.gapMm.toDouble() : _settings.gapMm;
-
-  Future<void> _applyDrift() async {
-    final gap = LabelDrift.newGap(currentGapMm: _currentGap, driftMm: _drift);
-    await _setGap(gap);
+  /// Đổi cuộn tem: bảo máy cuốn vài tem để đo lại khe thật của cuộn mới (cuộn khác khe thì
+  /// tem lệch dần). Gửi được thì báo cho khách biết máy sắp cuốn giấy.
+  Future<void> _detectGap() async {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busy = true);
+    final size = _size;
+    final failure = await AgentPrinter.detectGap(
+      address: widget.address,
+      spec: size.spec,
+      gapOverrideMm: _settings.gapMm,
+      dpi: _settings.dpi,
+      ribbon: _settings.ribbon.value,
+    );
     if (!mounted) return;
-    setState(() {
-      _drift = 0;
-      _measured = false;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đã chỉnh. In lại 4 tem liền để kiểm tra.')),
+    setState(() => _busy = false);
+    messenger.showSnackBar(
+      SnackBar(
+        backgroundColor: failure == null ? null : AppColors.errorRed,
+        duration: Duration(seconds: failure == null ? 8 : 10),
+        content: Text(
+          failure == null
+              ? 'Máy đang cuốn vài tem để đo lại khe. Đợi máy dừng rồi bấm "In tem '
+                    'thử" để kiểm tra.'
+              : AgentJobErrorText.message(
+                  failure.error,
+                  detail: failure.detail,
+                ),
+        ),
+      ),
     );
   }
 
@@ -148,19 +148,26 @@ class _LabelCalibrationPanelState extends State<LabelCalibrationPanel> {
               ),
             ),
             const _Hint(
-              'Tem in ra phải giống hình bên dưới: khung cách đều bốn mép tem. Khung '
-              'sát hoặc bị cắt một mép thì bấm mũi tên ngược lại.',
+              'Khung phải cách đều bốn mép tem. Lệch về phía nào thì bấm mũi tên ngược lại.',
+            ),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _busy ? null : () => unawaited(_detectGap()),
+                icon: const Icon(Icons.height_rounded, size: 18),
+                label: const Text('Vừa đổi cuộn tem? Dò lại khe'),
+              ),
             ),
           ] else
             const _Hint(
-              'Máy in chưa kết nối nên chưa in thử được. Nút "In tem thử" sẽ hiện lại '
-              'khi máy in kết nối. Vẫn dời vị trí bằng mũi tên được.',
+              'Máy in chưa kết nối nên chưa in thử được. Vẫn dời vị trí bằng mũi tên được.',
             ),
           Center(
             child: OffsetPreviewPad(
               widthMm: size.spec.widthMm,
               heightMm: size.spec.heightMm,
               count: size.count,
+              jewelry: _settings.dpi >= 300 || _settings.ribbon.value == true,
               offsetXMm: c.offsetXMm,
               offsetYMm: c.offsetYMm,
               onUp: () => unawaited(_nudge(dy: -LabelCalibration.stepMm)),
@@ -170,86 +177,10 @@ class _LabelCalibrationPanelState extends State<LabelCalibrationPanel> {
               onReset: c.isZero ? null : () => unawaited(_reset()),
             ),
           ),
-          const OffsetPreviewLegend(),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  LabelOffsetText.describe(c),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              if (!c.isZero)
-                TextButton(
-                  onPressed: () => unawaited(_reset()),
-                  child: const Text('Về 0'),
-                ),
-            ],
-          ),
-          Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              initiallyExpanded: _settings.gapMm > 0,
-              tilePadding: EdgeInsets.zero,
-              childrenPadding: EdgeInsets.zero,
-              title: const Text(
-                'In nhiều tem bị lệch dần?',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-              ),
-              children: [
-                if (widget.connected) ...[
-                  const _Hint(
-                    'Bấm đo: máy in 4 tem liền. Nhìn khung ở tem cuối so với tem '
-                    'đầu rồi nhập độ lệch — app tự tính lại khe giữa các tem.',
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _busy
-                          ? null
-                          : () => unawaited(_printMeasure()),
-                      icon: const Icon(Icons.straighten_rounded, size: 18),
-                      label: Text('Đo độ lệch: in ${LabelDrift.rows} tem liền'),
-                    ),
-                  ),
-                  if (_measured) ...[
-                    const SizedBox(height: 8),
-                    CalibrationStepper(
-                      title: 'Tem cuối lệch so với tem đầu',
-                      hint:
-                          'Tem cuối thấp hơn thì bấm +, cao hơn thì bấm −. Thẳng '
-                          'hàng thì không cần chỉnh.',
-                      valueText: _drift == 0
-                          ? 'Không lệch'
-                          : '${_drift > 0 ? 'Xuống ' : 'Lên '}'
-                                '${LabelOffsetText.mm(_drift.abs())}',
-                      onMinus: () => setState(
-                        () => _drift = (_drift - 0.5).clamp(-10.0, 10.0),
-                      ),
-                      onPlus: () => setState(
-                        () => _drift = (_drift + 0.5).clamp(-10.0, 10.0),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: _drift == 0
-                            ? null
-                            : () => unawaited(_applyDrift()),
-                        child: const Text('Tự chỉnh khe'),
-                      ),
-                    ),
-                  ],
-                ] else
-                  const _Hint('Cần máy in đang kết nối để đo độ lệch.'),
-              ],
-            ),
+          Text(
+            LabelOffsetText.describe(c),
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           ),
         ],
       );

@@ -59,6 +59,14 @@ class LabelPreset {
       count: 4,
       tem: '25×15',
     ),
+    // Tem vàng bạc, trang sức (nhỏ, dài): in trên máy 300dpi — chọn "300 dpi" trong cài đặt
+    // máy in (khổ này không tự đổi độ phân giải).
+    LabelPreset(
+      '1 tem · 50×12mm (tem vàng bạc)',
+      TsplLabelSpec(widthMm: 50, heightMm: 12, gapMm: 2),
+      count: 1,
+      tem: '50×12',
+    ),
   ];
 
   /// Mọi khổ để chọn: khổ của app trước, rồi [extra].

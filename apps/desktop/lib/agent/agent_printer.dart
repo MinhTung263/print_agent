@@ -91,15 +91,15 @@ abstract final class AgentPrinter {
   }
 
   /// Khe thật của cuộn tem trên máy này ([gapMm] > 0) thay cho khe trong lệnh.
-  static TsplLabelSpec withGap(TsplLabelSpec spec, num gapMm) => gapMm <= 0
-      ? spec
-      : TsplLabelSpec(
-          widthMm: spec.widthMm,
-          heightMm: spec.heightMm,
-          gapMm: gapMm,
-          home: spec.home,
-          shiftXDots: spec.shiftXDots,
-        );
+  static TsplLabelSpec withGap(TsplLabelSpec spec, num gapMm) =>
+      gapMm <= 0 ? spec : spec.copyWith(gapMm: gapMm);
+
+  /// Đầu in của máy tem này: [dpi] (203 / 300) và ruy-băng mực ([ribbon]; `null` = không gửi lệnh).
+  static TsplLabelSpec withDevice(
+    TsplLabelSpec spec, {
+    int dpi = 203,
+    bool? ribbon,
+  }) => spec.copyWith(dpi: dpi, ribbon: ribbon);
 
   /// In các hàng tem (TSPL) của [job] ra [address]; `null` = in được.
   /// [calibration]: chỉnh tem in lệch của máy tính này.
@@ -108,6 +108,8 @@ abstract final class AgentPrinter {
     String address, {
     LabelCalibration calibration = LabelCalibration.none,
     num gapOverrideMm = 0,
+    int dpi = 203,
+    bool? ribbon,
   }) async {
     if (job.images.isEmpty) {
       return const AgentPrintFailure(AgentJobError.noContent);
@@ -124,7 +126,11 @@ abstract final class AgentPrinter {
       () => TsplPrinter.printImages(
         port,
         job.images,
-        spec: withGap(labelSpecOf(job), gapOverrideMm),
+        spec: withDevice(
+          withGap(labelSpecOf(job), gapOverrideMm),
+          dpi: dpi,
+          ribbon: ribbon,
+        ),
         copies: job.copies,
         calibration: calibration,
       ),
@@ -142,6 +148,8 @@ abstract final class AgentPrinter {
     int? labelsPerRow,
     int? temWidthMm,
     int repeat = 1,
+    int dpi = 203,
+    bool? ribbon,
   }) async {
     final port = portOf(address);
     if (port == null) {
@@ -154,7 +162,11 @@ abstract final class AgentPrinter {
       address,
       () => TsplPrinter.printCalibration(
         port,
-        spec: withGap(spec, gapOverrideMm),
+        spec: withDevice(
+          withGap(spec, gapOverrideMm),
+          dpi: dpi,
+          ribbon: ribbon,
+        ),
         calibration: calibration,
         labelsPerRow: labelsPerRow,
         temWidthMm: temWidthMm,
@@ -165,6 +177,35 @@ abstract final class AgentPrinter {
 
   /// Cho máy in [address] kêu bíp ngắn (nhận ra máy nào): máy tem [label] dùng lệnh tem; `null` =
   /// đã gửi. Máy không có còi thì không có tiếng nhưng vẫn "gửi được".
+  /// Bảo máy tem dò lại khe cuộn tem (`GAPDETECT`): máy cuốn vài tem để đo khe thật —
+  /// dùng khi vừa đổi cuộn tem (cuộn mới khe khác thì tem lệch dần). `null` = đã gửi.
+  static Future<AgentPrintFailure?> detectGap({
+    required String address,
+    required TsplLabelSpec spec,
+    num gapOverrideMm = 0,
+    int dpi = 203,
+    bool? ribbon,
+  }) async {
+    final port = portOf(address);
+    if (port == null) {
+      return const AgentPrintFailure(
+        AgentJobError.unreachable,
+        detail: 'Chưa chọn máy in',
+      );
+    }
+    return _guard(
+      address,
+      () => TsplPrinter.detectGap(
+        port,
+        spec: withDevice(
+          withGap(spec, gapOverrideMm),
+          dpi: dpi,
+          ribbon: ribbon,
+        ),
+      ),
+    );
+  }
+
   static Future<AgentPrintFailure?> beep(
     String address, {
     required bool label,
@@ -227,6 +268,15 @@ abstract final class AgentPrinter {
         PaperStatus.coverOpen => const AgentPrintFailure(
           AgentJobError.coverOpen,
           detail: 'Máy in đang mở nắp',
+        ),
+        // Máy tem: kẹt giấy / sai khổ khe tem, hết ruy-băng mực — cũng giữ lệnh, tự in khi xử lý xong.
+        PaperStatus.jam => const AgentPrintFailure(
+          AgentJobError.outOfPaper,
+          detail: 'Máy in tem kẹt giấy hoặc sai khổ tem — kiểm tra cuộn tem',
+        ),
+        PaperStatus.ribbonEnd => const AgentPrintFailure(
+          AgentJobError.outOfPaper,
+          detail: 'Máy in tem hết cuộn mực (ruy-băng)',
         ),
         _ => const AgentPrintFailure(
           AgentJobError.outOfPaper,

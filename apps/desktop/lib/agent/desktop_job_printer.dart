@@ -33,6 +33,8 @@ class DesktopJobPrinter implements AgentJobPrinter<DesktopPrinter> {
         gapMm: _config().labelGapMm,
         beep: _config().beep,
         autoCut: _config().autoCut,
+        dpi: _config().labelDpi,
+        ribbon: _config().labelRibbon,
       );
 
   final AgentConfig Function() _config;
@@ -74,6 +76,8 @@ class DesktopJobPrinter implements AgentJobPrinter<DesktopPrinter> {
             printer.address,
             gapOverrideMm: settings.gapMm,
             calibration: settings.calibration,
+            dpi: settings.dpi,
+            ribbon: settings.ribbon.value,
           )
         : await AgentPrinter.printJob(
             job,
@@ -103,12 +107,22 @@ class DesktopJobPrinter implements AgentJobPrinter<DesktopPrinter> {
 
   @override
   AgentBuiltInSpec? builtInSpec() => AgentBuiltInSpec(
+    labelDpis: _labelDpis(),
     paper: _config().paper.name,
     // Máy in tem chỉ nhận tem; máy in hoá đơn nhận các phiếu hoá đơn.
     templates: _config().printerType == PrinterType.label
         ? labelTemplates
         : templates,
   );
+
+  /// Máy tem 300dpi (chỉ máy KHÁC 203dpi) báo cho máy gửi dựng ảnh mịn hơn: máy in chính
+  /// theo khoá `builtin`, máy in thêm theo địa chỉ.
+  Map<String, int> _labelDpis() => {
+    if (_config().printerType == PrinterType.label && _config().labelDpi != 203)
+      'builtin': _config().labelDpi,
+    for (final e in _gateway.extras.items)
+      if (e.type == PrinterType.label && e.dpi != 203) e.address: e.dpi,
+  };
 
   /// Mẫu in của máy in tem (tên khớp `TypeTemplateEnum.label` của app).
   static const List<String> labelTemplates = ['label'];

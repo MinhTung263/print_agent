@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
+import 'package:print_agent/print_agent.dart' show AgentSwitch;
 
 import '../../desktop/autostart.dart';
 import '../ds/ds.dart';
@@ -41,9 +42,8 @@ class AgentSettingsCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                CupertinoSwitch(
+                AgentSwitch(
                   value: on,
-                  activeTrackColor: AppColors.primaryBlueBase,
                   onChanged: (v) => unawaited(Autostart.instance.set(v)),
                 ),
               ],

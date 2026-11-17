@@ -99,6 +99,8 @@ install -d "$ROOT/etc/udev/rules.d"
 cat > "$ROOT/etc/udev/rules.d/60-easypos-printer.rules" <<'EOF'
 # Agent: cho người dùng đang đăng nhập ghi máy in USB (/dev/usb/lp*).
 SUBSYSTEM=="usbmisc", KERNEL=="lp[0-9]*", TAG+="uaccess"
+# Không cho kernel tự ngắt điện máy in USB (autosuspend) khi vắng khách.
+SUBSYSTEM=="usb", ATTR{bInterfaceClass}=="07", TEST=="power/control", ATTR{power/control}="on"
 EOF
 chmod 0644 "$ROOT/etc/udev/rules.d/60-easypos-printer.rules"
 
@@ -152,6 +154,7 @@ if [ "$1" = "configure" ]; then
   if command -v udevadm >/dev/null 2>&1; then
     udevadm control --reload-rules || true
     udevadm trigger --subsystem-match=usbmisc --action=change || true
+    udevadm trigger --subsystem-match=usb --action=change || true
   fi
   if command -v update-desktop-database >/dev/null 2>&1; then
     update-desktop-database -q /usr/share/applications || true
