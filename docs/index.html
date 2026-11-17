@@ -12,6 +12,15 @@
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 -apple-system,Segoe UI,Roboto,sans-serif; }
   main { max-width:620px; margin:0 auto; padding:16px; }
+  .grid { display:block; }
+  @media (min-width: 900px) {
+    html, body { height:100%; overflow:hidden; }
+    main { max-width:1040px; height:100dvh; display:flex; flex-direction:column; padding:16px 16px 8px; }
+    .grid { flex:1; min-height:0; display:grid; grid-template-columns:minmax(0,5fr) minmax(0,6fr); gap:16px; }
+    .col { min-height:0; overflow-y:auto; overscroll-behavior:contain; padding-right:2px; }
+    .col::-webkit-scrollbar { width:6px; } .col::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+  }
+  .stations { max-height:340px; overflow-y:auto; overscroll-behavior:contain; }
   h1 { font-size:20px; margin:8px 0 4px; }
   h2 { font-size:16px; margin:0 0 12px; }
   p.sub { color:var(--muted); margin:0 0 16px; }
@@ -30,16 +39,14 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .spin { display:inline-block; width:18px; height:18px; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cline x1='12.00' y1='7.00' x2='12.00' y2='2.00' stroke='white' stroke-width='2.4' stroke-linecap='round' opacity='0.12'/%3E%3Cline x1='14.50' y1='7.67' x2='17.00' y2='3.34' stroke='white' stroke-width='2.4' stroke-linecap='round' opacity='0.20'/%3E%3Cline x1='16.33' y1='9.50' x2='20.66' y2='7.00' stroke='white' stroke-width='2.4' stroke-linecap='round' opacity='0.28'/%3E%3Cline x1='17.00' y1='12.00' x2='22.00' y2='12.00' stroke='white' stroke-width='2.4' stroke-linecap='round' opacity='0.36'/%3E%3Cline x1='16.33' y1='14.50' x2='20.66' y2='17.00' stroke='white' stroke-width='2.4' stroke-linecap='round' opacity='0.44'/%3E%3Cline x1='14.50' y1='16.33' x2='17.00' y2='20.66' stroke='white' stroke-width='2.4' stroke-linecap='round' opacity='0.52'/%3E%3Cline x1='12.00' y1='17.00' x2='12.00' y2='22.00' stroke='white' stroke-width='2.4' stroke-linecap='round' opacity='0.60'/%3E%3Cline x1='9.50' y1='16.33' x2='7.00' y2='20.66' stroke='white' stroke-width='2.4' stroke-linecap='round' opacity='0.68'/%3E%3Cline x1='7.67' y1='14.50' x2='3.34' y2='17.00' stroke='white' stroke-width='2.4' stroke-linecap='round' opacity='0.76'/%3E%3Cline x1='7.00' y1='12.00' x2='2.00' y2='12.00' stroke='white' stroke-width='2.4' stroke-linecap='round' opacity='0.84'/%3E%3Cline x1='7.67' y1='9.50' x2='3.34' y2='7.00' stroke='white' stroke-width='2.4' stroke-linecap='round' opacity='0.92'/%3E%3Cline x1='9.50' y1='7.67' x2='7.00' y2='3.34' stroke='white' stroke-width='2.4' stroke-linecap='round' opacity='1.00'/%3E%3C/svg%3E") center/contain no-repeat; animation:spin 1s steps(12) infinite; vertical-align:-4px; margin-right:8px; }
   .prog { margin-top:12px; }
-  .prog .bar { height:6px; border-radius:3px; background:var(--primary-soft); overflow:hidden; }
-  .prog .bar > i { display:block; height:100%; width:0; background:var(--primary); }
-  .prog.ok .bar > i { background:var(--ok); } .prog.err .bar > i { background:var(--err); } .prog.warn .bar > i { background:var(--warn); }
-  .progline { display:flex; justify-content:space-between; gap:12px; margin-top:8px; font-size:14px; font-weight:600; color:var(--primary); }
+  .progline { display:flex; justify-content:space-between; gap:12px; font-size:14px; font-weight:600; color:var(--primary); }
   .progline #progTime { font-weight:400; color:var(--muted); font-variant-numeric:tabular-nums; }
   .prog.ok .progline > span:first-child { color:var(--ok); } .prog.err .progline > span:first-child { color:var(--err); } .prog.warn .progline > span:first-child { color:var(--warn); }
-  .log { margin-top:10px; } .log summary { cursor:pointer; font-size:13px; color:var(--muted); }
+  .log { margin-top:10px; } .log .timeline { max-height:180px; overflow-y:auto; } .log summary { cursor:pointer; font-size:13px; color:var(--muted); }
   .eta { margin-top:6px; font-size:13px; }
   [hidden] { display:none !important; }
   .station.stale { opacity:.55; }
+  .shopsum { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .linkbtn { background:none; border:0; color:var(--primary); cursor:pointer; padding:6px 2px; font-size:13px; height:auto; }
   .newver { display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--warn-soft); color:var(--warn); border:1px solid var(--warn); border-radius:12px; padding:10px 14px; margin-bottom:12px; font-weight:600; }
   .seg { display:flex; gap:8px; }
@@ -67,9 +74,12 @@
   <h1>Thử in qua Trạm in</h1>
   <p class="sub">Chọn một thiết bị đang bật Trạm in (điện thoại, máy POS, máy tính) rồi in thử. Lệnh đi qua kênh cloud của cửa hàng, không cần biết IP hay cùng Wi-Fi.</p>
 
+  <div class="grid">
+  <div class="col">
   <section class="card" id="shopCard">
     <h2>1. Cửa hàng</h2>
-    <div id="shopStatus" style="margin-bottom:12px"></div>
+    <div class="shopsum" id="shopSum" style="margin-bottom:12px"><span id="shopStatus"></span><button type="button" class="linkbtn" id="btnChange" hidden>Đổi cửa hàng</button></div>
+    <div id="shopForm">
     <div class="field">
       <label for="paste">Dán curl hoặc mã cửa hàng</label>
       <textarea id="paste" rows="3" placeholder="curl 'https://api.easypos.vn/...' -H 'authorization: Bearer ...'"></textarea>
@@ -87,6 +97,7 @@
       <button class="ghost" id="btnConnect" style="width:100%">Kết nối</button>
     </details>
     <div class="hint" id="shopHint"></div>
+    </div>
   </section>
 
   <section class="card">
@@ -94,8 +105,10 @@
       <h2 style="margin:0;flex:1">2. Trạm in trong cửa hàng</h2>
       <button class="ghost" id="btnRefresh" style="flex:none;width:44px;padding:0" title="Làm mới danh sách" aria-label="Làm mới danh sách">⟳</button>
     </div>
-    <div id="stations"><div class="hint">Chưa kết nối cửa hàng.</div></div>
+    <div id="stations" class="stations"><div class="hint">Chưa kết nối cửa hàng.</div></div>
   </section>
+  </div>
+  <div class="col">
 
   <section class="card">
     <h2>3. In thử</h2>
@@ -126,12 +139,13 @@
     <canvas id="cv"></canvas>
     <button class="primary" id="btnPrint" style="width:100%;margin-top:12px" disabled>In thử</button>
     <div class="prog" id="prog" hidden>
-      <div class="bar"><i id="progBar"></i></div>
       <div class="progline"><span id="progText"></span><span id="progTime"></span></div>
     </div>
     <details class="log" id="logBox" hidden><summary>Chi tiết lần in này</summary><ul class="timeline" id="timeline"></ul></details>
   </section>
 
+  </div>
+  </div>
   <p class="hint">Chỉ để kiểm tra. <span id="buildTag"></span> Cần cùng công ty với Trạm in. Cổng in trực tiếp qua LAN: <a href="lan.html">trang LAN</a>.</p>
 </main>
 
@@ -146,7 +160,10 @@ const pill = (cls, t) => `<span class="pill ${cls}">${esc(t)}</span>`;
 const BROKER = 'wss://broker.emqx.io:8084/mqtt';
 const store = { get: (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} } };
 
-let client = null, ch = null, selected = null, seq = Date.now().toString(36);
+let client = null, ch = null, selected = store.get('station') || null, seq = Date.now().toString(36);
+let printerKey = store.get('printerKey') || '';
+const readJson = (k, d) => { try { return JSON.parse(store.get(k) || '') ?? d; } catch (_) { return d; } };
+const optKey = (o) => o ? `${o.type}:${o.addr || o.ip || ''}` : '';
 const stations = new Map();   // topic id -> info
 const jobs = new Map();       // jobId -> {t0}
 
@@ -185,18 +202,21 @@ async function connect() {
   if (!key) { $('shopStatus').innerHTML = pill('err', 'Nhập mã công ty và mã chủ (số)'); return; }
   store.set('shop', key);
   await disconnect();
-  stations.clear(); selected = null; renderStations(); updatePrinters();
+  stations.clear(); loadCachedStations(key); renderStations(); updatePrinters();
   ch = await PrintRelay.channel(key);
   $('shopStatus').innerHTML = pill('warn', 'Đang kết nối…');
   client = mqtt.connect(BROKER, { clientId: 'webtest_' + PrintRelay.randomHex(6), clean: true, reconnectPeriod: 3000, connectTimeout: 10000, protocolVersion: 4 });
   client.on('connect', () => {
     $('shopStatus').innerHTML = pill('ok', 'Đã kết nối') + ` <span class="hint">${esc(key)}</span>`;
+    $('shopForm').hidden = true; $('btnChange').hidden = false;
+    setTimeout(() => { for (const i of stations.values()) delete i._cached; renderStations(); }, 6000);
     client.subscribe(`${ch.root}/stations/+`, { qos: 1 });
     pingStations();
     clearInterval(pingTimer); pingTimer = setInterval(pingStations, 20000);
     setTimeout(() => { if (!stations.size) renderStations(); }, 2000);
   });
   client.on('reconnect', () => { $('shopStatus').innerHTML = pill('warn', 'Đang nối lại…'); });
+  client.on('close', () => { if (client && !client.connected) $('shopStatus').innerHTML = pill('warn', 'Mất kết nối, đang nối lại…'); });
   client.on('error', (e) => { $('shopStatus').innerHTML = pill('err', 'Lỗi kết nối: ' + (e.message || e)); });
   client.on('message', onMessage);
   renderStations();
@@ -208,6 +228,15 @@ async function pingStations() {
   if (!client || !ch || !client.connected) return;
   try { client.publish(`${ch.root}/ping`, await PrintRelay.encrypt(ch, { at: Date.now() }), { qos: 1 }); } catch (_) {}
 }
+function loadCachedStations(key) {
+  const c = readJson('stations', {});
+  if (c.key !== key || !c.list) return;
+  for (const [id, info] of Object.entries(c.list)) stations.set(id, { ...info, _cached: true });
+}
+function saveStations(key) {
+  const list = {}; for (const [id, i] of stations) { const { _cached, ...rest } = i; list[id] = rest; }
+  try { store.set('stations', JSON.stringify({ key, list })); } catch (_) {}
+}
 async function disconnect() {
   clearInterval(pingTimer); if (client) { const c = client; client = null; await new Promise((r) => c.end(true, {}, r)); } }
 
@@ -218,7 +247,8 @@ async function onMessage(topic, payload) {
     const id = topic.slice(sp.length);
     const info = await PrintRelay.decrypt(ch, payload);
     if (info && typeof info === 'object') stations.set(id, info); else stations.delete(id);
-    if (selected && !stations.has(selected)) selected = null;
+    saveStations(shopFromFields());
+    autoPick();
     renderStations(); updatePrinters();
   } else if (topic.startsWith(st)) {
     const jobId = topic.slice(st.length), v = await PrintRelay.decrypt(ch, payload);
@@ -227,6 +257,13 @@ async function onMessage(topic, payload) {
 }
 
 // ---------- Trạm in ----------
+// Chưa chọn trạm nào mà chỉ có đúng một trạm đang bật thì chọn luôn.
+function autoPick() {
+  if (selected && stations.has(selected)) return;
+  const now = Date.now(), replaced = PrintRelay.replacedStationIds(stations);
+  const live = [...stations].filter(([id, i]) => !replaced.has(id) && (i._cached || PrintRelay.stationFresh(i, now)));
+  if (live.length === 1) { selected = live[0][0]; store.set('station', selected); }
+}
 function builtInText(i) {
   const b = i.builtIn; if (!b) return '';
   return b.off ? 'Máy in tích hợp: đã tắt' : `Máy in tích hợp: ${b.ready ? 'sẵn sàng' : 'chưa kết nối'}`;
@@ -242,16 +279,16 @@ function renderStations() {
   const live = [], stale = [];
   // Trạm cũ đã được thay bằng trạm mã mới (báo `prev`): bỏ hẳn, không phải "trạm cũ" nữa.
   const replaced = PrintRelay.replacedStationIds(stations);
-  for (const e of stations) if (replaced.has(e[0]) && e[0] !== selected) continue; else (PrintRelay.stationFresh(e[1], now) || e[0] === selected ? live : stale).push(e);
+  for (const e of stations) if (replaced.has(e[0]) && e[0] !== selected) continue; else (PrintRelay.stationFresh(e[1], now) || e[1]._cached || e[0] === selected ? live : stale).push(e);
   const add = ([tid, i], old) => {
     const p = i.printers || {};
     const el = document.createElement('div');
     el.className = 'station' + (selected === tid ? ' sel' : '') + (old ? ' stale' : '');
     el.innerHTML = `<div class="ic">🖨</div><div class="grow"><div class="t">${esc(i.name || 'Máy Agent')}</div>
       <div class="s">${esc(i.model || '')} ${i.app ? '· ' + esc(i.app) : ''}</div>
-      <div class="s">${[old ? 'Có thể đã tắt' : '', builtInText(i), p.total ? `${p.ok}/${p.total} máy in kết nối` : ''].filter(Boolean).join(' · ') || 'Chưa có máy in'}</div></div>
+      <div class="s">${[old ? 'Có thể đã tắt' : '', i._cached ? 'Đang kiểm tra…' : '', builtInText(i), p.total ? `${p.ok}/${p.total} máy in kết nối` : ''].filter(Boolean).join(' · ') || 'Chưa có máy in'}</div></div>
       ${selected === tid ? pill('info', 'Đang chọn') : ''}`;
-    el.onclick = () => { selected = tid; renderStations(); updatePrinters(); };
+    el.onclick = () => { selected = tid; store.set('station', tid); renderStations(); updatePrinters(); };
     box.appendChild(el);
   };
   live.forEach((e) => add(e, false));
@@ -265,6 +302,7 @@ function renderStations() {
     box.appendChild(a);
   }
 }
+let paperFor = null, printerSig = '';
 function updatePrinters() {
   const sel = $('printer'), i = selected && stations.get(selected);
   const all = i ? PrintRelay.printerOptions(i) : [];
@@ -272,33 +310,54 @@ function updatePrinters() {
   // không ra gì — phải nói rõ thay vì để người dùng chọn nhầm.
   const wantLabel = typeof isLabel === 'function' && isLabel();
   const opts = all.filter((o) => !!o.isLabel === wantLabel);
-  sel.innerHTML = opts.length ? opts.map((o, k) => `<option value="${k}">${esc(o.label)}</option>`).join('')
-    : `<option>${!i ? 'Chọn Trạm in trước' : all.length ? `Trạm in này chưa có máy in ${wantLabel ? 'tem' : 'hoá đơn'}` : 'Trạm in này chưa có máy in'}</option>`;
-  sel.disabled = !opts.length; sel._opts = opts;
+  // Danh sách không đổi (tin ping / trạng thái đến liên tục) thì KHÔNG dựng lại: không mất máy đã chọn.
+  const sig = `${selected}|${wantLabel}|` + opts.map((o) => optKey(o) + o.label).join(';') + `|${all.length}`;
+  if (sig !== printerSig) {
+    printerSig = sig;
+    const keep = sel._opts && sel._opts[+sel.value] ? optKey(sel._opts[+sel.value]) : printerKey;
+    sel.innerHTML = opts.length ? opts.map((o, k) => `<option value="${k}">${esc(o.label)}</option>`).join('')
+      : `<option>${!i ? 'Chọn Trạm in trước' : all.length ? `Trạm in này chưa có máy in ${wantLabel ? 'tem' : 'hoá đơn'}` : 'Trạm in này chưa có máy in'}</option>`;
+    sel.disabled = !opts.length; sel._opts = opts;
+    const at = opts.findIndex((o) => optKey(o) === keep);
+    if (at >= 0) sel.value = String(at);
+  }
   const other = all.filter((o) => !!o.isLabel !== wantLabel);
   const hint = $('printerHint');
   if (hint) {
     hint.hidden = !(i && !opts.length && other.length);
     hint.textContent = `Trạm in này chỉ có ${wantLabel ? 'máy in hoá đơn' : 'máy in tem'} (${other.map((o) => o.name).filter(Boolean).join(', ') || 'máy in của trạm'}) — ${wantLabel ? 'đổi "Loại phiếu" sang Hoá đơn để in' : 'đổi "Loại phiếu" sang Tem để in'}.`;
   }
-  if (i && i.builtIn && i.builtIn.paper) $('paper').value = Number(i.builtIn.paper) >= 80 || i.builtIn.paper === 'size80' ? 'size80' : 'size58';
-  $('btnPrint').disabled = !opts.length || !client;
+  // Khổ giấy theo máy in của trạm: chỉ đặt khi VỪA đổi trạm, không đè lựa chọn của người dùng.
+  if (i && paperFor !== selected && i.builtIn && i.builtIn.paper) {
+    paperFor = selected;
+    $('paper').value = Number(i.builtIn.paper) >= 80 || i.builtIn.paper === 'size80' ? 'size80' : 'size58';
+    refreshPreview();
+  }
+  $('btnPrint').disabled = !opts.length || !client || printUi.busy;
 }
+$('printer').addEventListener('change', () => { const o = $('printer')._opts?.[+$('printer').value]; if (o) { printerKey = optKey(o); store.set('printerKey', printerKey); } });
 
 // ---------- Phiếu thử ----------
 function drawReceipt() {
   const cv = $('cv'), W = $('paper').value === 'size80' ? 576 : 384, k = W / 384, ctx = cv.getContext('2d');
-  const L = [
-    ['QUÁN CÀ PHÊ EASYPOS', 'bold 20px sans-serif', 'center'], ['Phiếu in thử từ trang web', '13px sans-serif', 'center'],
-    ['Số HĐ: TEST-' + seq + '   Bàn: 05', '13px sans-serif', 'left'], [new Date().toLocaleString('vi-VN'), '12px sans-serif', 'left'],
-    ['------------------------------------', '13px monospace', 'left'],
-    ['Cà phê sữa đá (size L)   2   58.000', '14px sans-serif', 'left'], ['Trà đào cam sả ít đường  1   45.000', '14px sans-serif', 'left'],
-    ['Ghi chú: không đá, thêm trân châu', 'italic 11px sans-serif', 'left'], ['------------------------------------', '13px monospace', 'left'],
-    ['Tổng cộng            103.000đ', 'bold 17px sans-serif', 'left'], ['Cảm ơn quý khách - Hẹn gặp lại!', '12px sans-serif', 'center'],
-  ];
-  cv.width = W; cv.height = Math.round((L.length * 28 + 24) * k);
+  const items = [['Cà phê sữa đá (size L)', 2, 29000], ['Trà đào cam sả ít đường', 1, 45000], ['Bạc xỉu nóng', 1, 35000], ['Bánh mì chả lụa', 2, 25000],
+    ['Sinh tố bơ', 1, 42000], ['Trà sữa trân châu đường đen', 2, 39000], ['Matcha đá xay', 1, 49000], ['Bánh flan caramel', 3, 18000], ['Nước suối', 2, 10000]];
+  const fmt = (n) => n.toLocaleString('vi-VN');
+  const sum = items.reduce((t, [, q, p]) => t + q * p, 0);
+  const D = '--------------------------------------';
+  const L = [['QUÁN CÀ PHÊ EASYPOS', 'bold 20px sans-serif', 'center'], ['123 Nguyễn Huệ, Q.1, TP.HCM', '12px sans-serif', 'center'], ['Phiếu in thử từ trang web', '13px sans-serif', 'center'],
+    ['Số HĐ: TEST-' + seq + '   Bàn: 05', '13px sans-serif', 'left'], [new Date().toLocaleString('vi-VN'), '12px sans-serif', 'left'], ['Thu ngân: Nguyễn Văn A', '12px sans-serif', 'left'], [D, '13px monospace', 'left']];
+  for (const [n, q, p] of items) { L.push([n, '14px sans-serif', 'left']); L.push([`${q} x ${fmt(p)}`, '13px sans-serif', 'right', fmt(q * p)]); }
+  L.push([D, '13px monospace', 'left'], ['Tạm tính', '14px sans-serif', 'left', fmt(sum)], ['Giảm giá 10%', '14px sans-serif', 'left', '-' + fmt(Math.round(sum * 0.1))],
+    ['Tổng cộng', 'bold 17px sans-serif', 'left', fmt(sum - Math.round(sum * 0.1)) + 'đ'], ['Tiền khách đưa', '14px sans-serif', 'left', fmt(Math.ceil(sum / 50000) * 50000)], [D, '13px monospace', 'left'],
+    ['Ghi chú: không đá, thêm trân châu', 'italic 11px sans-serif', 'left'], ['Wifi: easypos / mật khẩu 12345678', '12px sans-serif', 'center'], ['Cảm ơn quý khách - Hẹn gặp lại!', '12px sans-serif', 'center']);
+  cv.width = W; cv.height = Math.round((L.length * 26 + 24) * k);
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height); ctx.fillStyle = '#000'; ctx.textBaseline = 'middle'; ctx.scale(k, k);
-  L.forEach(([t, f, a], n) => { ctx.font = f; ctx.textAlign = a; ctx.fillText(t, a === 'center' ? 192 : 6, 24 + n * 28); });
+  L.forEach(([t, f, a, right], n) => {
+    ctx.font = f; ctx.textAlign = a === 'right' ? 'left' : a; const y = 24 + n * 26;
+    ctx.fillText(t, a === 'center' ? 192 : a === 'right' ? 20 : 6, y);
+    if (right) { ctx.textAlign = 'right'; ctx.fillText(right, 378, y); }
+  });
 }
 // Xem trước theo loại phiếu: hoá đơn, hoặc hàng tem trà sữa đầu tiên.
 const isLabel = () => $('kind').value === 'label';
@@ -327,8 +386,22 @@ renderSizes();
 $('temSize').value = 'double'; // mặc định: 2 tem/hàng, mỗi tem 35×22mm
 $('tpl').innerHTML = TeaLabel.TEMPLATES.map((t) => `<option value="${t.id}">${t.title}</option>`).join('');
 ['kind', 'tpl', 'temSize', 'cups', 'paper', 'frame'].forEach((id) => { $(id).onchange = refreshPreview; });
+// Nhớ lựa chọn phiếu in qua lần tải lại trang.
+const UI_IDS = ['kind', 'tpl', 'temSize', 'cups', 'paper', 'copies'], UI_CHECKS = ['frame', 'beep'];
+const saveUi = () => { const o = { perRow }; UI_IDS.forEach((id) => { o[id] = $(id).value; }); UI_CHECKS.forEach((id) => { o[id] = $(id).checked; }); store.set('ui', JSON.stringify(o)); };
+function restoreUi() {
+  const o = readJson('ui', null); if (!o) return;
+  if (TeaLabel.COUNTS.includes(o.perRow)) perRow = o.perRow;
+  $('tpl').value = o.tpl ?? $('tpl').value; $('kind').value = o.kind ?? $('kind').value;
+  renderSizes(o.temSize);
+  for (const id of ['cups', 'paper', 'copies']) if (o[id] != null) $(id).value = o[id];
+  UI_CHECKS.forEach((id) => { if (typeof o[id] === 'boolean') $(id).checked = o[id]; });
+}
+document.addEventListener('change', saveUi); document.addEventListener('input', saveUi);
+document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('#perRow')) saveUi(); });
 $('kind').addEventListener('change', () => updatePrinters());
 $('cups').oninput = refreshPreview;
+restoreUi();
 refreshPreview();
 
 // ---------- Ảnh gửi đi: đen trắng (nhỏ hơn nhiều, Agent đằng nào cũng chuyển đen trắng) ----------
@@ -360,40 +433,26 @@ const STEPS = ['Chuẩn bị phiếu…', 'Gửi lệnh tới Trạm in…', 'Tr
 const hist = () => { try { return JSON.parse(localStorage.getItem('printMs') || '[]'); } catch (_) { return []; } };
 const medianMs = () => { const h = hist().slice().sort((a, b) => a - b); return h.length ? h[Math.floor(h.length / 2)] : 0; };
 const printUi = {
-  t0: 0, tStep: 0, step: 0, timer: null, raf: 0, cur: 0, target: 0, label: 'In thử',
+  t0: 0, tStep: 0, step: 0, timer: null, busy: false, label: 'In thử',
   start() {
-    this.label = $('btnPrint').textContent; this.t0 = this.tStep = performance.now(); this.step = 0; this.cur = 0; this.target = 0;
+    this.label = $('btnPrint').textContent; this.t0 = this.tStep = performance.now(); this.step = 0; this.busy = true;
     $('btnPrint').disabled = true; $('prog').hidden = false; $('prog').className = 'prog';
     // Mỗi lần in một danh sách chi tiết mới (không dồn lại các lần trước).
     $('timeline').innerHTML = ''; $('logBox').hidden = true; $('logBox').open = false;
-    clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 100); this.tick(); this.animate();
+    clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 100); this.tick();
   },
   go(i) { if (i > this.step) { this.step = i; this.tStep = performance.now(); } this.tick(); },
-  // Thanh chạy mượt theo từng khung hình (làm mượt kiểu mũ về mục tiêu): không giật theo từng sự kiện.
-  animate() {
-    cancelAnimationFrame(this.raf);
-    const frame = () => {
-      this.cur += (this.target - this.cur) * 0.14;
-      $('progBar').style.width = (Math.min(1, this.cur) * 100).toFixed(2) + '%';
-      if (this.timer) this.raf = requestAnimationFrame(frame);
-    };
-    this.raf = requestAnimationFrame(frame);
-  },
   tick() {
-    const el = (performance.now() - this.t0) / 1000, eta = medianMs() / 1000;
+    const el = (performance.now() - this.t0) / 1000;
     $('btnPrint').innerHTML = '<span class="spin"></span>Đang in…';
-    this.target = PrintRelay.progressTarget(this.step, performance.now() - this.tStep, (eta || 2) * 1000 / STEPS.length);
     // Một dòng duy nhất: việc đang làm + thời gian.
     $('progText').textContent = STEPS[this.step];
     $('progTime').textContent = `${el.toFixed(1)}s`;
   },
   finish(kind, text) {   // kind: ok | err | warn
-    clearInterval(this.timer); this.timer = null; cancelAnimationFrame(this.raf); const el = performance.now() - this.t0;
+    clearInterval(this.timer); this.timer = null; this.busy = false; const el = performance.now() - this.t0;
     $('btnPrint').disabled = false; $('btnPrint').textContent = this.label;
     $('prog').className = 'prog ' + kind;
-    // Về 100% bằng chuyển động ngắn (không nhảy vọt).
-    const bar = $('progBar'); bar.style.transition = 'width .3s ease-out'; bar.style.width = '100%';
-    setTimeout(() => { bar.style.transition = ''; }, 400);
     $('progText').textContent = (kind === 'ok' ? '✓ ' : '') + text;
     $('progTime').textContent = `${(el / 1000).toFixed(1)}s`;
     if (kind === 'ok') { const h = hist(); h.push(Math.round(el)); try { localStorage.setItem('printMs', JSON.stringify(h.slice(-7))); } catch (_) {} }
@@ -492,6 +551,9 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) chec
 // ---------- Khởi động ----------
 $('btnConnect').onclick = connect;
 $('btnRefresh').onclick = pingStations;
+$('btnChange').onclick = () => { $('shopForm').hidden = false; $('btnChange').hidden = true; };
+document.addEventListener('visibilitychange', () => { if (!document.hidden) pingStations(); });
+window.addEventListener('online', () => { if (client) client.reconnect && client.reconnect(); });
 (async () => {
   const saved = store.get('shop'); if (saved) fillFields(saved);
   const auto = await autoDetect();
