@@ -235,6 +235,18 @@ function loadCachedStations(key) {
   if (c.key !== key || !c.list) return;
   for (const [id, info] of Object.entries(c.list)) stations.set(id, { ...info, _cached: true });
 }
+// Trạm lưu từ lần trước (mã cũ) trùng máy với một trạm vừa báo thật (cùng tên / máy / app): bỏ bản lưu,
+// chuyển lựa chọn sang trạm thật — không hiện hai Agent cho một máy.
+function dropCachedDuplicates() {
+  const sig = (i) => `${i.name || ''}|${i.model || ''}|${i.app || ''}`;
+  const live = new Map();
+  for (const [id, i] of stations) if (!i._cached) live.set(sig(i), id);
+  for (const [id, i] of [...stations]) {
+    if (!i._cached || !live.has(sig(i))) continue;
+    stations.delete(id);
+    if (selected === id) { selected = live.get(sig(i)); store.set('station', selected); }
+  }
+}
 function saveStations(key) {
   const list = {}; for (const [id, i] of stations) { const { _cached, ...rest } = i; list[id] = rest; }
   try { store.set('stations', JSON.stringify({ key, list })); } catch (_) {}
@@ -249,6 +261,7 @@ async function onMessage(topic, payload) {
     const id = topic.slice(sp.length);
     const info = await PrintRelay.decrypt(ch, payload);
     if (info && typeof info === 'object') stations.set(id, info); else stations.delete(id);
+    dropCachedDuplicates();
     saveStations(shopFromFields());
     autoPick();
     renderStations(); updatePrinters();
