@@ -164,7 +164,7 @@
     if (info && info.builtIn) {
       const t = info.builtIn.templates || [];
       const label = t.length === 1 && t[0] === 'label';
-      out.push({ type: 'builtin', name: 'Máy in của trạm', isLabel: label,
+      out.push({ type: 'builtin', name: 'Máy in của trạm', isLabel: label, connected: !info.builtIn.off && info.builtIn.ready !== false,
         label: `Máy in của trạm (${label ? 'máy in tem' : 'máy in hoá đơn'})` });
     }
     for (const p of (info && info.printers && info.printers.names) || []) {

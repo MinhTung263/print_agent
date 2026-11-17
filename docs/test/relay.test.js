@@ -154,3 +154,12 @@ test('printerOptions: máy đang kết nối lên đầu, giữ thứ tự trong
   ] } };
   assert.deepEqual(R.printerOptions(info).map((o) => o.name), ['B', 'D', 'A', 'C']);
 });
+
+test('printerOptions: máy in của trạm có cờ connected theo trạng thái sẵn sàng / tắt', () => {
+  const on = R.printerOptions({ builtIn: { templates: [], ready: true } })[0];
+  const off = R.printerOptions({ builtIn: { templates: [], off: true } })[0];
+  const notReady = R.printerOptions({ builtIn: { templates: [], ready: false } })[0];
+  assert.equal(on.connected, true);
+  assert.equal(off.connected, false);
+  assert.equal(notReady.connected, false);
+});
