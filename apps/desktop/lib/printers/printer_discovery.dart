@@ -40,3 +40,11 @@ abstract interface class PrinterDiscovery {
   /// IPv4 nội bộ của máy này (điền sẵn dải mạng khi nhập IP tay).
   Future<String?> localIp();
 }
+
+/// Cổng dò máy in hiện KẾT QUẢ DẦN: máy in USB (nhanh) hiện ngay, máy in mạng hiện tới đâu thấy tới đó
+/// — màn chọn máy in không phải chờ quét hết cả dải mạng. Mỗi phần tử của luồng là danh sách ĐẦY ĐỦ
+/// những gì thấy cho tới lúc đó; phần tử cuối là kết quả cuối (đã ghép UDP / phát hiện trùng IP).
+abstract interface class ProgressivePrinterDiscovery
+    implements PrinterDiscovery {
+  Stream<List<PrinterOption>> findStream();
+}

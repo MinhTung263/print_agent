@@ -19,6 +19,7 @@ import 'ui/agent_theme.dart';
 import 'ui/dashboard/add_printer_action.dart';
 import 'ui/dashboard/agent_settings_card.dart';
 import 'ui/dashboard/printer_settings_panel.dart';
+import 'ui/dashboard/printer_test_print_action.dart';
 import 'ui/login_page.dart';
 
 /// EasyPOS Print Agent (Windows / Linux / macOS): nhận lệnh in của công ty qua
@@ -58,6 +59,14 @@ Future<void> main(List<String> args) async {
     final address = printer.refAddress ?? '';
     if (address.isEmpty) return null;
     return PrinterSettingsPanel(agent: agent, address: address);
+  };
+  // "In thử" của máy hoá đơn: cùng hàng với "Xoá máy in" ở chân chi tiết máy in.
+  PrintAgentUi.printerFooterAction = (printer) {
+    final address = printer.refAddress ?? '';
+    if (address.isEmpty || !PrinterTestPrintAction.applies(agent, address)) {
+      return null;
+    }
+    return PrinterTestPrintAction(agent: agent, address: address);
   };
   // Máy in USB dò rất nhanh (rút / cắm lại hiện ngay); máy LAN dò thưa hơn để khỏi chen cổng in.
   AgentPrinterWatchdog.fastProbe = (p) =>

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:print_agent_desktop/agent/printer_type.dart';
@@ -56,6 +58,17 @@ class _FakeDiscovery implements PrinterDiscovery {
     setups.add(setupPort);
     return 'queue:EasyPOS_USB';
   }
+}
+
+/// Dò hiện dần: test tự đẩy từng đợt kết quả vào [stream].
+class _ProgressiveDiscovery extends _FakeDiscovery
+    implements ProgressivePrinterDiscovery {
+  _ProgressiveDiscovery({super.models, super.types}) : super(const []);
+
+  final stream = StreamController<List<PrinterOption>>();
+
+  @override
+  Stream<List<PrinterOption>> findStream() => stream.stream;
 }
 
 void main() {
@@ -428,5 +441,50 @@ void main() {
       await t.pumpAndSettle();
       expect(find.text('Máy in tem'), findsOneWidget);
     });
+
+    testWidgets(
+      'dò hiện dần: máy USB hiện trước, máy mạng hiện tới đâu thấy tới đó; kết quả cuối không làm mất nhãn đã đọc',
+      (t) async {
+        final d = _ProgressiveDiscovery(
+          models: {'192.168.1.10': 'Xprinter XP-420B'},
+          types: {'192.168.1.10': PrinterType.label},
+        );
+        await t.binding.setSurfaceSize(const Size(1000, 900));
+        await t.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => showPrinterPickerDialog(context, discovery: d),
+                child: const Text('mở'),
+              ),
+            ),
+          ),
+        );
+        await t.tap(find.text('mở'));
+        await t.pump(const Duration(milliseconds: 100));
+        // Chưa có máy nào: đang quét.
+        expect(find.text('XP-58'), findsNothing);
+
+        // Máy USB về trước — hiện NGAY dù quét mạng chưa xong (vẫn đang quét).
+        final usb = PrinterOption.usb(address: 'cups:XP_58', name: 'XP-58');
+        d.stream.add([usb]);
+        await t.pump(const Duration(milliseconds: 100));
+        expect(find.text('XP-58'), findsOneWidget);
+
+        // Máy mạng đầu tiên thấy: hiện thêm, tên model + loại đọc xong.
+        d.stream.add([usb, PrinterOption.lan('192.168.1.10')]);
+        await t.pump(const Duration(milliseconds: 300));
+        expect(find.text('Máy in tem'), findsOneWidget);
+        expect(find.text('Xprinter XP-420B'), findsOneWidget);
+
+        // Kết quả cuối thay danh sách: nhãn đã đọc vẫn còn, không đọc lại từ đầu.
+        d.stream.add([usb, PrinterOption.lan('192.168.1.10')]);
+        await d.stream.close();
+        await t.pumpAndSettle();
+        expect(find.text('Máy in tem'), findsOneWidget);
+        expect(find.text('Xprinter XP-420B'), findsOneWidget);
+        expect(find.text('XP-58'), findsOneWidget);
+      },
+    );
   });
 }

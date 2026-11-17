@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
@@ -11,11 +12,12 @@ import '../../agent/printer_type.dart';
 import '../printer_discovery.dart';
 import '../printer_option.dart';
 import '../printer_type_detector.dart';
+import '../usb_printer_relevance.dart';
 
 /// [PrinterDiscovery] bằng plugin printer_label: quét cổng 9100 trong các dải
 /// mạng của máy, máy in USB theo hệ điều hành (Linux usblp, Windows hàng in
 /// RAW, macOS CUPS), tên model qua SNMP / mDNS...
-class DesktopPrinterDiscovery implements PrinterDiscovery {
+class DesktopPrinterDiscovery implements ProgressivePrinterDiscovery {
   const DesktopPrinterDiscovery();
 
   @override
@@ -24,30 +26,107 @@ class DesktopPrinterDiscovery implements PrinterDiscovery {
       LanPrinterScanner.scan(),
       if (UsbPrinters.supported) UsbPrinters.list(),
     ]);
-    final lan = results[0] as List<LanPrinterFound>;
-    final usb = results.length > 1
-        ? results[1] as List<UsbPrinterInfo>
-        : const <UsbPrinterInfo>[];
+    return _compose(
+      results.length > 1
+          ? await _usableUsb(results[1] as List<UsbPrinterInfo>)
+          : const <UsbPrinterInfo>[],
+      results[0] as List<LanPrinterFound>,
+    );
+  }
+
+  List<PrinterOption> _compose(
+    List<UsbPrinterInfo> usb,
+    List<LanPrinterFound> lan,
+  ) => [
+    for (final p in usb) _usbOption(p),
+    for (final p in lan)
+      PrinterOption.lan(
+        p.address,
+        hardBlock: p.issue == LanPrinterIssue.ipConflict,
+        warning: switch (p.issue) {
+          LanPrinterIssue.none => null,
+          LanPrinterIssue.ipConflict =>
+            'IP đang bị thiết bị khác dùng — cần đổi IP máy in',
+          LanPrinterIssue.unreachable =>
+            'Chưa kết nối được tới cổng in — bấm loa để thử bíp và xem lý do (IP bị thiết bị khác dùng, máy in tắt hoặc khác mạng), vẫn thêm được',
+        },
+      ),
+  ];
+
+  /// Chỉ giữ máy in USB in được phiếu / tem: bỏ máy in văn phòng và khổ lớn (HP Designjet...), hàng in ảo
+  /// (PDF, XPS, OneNote, Fax...) — "USB rác" làm khách rối. Tên đủ kết luận thì khỏi hỏi máy; tên
+  /// chưa rõ thì đọc chuỗi định danh IEEE 1284 của máy (chờ tối đa 2 giây mỗi máy, các máy song song).
+  /// Máy đọc không được gì: giữ (bỏ nhầm máy thật tệ hơn hiện thừa).
+  Future<List<UsbPrinterInfo>> _usableUsb(List<UsbPrinterInfo> list) async {
+    final keep = await Future.wait([
+      for (final p in list)
+        () async {
+          final byName = UsbPrinterRelevance.decidedByName(p.name);
+          if (byName != null) return byName;
+          // Chưa cài (Windows): chưa có gì để hỏi.
+          if (p.address.isEmpty) return true;
+          String? id;
+          try {
+            id = await UsbPrinters.deviceId(
+              p.address,
+            ).timeout(const Duration(seconds: 2));
+          } catch (_) {}
+          return UsbPrinterRelevance.isUsable(p.name, deviceId: id);
+        }(),
+    ]);
     return [
-      for (final p in usb)
-        PrinterOption.usb(
-          address: p.address,
-          name: p.name,
-          setupPort: p.setupPort,
-        ),
-      for (final p in lan)
-        PrinterOption.lan(
-          p.address,
-          hardBlock: p.issue == LanPrinterIssue.ipConflict,
-          warning: switch (p.issue) {
-            LanPrinterIssue.none => null,
-            LanPrinterIssue.ipConflict =>
-              'IP đang bị thiết bị khác dùng — cần đổi IP máy in',
-            LanPrinterIssue.unreachable =>
-              'Chưa kết nối được tới cổng in — bấm loa để thử bíp và xem lý do (IP bị thiết bị khác dùng, máy in tắt hoặc khác mạng), vẫn thêm được',
-          },
-        ),
+      for (var i = 0; i < list.length; i++)
+        if (keep[i]) list[i],
     ];
+  }
+
+  PrinterOption _usbOption(UsbPrinterInfo p) => PrinterOption.usb(
+    address: p.address,
+    name: p.name,
+    setupPort: p.setupPort,
+  );
+
+  @override
+  Stream<List<PrinterOption>> findStream() {
+    final out = StreamController<List<PrinterOption>>();
+    unawaited(() async {
+      var usb = <PrinterOption>[];
+      final lanNow = <PrinterOption>[];
+      void emit() {
+        if (!out.isClosed) out.add([...usb, ...lanNow]);
+      }
+
+      try {
+        // Máy USB chỉ hỏi hệ điều hành: nhanh, hiện trước khi quét mạng xong.
+        final usbFuture = UsbPrinters.supported
+            ? UsbPrinters.list().then(_usableUsb).then((list) {
+                usb = [for (final p in list) _usbOption(p)];
+                emit();
+                return list;
+              })
+            : Future.value(const <UsbPrinterInfo>[]);
+        // Máy in mạng: báo ngay khi một máy trả lời cổng in (chưa có kết quả ghép UDP / trùng IP).
+        final lanFuture = LanPrinterScanner.scan(
+          onFound: (f) {
+            lanNow.add(PrinterOption.lan(f.address));
+            emit();
+          },
+        );
+        final results = await Future.wait<Object>([usbFuture, lanFuture]);
+        // Kết quả cuối (đầy đủ, đã ghép UDP, cảnh báo trùng IP) thay các thẻ tạm.
+        out.add(
+          _compose(
+            results[0] as List<UsbPrinterInfo>,
+            results[1] as List<LanPrinterFound>,
+          ),
+        );
+      } catch (e, s) {
+        if (!out.isClosed) out.addError(e, s);
+      } finally {
+        await out.close();
+      }
+    }());
+    return out.stream;
   }
 
   @override

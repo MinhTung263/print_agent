@@ -342,7 +342,8 @@ void main() {
       expect(find.text('Khổ giấy'), findsOneWidget);
       expect(find.text('Còi báo'), findsOneWidget);
       expect(find.text('Tự động cắt giấy'), findsOneWidget);
-      expect(find.text('In thử'), findsOneWidget);
+      // "In thử" của máy hoá đơn nằm ở chân chi tiết máy in (cùng hàng "Xoá máy in"), không trong panel.
+      expect(find.text('In thử'), findsNothing);
       expect(find.text('Căn chỉnh tem'), findsNothing);
       expect(find.text('Độ phân giải đầu in'), findsNothing);
       expect(t.takeException(), isNull);

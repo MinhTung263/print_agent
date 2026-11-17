@@ -10,6 +10,7 @@ import '../agent_theme.dart';
 import 'printer_picker/manual_ip_field.dart';
 import 'printer_picker/printer_picker_parts.dart';
 import '../../printers/data/desktop_printer_discovery.dart';
+import '../../agent/printer_type.dart';
 import '../../printers/printer_discovery.dart';
 import '../../printers/printer_option.dart';
 import '../../printers/printer_picker_list.dart';
@@ -92,14 +93,57 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
     unawaited(_scan());
   }
 
+  /// Địa chỉ đã bắt đầu đọc model / loại máy (mỗi máy chỉ một lần dù danh sách cập nhật nhiều lần).
+  final Set<String> _identified = {};
+
+  /// Model / loại máy đã đọc được theo địa chỉ: danh sách máy in được thay bằng bản mới (hiện dần,
+  /// rồi kết quả cuối) thì áp lại — thẻ không mất tên model / nhãn loại đã hiện.
+  final Map<String, String> _models = {};
+  final Map<String, PrinterType> _types = {};
+
+  List<PrinterOption> _decorate(List<PrinterOption> list) {
+    var out = list;
+    for (final e in _models.entries) {
+      out = PrinterPickerList.withModel(out, e.key, e.value);
+    }
+    for (final e in _types.entries) {
+      out = PrinterPickerList.withType(out, e.key, e.value);
+    }
+    return out;
+  }
+
+  /// Tên model rồi loại máy in (tem / hoá đơn) của từng máy mới thấy: thẻ hiện "Xprinter
+  /// XP-420B · Máy in tem" ngay lúc chọn, khỏi chọn nhầm. Máy USB tự báo loại qua chuỗi định danh
+  /// IEEE 1284.
+  void _identifyNew(List<PrinterOption> found) {
+    for (final o in found) {
+      if (o.address.isEmpty || !_identified.add(o.address)) continue;
+      if (o.kind == PrinterOptionKind.lan) unawaited(_identify(o.address));
+      if (o.kind == PrinterOptionKind.usb) unawaited(_identifyUsb(o));
+    }
+  }
+
   Future<void> _scan() async {
     setState(() => _scanning = true);
-    final found = await widget.discovery.find();
-    final networks = await widget.discovery.scannedNetworks();
+    _identified.clear();
+    final d = widget.discovery;
+    var found = const <PrinterOption>[];
+    if (d is ProgressivePrinterDiscovery) {
+      // Máy in hiện dần (USB trước, mạng tới đâu thấy tới đó) — không chờ quét hết dải mạng.
+      await for (final partial in d.findStream()) {
+        if (!mounted) return;
+        found = partial;
+        setState(() => _options = _decorate(partial));
+        _identifyNew(partial);
+      }
+    } else {
+      found = await d.find();
+    }
+    final networks = await d.scannedNetworks();
     if (!mounted) return;
     setState(() {
       _networks = networks;
-      _options = found;
+      _options = _decorate(found);
       _scanning = false;
       if (widget.multi) {
         // Chỉ có một máy chưa dùng thì tick sẵn.
@@ -111,17 +155,7 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
         _selected = PrinterPickerList.preselect(_all, _selected);
       }
     });
-    // Tên model rồi loại máy in (tem / hoá đơn) của từng máy mạng: thẻ hiện "Xprinter
-    // XP-420B · Máy in tem" ngay lúc chọn, khỏi chọn nhầm.
-    for (final o in found.where((o) => o.kind == PrinterOptionKind.lan)) {
-      unawaited(_identify(o.address));
-    }
-    // Máy USB tự báo loại (tem / hoá đơn) qua chuỗi định danh IEEE 1284.
-    for (final o in found.where(
-      (o) => o.kind == PrinterOptionKind.usb && o.address.isNotEmpty,
-    )) {
-      unawaited(_identifyUsb(o));
-    }
+    _identifyNew(found);
   }
 
   /// Đọc model (không gửi gì vào cổng in) rồi hỏi trạng thái để biết máy in tem hay hoá
@@ -130,6 +164,7 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
     final model = await widget.discovery.modelOf(address);
     if (!mounted) return;
     if (model != null) {
+      _models[address] = model;
       setState(() {
         _options = PrinterPickerList.withModel(_options, address, model);
         _manual.replaceRange(0, _manual.length, [
@@ -147,6 +182,7 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
     }
     final type = await widget.discovery.typeOf(address, model: model);
     if (!mounted || type == null) return;
+    _types[address] = type;
     setState(() {
       _options = PrinterPickerList.withType(_options, address, type);
       _manual.replaceRange(0, _manual.length, [
@@ -158,6 +194,7 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
   Future<void> _identifyUsb(PrinterOption o) async {
     final type = await widget.discovery.typeOf(o.address, model: o.title);
     if (!mounted || type == null) return;
+    _types[o.address] = type;
     setState(
       () => _options = PrinterPickerList.withType(_options, o.address, type),
     );

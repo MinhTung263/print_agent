@@ -32,6 +32,9 @@ class DesktopWebPrint implements WebPrintPort {
       // của các Agent (không cần IP).
       'shopKey': PrintAgentModule.host.shopKey,
       'name': _agent.service.displayName,
+      // Mã Agent (cùng `id` trong thông tin trạm trên hàng đợi): trang web biết "Agent này chính là trạm
+      // đang chọn" để in thẳng qua cổng web (nhanh) thay vì đi vòng hàng đợi cloud.
+      'stationId': _agent.service.stationId,
       'paper': c.paper.name,
       'printers': [
         if (c.hasPrinter)

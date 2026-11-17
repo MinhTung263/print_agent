@@ -30,6 +30,7 @@ Phiếu web đi chung hàng đợi với phiếu của app bán hàng:
   "on": true,               // đang nhận lệnh in
   "companyId": 123, "companyName": "Quán A",
   "name": "Quầy thu ngân", "paper": "size80",
+  "stationId": "44a9486bd7a0d1e9",   // mã Agent = `id` của trạm trên hàng đợi cloud (xem "Chọn đường in")
   "printers": [
     {"id": "builtin", "name": "Máy in của trạm in", "ready": true},
     {"id": "lan:192.168.1.50", "name": "Bếp"}
@@ -110,6 +111,37 @@ async function printViaAgent(element, { jobId, printer = 'builtin', ...opts }) {
   return r.json(); // { status, message? }
 }
 ```
+
+## Chọn đường in để nhanh nhất
+
+Có ba đường đưa phiếu từ trang web tới máy in. Số đo thật (phiếu hoá đơn 80mm, máy in LAN, mạng văn phòng;
+"xong" = Agent đã đẩy dữ liệu sang máy in):
+
+| Đường | Khi nào dùng | Tốc độ gửi → xong |
+|---|---|---|
+| **1. Cổng web của Agent cùng máy** `http://127.0.0.1:9102/v1/print` | Trình duyệt chạy **trên cùng máy** với Agent | **~0,2–0,4s** |
+| 2. Hàng đợi cloud (MQTT, `broker.emqx.io`) | Agent ở **máy khác** / không có Agent cùng máy | ~1–2s, có lúc 4s |
+| 3. TCP nội bộ `:9101` | Chỉ app bán hàng native (cần mã `lan` từ hàng đợi) — trình duyệt **không** gọi được | ~0,03–0,06s |
+
+**Quy tắc cho trang web: đi đường 1 khi được, không được thì đi đường 2.**
+
+1. Khi mở trang và mỗi ~20 giây: `GET http://127.0.0.1:9102/v1/info` (rồi `19102`). Thất bại / 403 → không có Agent
+   cùng máy (hoặc Agent không cho trang này, xem `webOrigins`) → chỉ dùng đường 2.
+2. Muốn in vào **trạm X** (người dùng đã chọn trạm trong danh sách trạm trên hàng đợi): nếu `info.stationId === X.id`
+   và `info.ready && info.on` thì trạm X **chính là Agent cùng máy** → gọi `POST /v1/print` (đường 1).
+   Agent bản cũ không báo `stationId` → coi như không phải máy này (đi đường 2).
+3. `printer` gửi theo máy in đã chọn: `builtin` hoặc `lan:<địa chỉ>` (`<địa chỉ>` là IP máy in LAN, hoặc địa chỉ máy USB
+   của Agent). Kết quả:
+   - `done` / `held` / `failed`: **xong, dùng kết quả này** — KHÔNG gửi lại qua cloud (tránh in đúp; `failed` nghĩa là
+     chưa in, cho người dùng bấm in lại).
+   - `off` / `noPrinter` / `wrongCompany` / `error`, hoặc lỗi mạng / CORS / 403: **chuyển sang đường 2** với cùng nội dung.
+4. Lệnh **in tem** (`kind: label`) hiện chưa có trên cổng web — luôn đi đường 2.
+5. Gửi `jobId` ổn định cho mỗi phiếu (`<mã HĐ>-<lần in>`): Agent bỏ lệnh trùng trong 15 phút, nên an toàn khi bấm
+   in lại.
+
+Để đường 2 cũng nhanh: đăng ký nhận trạng thái **một lần** `status/+` khi nối kênh (không đăng ký từng lệnh), và gửi
+phiếu dạng **PNG 1 bit** (đen trắng thật) — nhỏ hơn PNG màu 5–10 lần. Ví dụ đủ chạy: `docs/index.html` của repo
+(hàm `printLocal`, `findLocalAgent`, `isLocalStation`, `monoPng1Base64`).
 
 ## Lưu ý trình duyệt
 - **Chrome / Edge 142 trở lên** hỏi một lần: "app.easypos.vn muốn truy cập các

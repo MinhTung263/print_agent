@@ -92,10 +92,6 @@ class PrinterSettingsPanel extends StatelessWidget {
                 ),
               ],
             ),
-            if (connected)
-              _TestPrintButton(agent: agent, address: address)
-            else
-              const _OfflineNote(),
             AppRow(
               spacing: AppSpace.sm,
               children: [
@@ -152,64 +148,6 @@ class PrinterSettingsPanel extends StatelessWidget {
         ],
       );
     }),
-  );
-}
-
-/// "In thử" của máy hoá đơn (máy tem có "In tem thử" trong phần căn chỉnh).
-class _TestPrintButton extends StatefulWidget {
-  const _TestPrintButton({required this.agent, required this.address});
-
-  final DesktopAgent agent;
-  final String address;
-
-  @override
-  State<_TestPrintButton> createState() => _TestPrintButtonState();
-}
-
-class _TestPrintButtonState extends State<_TestPrintButton> {
-  bool _busy = false;
-
-  Future<void> _print() async {
-    final messenger = ScaffoldMessenger.of(context);
-    setState(() => _busy = true);
-    final error = await widget.agent.printTestTo(widget.address);
-    if (!mounted) return;
-    setState(() => _busy = false);
-    // In được thì không báo gì (tờ giấy ra là đủ); chỉ báo khi LỖI để biết vì sao.
-    if (error == null) return;
-    messenger.showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.errorRed,
-        duration: const Duration(seconds: 10),
-        content: Text(error),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    width: double.infinity,
-    child: FilledButton.icon(
-      onPressed: _busy ? null : () => unawaited(_print()),
-      icon: _busy
-          ? AgentSpinner(size: 16, color: Colors.white)
-          : const Icon(Icons.print_rounded, size: 18),
-      label: const Text('In thử'),
-    ),
-  );
-}
-
-/// Máy in chưa kết nối: không in thử được — kết nối lại thì nút in thử tự hiện.
-class _OfflineNote extends StatelessWidget {
-  const _OfflineNote();
-
-  @override
-  Widget build(BuildContext context) => const AppText(
-    'Máy in chưa kết nối nên chưa in thử được. Nút "In thử" sẽ hiện lại khi máy in '
-    'kết nối.',
-    variant: .caption,
-    tone: .secondary,
-    maxLines: 3,
   );
 }
 
