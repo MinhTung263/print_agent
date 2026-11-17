@@ -126,6 +126,7 @@
         <div style="flex:2"><label for="temSize">Khổ một tem (mm)</label><select id="temSize"></select></div>
         <div style="flex:1"><label for="cups" id="cupsLabel">Số ly</label><input type="number" id="cups" min="1" max="20" value="2"></div>
       </div>
+      <div class="field" id="qrBox"><label style="font-weight:400"><input type="checkbox" id="qr" checked> In kèm mã QR (tem vàng bạc, tem sản phẩm)</label></div>
       <div class="field"><label style="font-weight:400"><input type="checkbox" id="frame"> Vẽ khung viền quanh tem (chỉ để căn chỉnh)</label></div>
       <div class="hint" id="temInfo" style="margin:-4px 0 12px"></div>
     </div>
@@ -150,6 +151,7 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="relay.js?v=__BUILD__"></script>
 <script src="curl.js?v=__BUILD__"></script>
 <script src="tem.js?v=__BUILD__"></script>
@@ -351,28 +353,40 @@ function drawReceipt() {
   L.push([D, '13px monospace', 'left'], ['Tạm tính', '14px sans-serif', 'left', fmt(sum)], ['Giảm giá 10%', '14px sans-serif', 'left', '-' + fmt(Math.round(sum * 0.1))],
     ['Tổng cộng', 'bold 17px sans-serif', 'left', fmt(sum - Math.round(sum * 0.1)) + 'đ'], ['Tiền khách đưa', '14px sans-serif', 'left', fmt(Math.ceil(sum / 50000) * 50000)], [D, '13px monospace', 'left'],
     ['Ghi chú: không đá, thêm trân châu', 'italic 11px sans-serif', 'left'], ['Wifi: easypos / mật khẩu 12345678', '12px sans-serif', 'center'], ['Cảm ơn quý khách - Hẹn gặp lại!', '12px sans-serif', 'center']);
-  cv.width = W; cv.height = Math.round((L.length * 26 + 24) * k);
+  const qrSide = typeof qrcode === 'function' ? 150 : 0;
+  cv.width = W; cv.height = Math.round((L.length * 26 + 24 + (qrSide ? qrSide + 28 : 0)) * k);
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height); ctx.fillStyle = '#000'; ctx.textBaseline = 'middle'; ctx.scale(k, k);
   L.forEach(([t, f, a, right], n) => {
     ctx.font = f; ctx.textAlign = a === 'right' ? 'left' : a; const y = 24 + n * 26;
     ctx.fillText(t, a === 'center' ? 192 : a === 'right' ? 20 : 6, y);
     if (right) { ctx.textAlign = 'right'; ctx.fillText(right, 378, y); }
   });
+  // Mã QR tra cứu hoá đơn ở cuối phiếu.
+  if (qrSide) {
+    const y0 = 24 + L.length * 26;
+    // Vẽ ngoài phép co giãn (k) để mỗi module QR là số nguyên chấm, nét sắc.
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    TeaLabel.drawQr(ctx, Math.round((192 - qrSide / 2) * k), Math.round(y0 * k), Math.round(qrSide * k), 'https://easypos.vn/hoa-don/TEST-' + seq);
+    ctx.restore();
+    ctx.textAlign = 'center'; ctx.font = '12px sans-serif'; ctx.fillText('Quét mã để xem hoá đơn điện tử', 192, y0 + qrSide + 14);
+  }
 }
 // Xem trước theo loại phiếu: hoá đơn, hoặc hàng tem trà sữa đầu tiên.
 const isLabel = () => $('kind').value === 'label';
 const temTpl = () => $('tpl').value || 'tea';
 const temSize = () => TeaLabel.bySize($('temSize').value) || TeaLabel.SIZES[0];
-const temInfo = (i = 0, total = 1) => ({ shop: 'EasyPOS Tea', order: String(seq).slice(-3).toUpperCase(), time: new Date().toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }), total, startIndex: i + 1, frame: $('frame').checked });
+const temInfo = (i = 0, total = 1) => ({ shop: 'EasyPOS Tea', order: String(seq).slice(-3).toUpperCase(), time: new Date().toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }), total, startIndex: i + 1, frame: $('frame').checked, qr: $('qr').checked });
 function refreshPreview() {
   $('temBox').style.display = isLabel() ? '' : 'none';
+  $('qrBox').style.display = isLabel() && temTpl() !== 'tea' ? '' : 'none';
   $('paperBox').style.display = isLabel() ? 'none' : '';
   if (!isLabel()) return drawReceipt();
   const size = temSize(), cups = Math.max(1, +$('cups').value || 1);
   TeaLabel.drawRow($('cv'), size, TeaLabel.rows(cups, size, temTpl())[0], temInfo(0, cups), temTpl());
-  $('cupsLabel').textContent = temTpl() === 'product' ? 'Số tem' : 'Số ly';
+  $('cupsLabel').textContent = temTpl() === 'tea' ? 'Số ly' : 'Số tem';
   $('temInfo').textContent = `${size.count} tem/hàng · tem ${size.tem}mm · cả hàng ${size.w}×${size.h}mm · khe ${size.gap}mm · ${size.use}` +
-    (size.custom ? ' · khổ này chỉ Agent máy tính in đúng (app bản hiện tại chưa có khổ này)' : '');
+    (size.custom ? ' · khổ này chỉ Agent máy tính in đúng (app bản hiện tại chưa có khổ này)' : '') +
+    (size.jewelry ? ' · máy in 300dpi: chọn "300 dpi" trong cài đặt máy in của Agent' : '');
 }
 // Chọn số tem mỗi hàng → danh sách khổ tem của loại đó.
 let perRow = 2;
@@ -385,9 +399,13 @@ function renderSizes(keep) {
 renderSizes();
 $('temSize').value = 'double'; // mặc định: 2 tem/hàng, mỗi tem 35×22mm
 $('tpl').innerHTML = TeaLabel.TEMPLATES.map((t) => `<option value="${t.id}">${t.title}</option>`).join('');
-['kind', 'tpl', 'temSize', 'cups', 'paper', 'frame'].forEach((id) => { $(id).onchange = refreshPreview; });
+['kind', 'tpl', 'temSize', 'cups', 'paper', 'frame', 'qr'].forEach((id) => { $(id).onchange = refreshPreview; });
+// Chọn "Tem vàng bạc": về 1 tem / hàng và khổ tem vàng bạc (50×12) nếu đang chọn khổ khác.
+$('tpl').addEventListener('change', () => {
+  if (temTpl() === 'jewelry' && !temSize().jewelry) { perRow = 1; renderSizes(TeaLabel.JEWELRY_DEFAULT); refreshPreview(); }
+});
 // Nhớ lựa chọn phiếu in qua lần tải lại trang.
-const UI_IDS = ['kind', 'tpl', 'temSize', 'cups', 'paper', 'copies'], UI_CHECKS = ['frame', 'beep'];
+const UI_IDS = ['kind', 'tpl', 'temSize', 'cups', 'paper', 'copies'], UI_CHECKS = ['frame', 'qr', 'beep'];
 const saveUi = () => { const o = { perRow }; UI_IDS.forEach((id) => { o[id] = $(id).value; }); UI_CHECKS.forEach((id) => { o[id] = $(id).checked; }); store.set('ui', JSON.stringify(o)); };
 function restoreUi() {
   const o = readJson('ui', null); if (!o) return;
@@ -417,6 +435,34 @@ function monoPngBase64(cv) {
   }
   x.putImageData(d, 0, 0);
   return c.toDataURL('image/png').split(',')[1];
+}
+
+// PNG 1 bit/điểm (đen/trắng thật): nhỏ hơn PNG 8 bit khoảng 5–10 lần → gửi qua broker và giải mã nhanh hơn.
+// Cần CompressionStream (trình duyệt đời mới); thiếu thì dùng PNG đen trắng 8 bit như cũ.
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = (b) => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+async function monoPng1Base64(cv) {
+  if (typeof CompressionStream === 'undefined') return monoPngBase64(cv);
+  const w = cv.width, h = cv.height, p = cv.getContext('2d').getImageData(0, 0, w, h).data, rb = (w + 7) >> 3;
+  const raw = new Uint8Array((rb + 1) * h);   // mỗi hàng: 1 byte bộ lọc (0) + các điểm; bit 1 = trắng
+  for (let y = 0; y < h; y++) {
+    const o = y * (rb + 1); raw.fill(255, o + 1, o + 1 + rb); raw[o] = 0;
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      if (p[i + 3] > 50 && 299 * p[i] + 587 * p[i + 1] + 114 * p[i + 2] < 200000) raw[o + 1 + (x >> 3)] &= ~(0x80 >> (x & 7));
+    }
+  }
+  const idat = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer());
+  const chunk = (type, data) => {
+    const out = new Uint8Array(12 + data.length), dv = new DataView(out.buffer);
+    dv.setUint32(0, data.length); for (let i = 0; i < 4; i++) out[4 + i] = type.charCodeAt(i);
+    out.set(data, 8); dv.setUint32(8 + data.length, crc32(out.subarray(4, 8 + data.length))); return out;
+  };
+  const ihdr = new Uint8Array(13), hv = new DataView(ihdr.buffer); hv.setUint32(0, w); hv.setUint32(4, h); ihdr[8] = 1; ihdr[9] = 0;
+  const parts = [new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', idat), chunk('IEND', new Uint8Array(0))];
+  const all = new Uint8Array(parts.reduce((n, a) => n + a.length, 0)); let off = 0; for (const a of parts) { all.set(a, off); off += a.length; }
+  let bin = ''; for (let i = 0; i < all.length; i += 0x8000) bin += String.fromCharCode.apply(null, all.subarray(i, i + 0x8000));
+  return btoa(bin);
 }
 
 // ---------- In ----------
@@ -482,8 +528,7 @@ $('btnPrint').onclick = async () => {
       const images = list.map((row, n) => TeaLabel.drawRow(document.createElement('canvas'), size, row, temInfo(n * size.count, cups), temTpl()).toDataURL('image/png').split(',')[1]);
       job = PrintRelay.labelJob({ images, printer: opt, stationId: i.id, labelSize: size.name, copies: +$('copies').value || 1, spec: size });
     } else {
-      const dataUrl = 'data:image/png;base64,' + monoPngBase64($('cv'));
-      job = PrintRelay.receiptJob({ imageBase64: dataUrl.split(',')[1], printer: opt, stationId: i.id, paper: $('paper').value, copies: +$('copies').value || 1, beep: $('beep').checked });
+      job = PrintRelay.receiptJob({ imageBase64: await monoPng1Base64($('cv')), printer: opt, stationId: i.id, paper: $('paper').value, copies: +$('copies').value || 1, beep: $('beep').checked });
     }
     printUi.go(1);
     const jobId = PrintRelay.randomHex(8);

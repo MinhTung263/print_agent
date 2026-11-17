@@ -171,10 +171,13 @@
       if (!p.addr || (p.kind !== 'lan' && p.kind !== 'usb')) continue;
       const isLabel = isLabelName(p.name), ok = p.ok ? '' : ' — chưa kết nối';
       out.push(p.kind === 'usb'
-        ? { type: 'usb', addr: p.addr, name: p.name, isLabel, label: `${p.name || 'Máy in USB'} (USB)${ok}` }
-        : { type: 'lan', ip: p.addr, name: p.name, isLabel, label: `${p.name || 'Máy in LAN'} (${p.addr})${ok}` });
+        ? { type: 'usb', addr: p.addr, name: p.name, isLabel, connected: !!p.ok, label: `${p.name || 'Máy in USB'} (USB)${ok}` }
+        : { type: 'lan', ip: p.addr, name: p.name, isLabel, connected: !!p.ok, label: `${p.name || 'Máy in LAN'} (${p.addr})${ok}` });
     }
-    return out;
+    // Máy đang kết nối lên đầu (giữ nguyên thứ tự trong mỗi nhóm) cho dễ chọn.
+    const builtOk = !!(info && info.builtIn) && !info.builtIn.off && info.builtIn.ready !== false;
+    const rank = (o) => (o.type === 'builtin' ? builtOk : o.connected) ? 0 : 1;
+    return out.map((o, k) => [o, k]).sort((x, y) => rank(x[0]) - rank(y[0]) || x[1] - y[1]).map((e) => e[0]);
   }
 
   g.PrintRelay = { PREFIX, printerOptions, progressTarget, replacedStationIds, stationFresh, STATION_MAX_AGE_MS, randomHex, normalizeEnv, shopKey, parseShopKey, channel, encrypt, decrypt, receiptJob, labelJob };

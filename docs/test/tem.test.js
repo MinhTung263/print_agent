@@ -67,5 +67,17 @@ test('tem sản phẩm: rows dùng hàng hoá mẫu, 2 tem/hàng', () => {
   assert.deepEqual(r.map((x) => x.length), [2, 1]);
   assert.equal(r[0][0].name, 'Áo Dài Truyền Thống');
   assert.equal(r[0][0].code, '12345678');
-  assert.deepEqual(T.TEMPLATES.map((t) => t.id), ['tea', 'product']);
+  assert.deepEqual(T.TEMPLATES.map((t) => t.id), ['tea', 'product', 'jewelry']);
+});
+
+test('tem vàng bạc: có khổ 50×12, rows lấy hàng trang sức mẫu', () => {
+  const z = T.bySize(T.JEWELRY_DEFAULT);
+  assert.ok(z && z.jewelry && z.w === 50 && z.h === 12 && z.count === 1);
+  const r = T.rows(3, z, 'jewelry');
+  assert.equal(r.length, 3);
+  assert.ok(r[0][0].karat && r[0][0].weight && r[0][0].code);
+});
+
+test('drawQr: không có thư viện qrcode thì bỏ qua, không lỗi', () => {
+  assert.equal(T.drawQr({}, 0, 0, 80, 'abc'), 0);
 });

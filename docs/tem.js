@@ -37,9 +37,13 @@
     { name: 'triple_35_25', count: 3, w: 112, h: 25, gap: 1, tem: '35×25', use: 'Tem mã vạch hàng hoá' },
     // 4 tem / hàng
     { name: 'triple', custom: true, id: 'c_quad_25_15', count: 4, w: 106, h: 15, gap: 2, tem: '25×15', use: 'Tem rất nhỏ (ống nghiệm, kho)' },
+    // Tem vàng bạc, trang sức (nhỏ, dài): in trên máy 300dpi — chọn "300 dpi" trong cài đặt máy in ở Agent.
+    { name: 'single', custom: true, id: 'c_single_50_12', count: 1, w: 50, h: 12, gap: 2, tem: '50×12', use: 'Tem vàng bạc, trang sức', jewelry: true },
+    { name: 'single', custom: true, id: 'c_single_60_15', count: 1, w: 60, h: 15, gap: 2, tem: '60×15', use: 'Tem vàng bạc, trang sức', jewelry: true },
   ].map((z) => ({ ...z, id: z.id || z.name, title: `${z.tem}mm${z.custom ? ' · Agent máy tính' : ''}` }));
 
   const COUNTS = [1, 2, 3, 4];
+  const JEWELRY_DEFAULT = 'c_single_50_12';
   const bySize = (id) => SIZES.find((z) => z.id === id);
   const ofCount = (count) => SIZES.filter((z) => z.count === count);
 
@@ -138,6 +142,22 @@
     return mod;
   }
 
+  /**
+   * Mã QR (đen trắng, mỗi module là SỐ NGUYÊN chấm cho nét sắc) vào ô vuông tối đa [size] chấm tại (x, y).
+   * Dùng thư viện `qrcode` (qrcode-generator) nếu trang đã nạp; không có thì bỏ qua (trả 0).
+   */
+  function drawQr(ctx, x, y, size, text) {
+    const make = g.qrcode;
+    if (typeof make !== 'function') return 0;
+    const qr = make(0, 'M'); qr.addData(String(text)); qr.make();
+    const n = qr.getModuleCount(), quiet = 2, mod = Math.floor(size / (n + quiet * 2));
+    if (mod < 1) return 0;
+    const side = mod * (n + quiet * 2), ox = x + Math.floor((size - side) / 2), oy = y + Math.floor((size - side) / 2);
+    ctx.fillStyle = '#fff'; ctx.fillRect(ox, oy, side, side); ctx.fillStyle = '#000';
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) ctx.fillRect(ox + (c + quiet) * mod, oy + (r + quiet) * mod, mod, mod);
+    return side;
+  }
+
   /** Hàng hoá mẫu (tem sản phẩm / quần áo). */
   const PRODUCTS = [
     { name: 'Áo Dài Truyền Thống', code: '12345678', price: 190000 },
@@ -161,7 +181,7 @@
    * Tem sản phẩm kiểu tem thị trường: tên hàng, mã vạch, số mã, "Giá: ... VND". Chừa
    * lề an toàn ~1,5mm quanh tem (đầu in / cuộn tem lệch nhẹ vẫn không cắt chữ).
    */
-  function drawProduct(ctx, w, h, item) {
+  function drawProduct(ctx, w, h, item, info = {}) {
     const u = Math.min(h / 176, w / 288);
     const m = Math.round(12 * u) + 2;
     const inner = w - m * 2;
@@ -186,9 +206,51 @@
     // Giá ở chân tem.
     ctx.textAlign = 'left';
     const price = `Giá: ${item.price.toLocaleString('vi-VN')} VND`;
-    fitFont(ctx, price, inner, Math.round(25 * u), Math.round(16 * u), 'bold');
+    let priceW = inner;
+    if (info.qr && typeof g.qrcode === 'function') {
+      const q = Math.round(52 * u); priceW = inner - q - m;
+      drawQr(ctx, w - m - q, h - m - q, q, `${item.code}|${item.name}|${item.price}`);
+    }
+    fitFont(ctx, price, priceW, Math.round(25 * u), Math.round(16 * u), 'bold');
     ctx.textBaseline = 'bottom';
     ctx.fillText(price, m, h - Math.round(8 * u));
+  }
+
+  /** Hàng trang sức mẫu: loại, tuổi vàng, trọng lượng, mã, giá. */
+  const JEWELRY = [
+    { name: 'Nhẫn vàng trơn', karat: '24K', weight: '3.52g', code: 'NV240352', price: 28500000 },
+    { name: 'Lắc tay vàng 18K', karat: '18K', weight: '5.80g', code: 'LT180580', price: 24200000 },
+    { name: 'Dây chuyền bạc', karat: 'S925', weight: '8.10g', code: 'DB925810', price: 1250000 },
+    { name: 'Bông tai vàng 14K', karat: '14K', weight: '1.25g', code: 'BT140125', price: 4800000 },
+  ];
+
+  /**
+   * Tem vàng bạc: tem nhỏ, dài. Nửa trái: tên, tuổi + trọng lượng, giá; nửa phải: mã vạch + số mã.
+   * Chừa lề an toàn quanh tem; chữ co theo chiều cao tem.
+   */
+  function drawJewelry(ctx, w, h, item, info = {}) {
+    const m = Math.round(h * 0.08) + 3, u = h / 96, split = Math.round(w * 0.56);
+    ctx.fillStyle = '#000'; ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+    const left = split - m * 2;
+    let y = m;
+    fitFont(ctx, item.name, left, Math.round(22 * u), Math.round(13 * u), 'bold');
+    ctx.fillText(item.name, m, y); y += Math.round(25 * u);
+    ctx.font = `normal ${Math.round(19 * u)}px "Helvetica Neue", Arial, sans-serif`;
+    ctx.fillText(`${item.karat} · TL ${item.weight}`, m, y);
+    const price = item.price.toLocaleString('vi-VN') + 'đ';
+    fitFont(ctx, price, left, Math.round(24 * u), Math.round(13 * u), 'bold');
+    ctx.textBaseline = 'bottom'; ctx.fillText(price, m, h - m);
+    if (info.qr && typeof g.qrcode === 'function') {
+      // QR thay mã vạch: vuông, sát lề phải, cao hết tem.
+      const q = h - m * 2;
+      drawQr(ctx, w - m - q, m, q, `${item.code}|${item.name}|${item.karat}|${item.weight}`);
+      return;
+    }
+    const bx = split + m, bw = w - bx - m, bh = Math.round(h * 0.52);
+    drawBarcode(ctx, bx, m, bw, bh, item.code);
+    ctx.textBaseline = 'bottom'; ctx.textAlign = 'center';
+    ctx.font = `normal ${Math.max(10, Math.round(17 * u))}px "Helvetica Neue", Arial, sans-serif`;
+    ctx.fillText(item.code, bx + bw / 2, h - m);
   }
 
   function drawOne(ctx, x, y, w, h, item, info) {
@@ -292,8 +354,10 @@
     ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
     const cell = W / size.count;
     items.slice(0, size.count).forEach((item, i) => {
-      if (template === 'product') {
-        ctx.save(); ctx.translate(i * cell, 0); drawProduct(ctx, cell, H, item); ctx.restore();
+      if (template === 'jewelry') {
+        ctx.save(); ctx.translate(i * cell, 0); drawJewelry(ctx, cell, H, item, info); ctx.restore();
+      } else if (template === 'product') {
+        ctx.save(); ctx.translate(i * cell, 0); drawProduct(ctx, cell, H, item, info); ctx.restore();
       } else {
         drawOne(ctx, i * cell + 6, 4, cell - 12, H - 8, item, { ...info, index: (info.startIndex || 1) + i });
       }
@@ -303,7 +367,7 @@
 
   /** Chia [cups] ly thành các hàng tem: [[item...], ...] lấy xoay vòng từ [MENU]. */
   function rows(cups, size, template = 'tea') {
-    const menu = template === 'product' ? PRODUCTS : MENU;
+    const menu = template === 'jewelry' ? JEWELRY : template === 'product' ? PRODUCTS : MENU;
     const items = Array.from({ length: cups }, (_, i) => menu[i % menu.length]);
     const out = [];
     for (let i = 0; i < items.length; i += size.count) out.push(items.slice(i, i + size.count));
@@ -313,8 +377,9 @@
   const TEMPLATES = [
     { id: 'tea', title: 'Tem ly trà sữa' },
     { id: 'product', title: 'Tem sản phẩm (mã vạch)' },
+    { id: 'jewelry', title: 'Tem vàng bạc (trang sức)' },
   ];
 
-  g.TeaLabel = { SIZES, COUNTS, MENU, PRODUCTS, TEMPLATES, bySize, ofCount, drawRow, rows, wrap, code128, drawBarcode, binarize };
+  g.TeaLabel = { SIZES, COUNTS, JEWELRY_DEFAULT, MENU, PRODUCTS, JEWELRY, TEMPLATES, bySize, ofCount, drawRow, rows, wrap, code128, drawBarcode, drawQr, binarize };
   if (typeof module !== 'undefined') module.exports = g.TeaLabel;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

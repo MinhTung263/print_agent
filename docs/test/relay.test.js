@@ -144,3 +144,13 @@ test('job tới máy USB của trạm mang địa chỉ cổng + loại usb', ()
   assert.equal(l.printerType, 'usb');
   assert.equal(R.receiptJob({ imageBase64: 'x', printer: { type: 'builtin' }, paper: 'size80' }).printerType, 'builtin');
 });
+
+test('printerOptions: máy đang kết nối lên đầu, giữ thứ tự trong mỗi nhóm', () => {
+  const info = { printers: { names: [
+    { kind: 'lan', addr: '10.0.0.1', name: 'A', ok: false },
+    { kind: 'lan', addr: '10.0.0.2', name: 'B', ok: true },
+    { kind: 'usb', addr: 'u1', name: 'C', ok: false },
+    { kind: 'usb', addr: 'u2', name: 'D', ok: true },
+  ] } };
+  assert.deepEqual(R.printerOptions(info).map((o) => o.name), ['B', 'D', 'A', 'C']);
+});
