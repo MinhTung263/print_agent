@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:print_agent/src/agent_domain.dart';
 import 'package:print_agent/src/presentation/kit/kit.dart';
 
-/// "Trạm in này" — mở từ thẻ tên hoặc bấm nút máy này trên sơ đồ: đặt tên
-/// (gợi ý một chạm "Quầy thu ngân", "Bếp"...), mã máy (không đổi), và lối tắt
-/// "Thêm máy in" ([PrintAgentUi.onAddPrinter]).
+/// "Trạm in này" — mở từ thẻ tên hoặc bấm nút máy này trên sơ đồ: CHỈ để đặt tên (gợi ý một chạm
+/// "Quầy thu ngân", "Bếp"...) và xem mã máy (không đổi). "Thêm máy in" nằm riêng ở đầu sơ đồ
+/// ([AgentMapHeader]) — không gộp vào đây để khách khỏi tưởng nút "Lưu" áp dụng cho cả hai.
 class AgentNameSheet extends StatefulWidget {
   const AgentNameSheet({super.key});
 
@@ -30,9 +30,9 @@ class AgentNameSheet extends StatefulWidget {
 
 class _AgentNameSheetState extends State<AgentNameSheet> {
   // Chưa đặt tên: điền sẵn tên máy đang dùng để sửa nhanh.
-  late final _name = TextEditingController(
-    text: PrintAgentUi.station.displayName,
-  )..addListener(_onChanged);
+  late final String _original = PrintAgentUi.station.displayName;
+  late final _name = TextEditingController(text: _original)
+    ..addListener(_onChanged);
 
   void _onChanged() => setState(() {});
 
@@ -58,7 +58,6 @@ class _AgentNameSheetState extends State<AgentNameSheet> {
   Widget build(BuildContext context) {
     final station = PrintAgentUi.station;
     final current = _name.text.trim();
-    final addPrinter = PrintAgentUi.onAddPrinter;
     return AppPadding.all(
       AppSpace.lg,
       child: AppColumn(
@@ -128,50 +127,13 @@ class _AgentNameSheetState extends State<AgentNameSheet> {
             ],
           ),
           BaseButton(
-            onPressed: current.isEmpty ? null : () => unawaited(_save()),
+            // Chỉ bấm được khi đã đổi tên (chưa đổi gì thì không có gì để lưu).
+            onPressed: current.isEmpty || current == _original.trim()
+                ? null
+                : () => unawaited(_save()),
             title: LocaleKeys.printerSetting_agentNameSave,
             backgroundColor: AppColors.primaryBlueBase,
           ),
-          if (addPrinter != null) ...[
-            const AppDivider(),
-            BaseTap(
-              // Mở chồng lên bảng này (như hộp thoại trên máy tính), KHÔNG đóng
-              // bảng trước: đóng rồi mở ngay làm bảng mới bị đóng theo.
-              onTap: () => unawaited(addPrinter()),
-              child: AppRow(
-                spacing: AppSpace.md,
-                children: [
-                  const Icon(
-                    Icons.add_circle_outline_rounded,
-                    color: AppColors.primaryBlueBase,
-                  ),
-                  const Expanded(
-                    child: AppColumn(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      spacing: 2,
-                      children: [
-                        AppText(
-                          LocaleKeys.printerSetting_agentAddPrinter,
-                          variant: .title,
-                          textColor: AppColors.primaryBlueBase,
-                        ),
-                        AppText(
-                          LocaleKeys.printerSetting_agentAddPrinterHint,
-                          variant: .caption,
-                          tone: .secondary,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: AppColors.dsGray2,
-                  ),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );

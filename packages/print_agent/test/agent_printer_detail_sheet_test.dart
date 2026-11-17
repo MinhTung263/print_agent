@@ -201,4 +201,65 @@ void main() {
       findsNothing,
     );
   });
+
+  testWidgets(
+    'chân chi tiết: nút của app chủ và "Xoá máy in" cùng MỘT hàng, chia đều; chỉ có một nút thì chiếm cả hàng',
+    (t) async {
+      const action = Key('footer-action');
+      final remove = LocaleKeys.printerSetting_agentPrinterRemove.tr;
+      await t.binding.setSurfaceSize(const Size(500, 1200));
+      await t.pumpWidget(
+        GetMaterialApp(
+          home: Scaffold(
+            body: AgentPrinterDetailFooter(
+              detail: AgentPrinterDetail(
+                name: 'HPRT',
+                kind: 'lan',
+                state: AgentPrinterDetailState.ready,
+                on: true,
+                onRemove: () async => true,
+                footerAction: const SizedBox(key: action, height: 44),
+              ),
+            ),
+          ),
+        ),
+      );
+      final a = t.getRect(find.byKey(action));
+      final r = t.getRect(find.text(remove));
+      expect(a.center.dy, closeTo(r.center.dy, 12), reason: 'cùng một hàng');
+      expect(a.left, lessThan(r.left));
+      expect(a.width, closeTo(t.getRect(find.byType(Expanded).last).width, 1));
+
+      // Chỉ có "Xoá máy in": chiếm cả hàng.
+      await t.pumpWidget(
+        GetMaterialApp(
+          home: Scaffold(
+            body: AgentPrinterDetailFooter(
+              detail: AgentPrinterDetail(
+                name: 'HPRT',
+                kind: 'lan',
+                state: AgentPrinterDetailState.ready,
+                on: true,
+                onRemove: () async => true,
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(find.text(remove), findsOneWidget);
+      expect(find.byKey(action), findsNothing);
+      expect(
+        AgentPrinterDetailFooter.has(
+          AgentPrinterDetail(
+            name: 'x',
+            kind: 'lan',
+            state: AgentPrinterDetailState.ready,
+            on: true,
+          ),
+        ),
+        isFalse,
+        reason: 'không nút nào thì không dựng hàng',
+      );
+    },
+  );
 }

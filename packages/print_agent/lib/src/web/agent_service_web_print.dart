@@ -52,6 +52,9 @@ class AgentServiceWebPrint<P extends AgentPrinterRef> implements WebPrintPort {
     // Mã hàng đợi in của cửa hàng (xem DesktopWebPrint).
     'shopKey': PrintAgentModule.host.shopKey,
     'name': _service.displayName,
+    // Mã Agent (cùng `id` trong thông tin trạm trên hàng đợi): trang web biết "Agent này chính là trạm
+    // đang chọn" để in thẳng qua cổng web (nhanh) thay vì đi vòng hàng đợi cloud.
+    'stationId': _service.stationId,
     'paper': defaultPaper(),
     'printers': [
       if (hasBuiltInPrinter())

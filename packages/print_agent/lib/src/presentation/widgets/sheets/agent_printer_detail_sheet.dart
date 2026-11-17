@@ -27,6 +27,7 @@ class AgentPrinterDetail {
     this.onTestPrint,
     this.onRemove,
     this.settings,
+    this.footerAction,
     this.onReconnect,
     this.onSwitchNetwork,
   });
@@ -62,6 +63,9 @@ class AgentPrinterDetail {
   /// Cài đặt riêng của máy in (app chủ dựng); `null` = không có.
   final Widget? settings;
 
+  /// Nút của app chủ đặt cùng hàng với "Xoá máy in" ở chân chi tiết (VD "In thử"); `null` = không có.
+  final Widget? footerAction;
+
   /// "Kết nối lại" máy in đang lỗi (mở bảng kết nối lại, `true` = đã kết nối được); `null` =
   /// máy in không lỗi / không kết nối lại được ở đây.
   final Future<bool> Function()? onReconnect;
@@ -73,9 +77,17 @@ class AgentPrinterDetail {
 /// "Chi tiết máy in" khi bấm máy in trên sơ đồ: điện thoại mở bảng trượt,
 /// máy tính / tablet mở popup. Có công tắc "Nhận lệnh in".
 class AgentPrinterDetailSheet extends StatelessWidget {
-  const AgentPrinterDetailSheet({super.key, required this.detail});
+  const AgentPrinterDetailSheet({
+    super.key,
+    required this.detail,
+    this.footerInline = true,
+  });
 
   final AgentPrinterDetail detail;
+
+  /// `true`: hàng nút ở chân nằm cuối nội dung (bảng trượt trên điện thoại). `false`: nơi dựng
+  /// tự đặt [AgentPrinterDetailFooter] cố định bên dưới vùng cuộn (popup máy tính / tablet).
+  final bool footerInline;
 
   static Future<void> show(AgentPrinterDetail detail) async {
     if (PrintAgentUi.kit.isTablet) {
@@ -284,7 +296,8 @@ class AgentPrinterDetailSheet extends StatelessWidget {
                 ],
               ),
             ),
-          if (d.onRemove != null) AgentPrinterRemoveButton(detail: d),
+          if (footerInline && AgentPrinterDetailFooter.has(d))
+            AgentPrinterDetailFooter(detail: d),
         ],
       ),
     );
@@ -377,9 +390,18 @@ class _Popup extends StatelessWidget {
           ),
           Flexible(
             child: SingleChildScrollView(
-              child: AgentPrinterDetailSheet(detail: detail),
+              child: AgentPrinterDetailSheet(
+                detail: detail,
+                footerInline: false,
+              ),
             ),
           ),
+          // Hàng nút (In thử · Xoá máy in) luôn nằm dưới cùng, không trôi theo vùng cuộn.
+          if (AgentPrinterDetailFooter.has(detail))
+            AppPadding.all(
+              AppSpace.lg,
+              child: AgentPrinterDetailFooter(detail: detail),
+            ),
         ],
       ),
     ),
@@ -389,3 +411,26 @@ class _Popup extends StatelessWidget {
 /// Mở chi tiết rồi thôi (dùng làm `onTap` của nút máy in trên sơ đồ).
 VoidCallback agentShowPrinterDetail(AgentPrinterDetail detail) =>
     () => unawaited(AgentPrinterDetailSheet.show(detail));
+
+/// Hàng nút ở chân chi tiết máy in: nút của app chủ (VD "In thử") và "Xoá máy in", chia đều một hàng.
+class AgentPrinterDetailFooter extends StatelessWidget {
+  const AgentPrinterDetailFooter({super.key, required this.detail});
+
+  final AgentPrinterDetail detail;
+
+  static bool has(AgentPrinterDetail d) =>
+      d.onRemove != null || d.footerAction != null;
+
+  @override
+  Widget build(BuildContext context) {
+    final action = detail.footerAction;
+    return AppRow(
+      spacing: AppSpace.md,
+      children: [
+        if (action != null) Expanded(child: action),
+        if (detail.onRemove != null)
+          Expanded(child: AgentPrinterRemoveButton(detail: detail)),
+      ],
+    );
+  }
+}

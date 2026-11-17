@@ -233,6 +233,7 @@ class AgentJobHandler<P extends AgentPrinterRef> {
     _downAt.remove(key);
     printedIp = ready.refAddress;
     var failure = await _attempt(ready, job);
+    if (failure == null) _watchdog.markFresh(ready);
     // Đi đường nhanh (không hỏi lại máy in) mà máy in thực ra đã mất: chờ sẵn sàng đầy đủ rồi in lại
     // một lần — như trước đây khi chưa có đường nhanh.
     if (fast && _retryable(failure)) {
@@ -248,6 +249,7 @@ class AgentJobHandler<P extends AgentPrinterRef> {
       }
       printedIp = again.refAddress;
       failure = await _attempt(again, job);
+      if (failure == null) _watchdog.markFresh(again);
     }
     if (_holdable(failure)) failure = await _hold(ready, job, key, failure!);
     return record(failure);

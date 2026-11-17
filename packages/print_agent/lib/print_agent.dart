@@ -10,6 +10,7 @@ export 'src/data/agent_held_job_store.dart';
 export 'src/data/agent_job_handler.dart';
 export 'src/data/agent_job_log_store.dart';
 export 'src/data/agent_map_layout.dart';
+export 'src/data/agent_peers_visibility.dart';
 export 'src/data/agent_print_activity_store.dart';
 export 'src/data/agent_printer_reconnect.dart';
 export 'src/data/agent_printer_remote.dart';

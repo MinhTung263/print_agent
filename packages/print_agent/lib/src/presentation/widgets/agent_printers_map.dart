@@ -37,7 +37,11 @@ class AgentPrintersMap extends StatelessWidget {
         final off = AgentPrinterSwitches.off.toSet();
         final service = PrintAgentUi.station;
         // Các Agent KHÁC (đang bật / đã tắt) + máy in của từng Agent — vùng riêng.
-        final peers = agentPeerEntries(online);
+        AgentPeersVisibility.ensureLoaded();
+        final showPeers = AgentPeersVisibility.show.value;
+        final peers = showPeers
+            ? agentPeerEntries(online)
+            : const <AgentPeerEntry>[];
         return AgentNetworkMap(
           cloud: AgentMapNode(
             icon: Icons.cloud_outlined,
@@ -100,9 +104,11 @@ class AgentPrintersMap extends StatelessWidget {
           ],
           nodesLabel: LocaleKeys.printerSetting_agentZoneMyPrinters.tr,
           clusters: [for (final e in peers) agentPeerCluster(e)],
-          clustersLabel: LocaleKeys.printerSetting_agentOthersTitleTr(
-            count: '${peers.length}',
-          ),
+          clustersLabel: !showPeers
+              ? null
+              : LocaleKeys.printerSetting_agentOthersTitleTr(
+                  count: '${peers.length}',
+                ),
           emptyText: LocaleKeys.printerSetting_agentNoPrinters.tr,
         );
       }),
@@ -224,6 +230,9 @@ class AgentPrintersMap extends StatelessWidget {
       // Máy in tích hợp của máy POS (Sunmi...) không có cài đặt riêng; máy in chính của
       // Agent máy tính (IP thật hoặc USB) thì có.
       settings: _isDesktopOwn(p) ? PrintAgentUi.printerSettings?.call(p) : null,
+      footerAction: _isDesktopOwn(p)
+          ? PrintAgentUi.printerFooterAction?.call(p)
+          : null,
       // Máy in tích hợp của máy POS không xoá được; máy in LAN / USB đã lưu và máy in
       // đã chọn của Agent máy tính (IP thật) thì xoá nhanh được ngay ở đây.
       onRemove:

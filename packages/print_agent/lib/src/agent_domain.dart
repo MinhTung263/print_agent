@@ -7,6 +7,7 @@ export 'data/agent_device_name.dart';
 export 'data/agent_job_handler.dart';
 export 'data/agent_job_log_store.dart';
 export 'data/agent_map_layout.dart';
+export 'data/agent_peers_visibility.dart';
 export 'data/agent_print_activity_store.dart';
 export 'data/agent_printer_reconnect.dart';
 export 'data/agent_printer_remote.dart';

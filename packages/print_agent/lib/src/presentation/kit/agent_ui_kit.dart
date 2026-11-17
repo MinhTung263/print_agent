@@ -169,6 +169,10 @@ abstract final class PrintAgentUi {
   /// không hiện thêm nút "In thử" chung — tránh nhiều nút in thử cho cùng một máy.
   static bool Function(AgentPrinterRef printer)? hasOwnTestPrint;
 
+  /// Nút hành động riêng của app chủ cho máy in [printer], đặt CÙNG HÀNG với "Xoá máy in" ở chân
+  /// chi tiết máy in (VD "In thử"). `null` hoặc trả `null` = không có.
+  static Widget? Function(AgentPrinterRef printer)? printerFooterAction;
+
   /// [station]: điều khiển máy Agent của app chủ (màn Máy Agent cần).
   static void init(
     AgentUiKit kit, {

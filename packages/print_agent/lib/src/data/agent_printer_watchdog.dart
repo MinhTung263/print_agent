@@ -132,7 +132,11 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
   /// Máy in vừa được xác nhận kết nối trong chừng này thì lệnh in tới KHÔNG hỏi lại — in ngay
   /// (vòng dò nền chạy mỗi 3–15 giây). Nếu thực tế máy đã mất, lệnh in lỗi và chạy lại đường chờ
   /// đầy đủ ([waitUntilReady] với `allowFresh: false`).
-  static const Duration freshFor = Duration(seconds: 10);
+  ///
+  /// PHẢI lớn hơn chu kỳ dò nền ([_probeBackground] = 15s): nhỏ hơn thì cứ vài lệnh lại có một lệnh
+  /// rơi vào khoảng "hết hạn xác nhận" và đi đường chờ đầy đủ (mở kết nối + hỏi trạng thái, 1–4 giây)
+  /// — in qua web lúc nhanh lúc chậm dù máy in vẫn khoẻ.
+  static const Duration freshFor = Duration(seconds: 20);
 
   /// Máy in [printer] vừa được xác nhận kết nối gần đây.
   bool isFresh(P printer) {
@@ -142,6 +146,10 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
 
   /// Bỏ xác nhận gần đây của [printer] (lệnh in vừa lỗi: không tin kết quả dò cũ).
   void forgetFresh(P printer) => _okAt.remove(_keyOf(printer));
+
+  /// Lệnh in vừa tới máy thành công = bằng chứng máy in đang kết nối: lệnh sau đi đường nhanh, không
+  /// phụ thuộc vòng dò nền.
+  void markFresh(P printer) => _okAt[_keyOf(printer)] = DateTime.now();
 
   void _setStatus(P printer, AgentPrinterState state, {String? note}) {
     final key = _keyOf(printer);

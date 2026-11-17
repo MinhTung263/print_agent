@@ -10,11 +10,49 @@ import 'package:print_agent/src/presentation/widgets/agent_printers_map.dart';
 
 /// Một máy in trong bảng sắp xếp.
 class _Printer {
-  const _Printer(this.key, this.name, this.icon);
+  const _Printer(this.key, this.name, this.icon, [this.detail = '']);
 
   final String key;
   final String name;
   final IconData icon;
+
+  /// Dòng phụ phân biệt các máy cùng tên: cách kết nối + địa chỉ ("Mạng LAN · 192.168.1.242",
+  /// "Cắm USB", "Có sẵn trên máy").
+  final String detail;
+}
+
+/// Cách kết nối + địa chỉ của một máy in (hiện dưới tên để phân biệt hai máy cùng tên).
+String _connection(String kind, String address) {
+  final addr = address.trim();
+  return switch (kind) {
+    'builtin' => LocaleKeys.printerSetting_agentPrinterKindBuiltIn.tr,
+    'usb' => LocaleKeys.printerSetting_agentPrinterKindUsb.tr,
+    _ =>
+      addr.isEmpty
+          ? LocaleKeys.printerSetting_agentPrinterKindLan.tr
+          : '${LocaleKeys.printerSetting_agentPrinterKindLan.tr} · $addr',
+  };
+}
+
+/// Hai máy cùng tên VÀ cùng dòng phụ (VD hai máy USB giống nhau): đánh số thứ tự cho khác nhau.
+List<_Printer> _numberDuplicates(List<_Printer> list) {
+  final count = <String, int>{};
+  for (final p in list) {
+    count['${p.name}|${p.detail}'] = (count['${p.name}|${p.detail}'] ?? 0) + 1;
+  }
+  final seen = <String, int>{};
+  return [
+    for (final p in list)
+      if ((count['${p.name}|${p.detail}'] ?? 0) > 1)
+        _Printer(
+          p.key,
+          p.name,
+          p.icon,
+          '${p.detail} #${seen['${p.name}|${p.detail}'] = (seen['${p.name}|${p.detail}'] ?? 0) + 1}',
+        )
+      else
+        p,
+  ];
 }
 
 /// Một nhánh (máy Agent) trong bảng sắp xếp.
@@ -61,14 +99,20 @@ class _AgentMapArrangeSheetState extends State<AgentMapArrangeSheet> {
 
   List<_Branch> _load() {
     final service = PrintAgentUi.station;
-    final peers = agentPeerEntries(service.relay.stations.value);
+    // Máy Agent đã ẨN các trạm in khác trên sơ đồ thì ở đây cũng không liệt kê chúng (chỉ sắp xếp những
+    // gì đang thấy). Máy bán hàng: sơ đồ luôn hiện các Agent của công ty.
+    AgentPeersVisibility.ensureLoaded();
+    final showPeers = !widget.isAgent || AgentPeersVisibility.show.value;
+    final peers = showPeers
+        ? agentPeerEntries(service.relay.stations.value)
+        : const <AgentPeerEntry>[];
     return [
       if (widget.isAgent)
         _Branch(
           id: service.stationId,
           title: AgentIdentity.label(service.displayName, service.stationId),
           self: true,
-          printers: [
+          printers: _numberDuplicates([
             for (final s in AgentMapLayout.sorted(
               PrintAgentUi.station.watchdog.statuses.toList(),
               AgentMapLayout.printers[service.stationId] ?? const <String>[],
@@ -82,14 +126,19 @@ class _AgentMapArrangeSheetState extends State<AgentMapArrangeSheet> {
                   AgentPrinterKind.usb => Icons.usb_rounded,
                   _ => Icons.print_rounded,
                 },
+                _connection(switch (s.printer.refKind) {
+                  AgentPrinterKind.builtIn => 'builtin',
+                  AgentPrinterKind.usb => 'usb',
+                  _ => 'lan',
+                }, s.printer.refAddress ?? ''),
               ),
-          ],
+          ]),
         ),
       for (final e in peers)
         _Branch(
           id: '${e.info['id']}',
           title: AgentIdentity.ofStation(e.info),
-          printers: [
+          printers: _numberDuplicates([
             for (final p in agentPeerPrinterMaps(e.info))
               _Printer(
                 agentPeerPrinterKey(p),
@@ -99,19 +148,26 @@ class _AgentMapArrangeSheetState extends State<AgentMapArrangeSheet> {
                   'usb' => Icons.usb_rounded,
                   _ => Icons.print_rounded,
                 },
+                _connection('${p['kind'] ?? ''}', '${p['addr'] ?? ''}'),
               ),
-          ],
+          ]),
         ),
     ];
   }
 
   Future<void> _save() async {
+    final shown = {for (final b in _branches) b.id};
     await AgentMapLayout.save(
+      // Trạm đang ẩn (không có trong bảng): giữ nguyên thứ tự đã sắp trước đó, không xoá.
       agentOrder: [
         for (final b in _branches)
           if (!b.self) b.id,
+        for (final id in AgentMapLayout.agents)
+          if (!shown.contains(id)) id,
       ],
       printerOrder: {
+        for (final e in AgentMapLayout.printers.entries)
+          if (!shown.contains(e.key)) e.key: e.value,
         for (final b in _branches) b.id: [for (final p in b.printers) p.key],
       },
     );
@@ -324,7 +380,23 @@ class _PrinterRow extends StatelessWidget {
         spacing: AppSpace.sm,
         children: [
           Icon(printer.icon, size: 18, color: AppColors.primaryBlueBase),
-          Expanded(child: AppText.raw(printer.name, maxLines: 1)),
+          Expanded(
+            child: AppColumn(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 2,
+              children: [
+                AppText.raw(printer.name, maxLines: 1),
+                if (printer.detail.isNotEmpty)
+                  AppText.raw(
+                    printer.detail,
+                    variant: .caption,
+                    tone: .secondary,
+                    maxLines: 1,
+                  ),
+              ],
+            ),
+          ),
           const Icon(
             Icons.drag_indicator_rounded,
             size: 18,

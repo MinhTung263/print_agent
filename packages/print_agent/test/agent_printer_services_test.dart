@@ -122,6 +122,24 @@ void main() {
     );
 
     test(
+      'đường nhanh phủ hết chu kỳ dò nền (15s) và lệnh in thành công làm mới xác nhận',
+      () async {
+        // Xác nhận hết hạn trước vòng dò kế tiếp = cứ vài lệnh lại có lệnh chậm 1–4 giây.
+        expect(
+          AgentPrinterWatchdog.freshFor,
+          greaterThan(const Duration(seconds: 15)),
+        );
+        watchdog.forgetFresh(kitchen);
+        expect(watchdog.isFresh(kitchen), isFalse);
+        watchdog.markFresh(kitchen);
+        expect(watchdog.isFresh(kitchen), isTrue);
+        gateway.readyChecks = 0;
+        expect(await watchdog.waitUntilReady(kitchen), kitchen);
+        expect(gateway.readyChecks, 0);
+      },
+    );
+
+    test(
       'máy USB rút / cắm lại: trạng thái đổi trong vài trăm ms (dò nhanh), không chờ vòng 3–15s',
       () async {
         AgentPrinterWatchdog.fastProbe = (p) =>
