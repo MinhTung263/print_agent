@@ -7,6 +7,8 @@ import 'package:print_agent_core/print_agent_core.dart';
 import '../domain/entities/agent_job_log.dart';
 import '../domain/entities/agent_printer_ref.dart';
 import '../domain/ports/agent_job_printer.dart';
+import '../domain/ports/agent_host.dart' show AgentNoticeLevel;
+import '../l10n/agent_locale_keys.dart';
 import '../print_agent_module.dart';
 import 'agent_held_job_store.dart';
 import 'agent_job_log_store.dart';
@@ -40,6 +42,10 @@ class AgentJobHandler<P extends AgentPrinterRef> {
   final AgentHeldJobStore _heldStore;
 
   static const Duration dedupeWindow = Duration(minutes: 15);
+
+  /// Lệnh lớn hơn mức này không lưu xuống máy khi phải chờ (ghi đĩa lớn lúc cao điểm làm
+  /// chậm máy cấu hình thấp). Phiếu 1-bit / tem thường chỉ vài chục KB.
+  static const int maxPersistBytes = 512 * 1024;
   static const int dedupeMax = 500;
   static Duration breakerWindow = const Duration(seconds: 10);
   static const Duration holdMax = Duration(minutes: 10);
@@ -65,6 +71,12 @@ class AgentJobHandler<P extends AgentPrinterRef> {
   /// Máy in → các lệnh đang chờ tới lượt (để báo "giữ lệnh" khi máy in hết
   /// giấy giữa chừng).
   final Map<String, List<PrintRelayJob>> _waiting = {};
+
+  /// Thứ tự đến của từng lệnh (tăng dần) — lưu kèm lệnh để khôi phục đúng thứ tự.
+  int _arrivals = 0;
+  final Map<PrintRelayJob, int> _order = Map.identity();
+
+  int _orderOf(PrintRelayJob job) => _order[job] ?? 0;
 
   /// Máy in vừa được xác nhận mất kết nối.
   final Map<String, DateTime> _downAt = {};
@@ -122,11 +134,19 @@ class AgentJobHandler<P extends AgentPrinterRef> {
     final found = _printer.resolve(job);
     final key = _printerKey(found);
     final waiting = _waiting.putIfAbsent(key, () => []);
+    // Lệnh phải CHỜ sau lệnh khác (máy in đang in / đang giữ): lưu xuống máy để cúp điện /
+    // tắt app giữa chừng vẫn in tiếp, không mất đơn. Lệnh in ngay không lưu (đỡ ghi đĩa,
+    // và tránh in lại một phiếu đã in dở sau khi khởi động lại).
+    final mustWait = _tails[key] != null || _holding.contains(key);
+    _order[job] = _arrivals++;
     waiting.add(job);
+    if (mustWait && job.payloadBytes <= maxPersistBytes) {
+      unawaited(_heldStore.save(job, order: _orderOf(job)));
+    }
     // Máy in đang giữ lệnh: lệnh mới xếp sau, báo máy gửi ngay.
     if (_holding.contains(key)) {
       job.onHeld?.call();
-      unawaited(_heldStore.save(job));
+      unawaited(_heldStore.save(job, order: _orderOf(job)));
     }
     final result = Completer<bool>();
     final tail = (_tails[key] ?? Future<void>.value()).then((_) async {
@@ -137,6 +157,7 @@ class AgentJobHandler<P extends AgentPrinterRef> {
         PrintAgentModule.host.log('[AGENT] In lệnh lỗi: $e');
         result.complete(false);
       } finally {
+        _order.remove(job);
         await _heldStore.remove(job);
       }
     });
@@ -274,10 +295,10 @@ class AgentJobHandler<P extends AgentPrinterRef> {
       'máy in sẵn sàng',
     );
     job.onHeld?.call();
-    await _heldStore.save(job);
+    await _heldStore.save(job, order: _orderOf(job));
     for (final waiting in List.of(_waiting[key] ?? const <PrintRelayJob>[])) {
       waiting.onHeld?.call();
-      await _heldStore.save(waiting);
+      await _heldStore.save(waiting, order: _orderOf(waiting));
     }
     final until = DateTime.now().add(holdMax);
     AgentPrintFailure? failure = first;
@@ -291,6 +312,20 @@ class AgentJobHandler<P extends AgentPrinterRef> {
     }
     if (failure == null) {
       host.log('[AGENT] ${printer.refName}: đã in lệnh đang giữ');
+      // Máy TEM có giấy lại sau khi hết giấy / kẹt: thường là vừa đổi cuộn tem — cuộn mới
+      // khe khác thì tem lệch dần nếu chưa dò lại khe. Nhắc khách (không tự dò: dò làm máy
+      // cuốn thêm vài tem và cần đúng khổ tem). Mở nắp rồi đóng thì không nhắc.
+      if (job.isLabel && first.error == AgentJobError.outOfPaper) {
+        host.notify(
+          LocaleKeys.printerSetting_agentLabelRollReminderTr(
+            printer: printer.refName.isEmpty
+                ? (printer.refAddress ?? '')
+                : printer.refName,
+          ),
+          level: AgentNoticeLevel.warning,
+          duration: const Duration(seconds: 20),
+        );
+      }
     }
     return failure;
   }

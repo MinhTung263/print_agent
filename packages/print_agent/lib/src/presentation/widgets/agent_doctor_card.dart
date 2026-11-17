@@ -1,22 +1,63 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:printer_label/printer_label.dart';
 import 'package:print_agent/src/agent_domain.dart';
 import 'package:print_agent/src/presentation/agent_widgets.dart';
 import 'package:print_agent/src/presentation/kit/kit.dart';
 
-import 'agent_printer_issues_card.dart';
+import 'package:print_agent/src/presentation/utils/agent_printer_issue.dart';
 
 /// "Bác sĩ trạm in": tự kiểm tra các điều kiện để trạm in nhận và in được
 /// phiếu, nói bằng lời dễ hiểu cái gì đang ổn / cần xem — nhận phiếu qua
 /// Internet, trong mạng quán, máy in sẵn sàng, vai trò trạm chính / dự phòng.
 /// Không hiện IP / tên kênh kỹ thuật.
-class AgentDoctorCard extends StatelessWidget {
+class AgentDoctorCard extends StatefulWidget {
   const AgentDoctorCard({super.key, required this.cloud});
 
   /// Trạng thái các kênh Internet (màn Trạm in theo dõi sẵn).
   final AgentCloudInfo cloud;
 
   @override
+  State<AgentDoctorCard> createState() => _AgentDoctorCardState();
+}
+
+class _AgentDoctorCardState extends State<AgentDoctorCard>
+    with WidgetsBindingObserver {
+  /// Android: ứng dụng đã được miễn "tối ưu hoá pin" chưa (chưa thì hệ điều hành có thể dừng
+  /// trạm in khi tắt màn hình). Nơi khác luôn `true`.
+  bool _batteryOk = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (Platform.isAndroid) {
+      WidgetsBinding.instance.addObserver(this);
+      unawaited(_refreshBattery());
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Người dùng đổi cài đặt pin rồi quay lại app: kiểm tra lại.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) unawaited(_refreshBattery());
+  }
+
+  Future<void> _refreshBattery() async {
+    final ok = await PrinterLabel.isIgnoringBatteryOptimizations();
+    if (mounted && ok != _batteryOk) setState(() => _batteryOk = ok);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final cloud = widget.cloud;
     final station = PrintAgentUi.station;
     return BaseCard.section(
       child: Obx(() {
@@ -30,7 +71,7 @@ class AgentDoctorCard extends StatelessWidget {
         final ready = active
             .where((s) => s.state == AgentPrinterState.connected)
             .length;
-        final printerIssue = active.any(AgentPrinterIssuesCard.isIssue);
+        final printerIssue = active.any(AgentPrinterIssue.isIssue);
         final channels = cloud.channels;
         final internet = channels.isEmpty
             ? null
@@ -73,6 +114,20 @@ class AgentDoctorCard extends StatelessWidget {
                 : LocaleKeys.printerSetting_agentDoctorStandby.tr,
             state: _State.ok,
           ),
+          if (Platform.isAndroid && !_batteryOk)
+            _Check(
+              title: LocaleKeys.printerSetting_agentDoctorBackground,
+              detail: LocaleKeys.printerSetting_agentDoctorBackgroundFix.tr,
+              state: _State.warn,
+              onTap: () =>
+                  unawaited(PrinterLabel.openBatteryOptimizationSettings()),
+            ),
+          if (Platform.isIOS)
+            _Check(
+              title: LocaleKeys.printerSetting_agentDoctorKeepOpen,
+              detail: LocaleKeys.printerSetting_agentDoctorKeepOpenHint.tr,
+              state: _State.ok,
+            ),
         ];
         final issues = checks.where((c) => c.state != _State.ok).length;
         return AppColumn(
@@ -123,11 +178,15 @@ class _Check {
     required this.title,
     required this.detail,
     required this.state,
+    this.onTap,
   });
 
   final String title;
   final String detail;
   final _State state;
+
+  /// Bấm vào dòng để xử lý ngay (VD mở cài đặt pin).
+  final VoidCallback? onTap;
 }
 
 class _CheckRow extends StatelessWidget {
@@ -142,7 +201,7 @@ class _CheckRow extends StatelessWidget {
       _State.warn => (Icons.error_outline_rounded, AppColors.orange),
       _State.bad => (Icons.cancel_rounded, AppColors.errorRed),
     };
-    return AppRow(
+    final row = AppRow(
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: AppSpace.sm,
       children: [
@@ -165,5 +224,6 @@ class _CheckRow extends StatelessWidget {
         ),
       ],
     );
+    return check.onTap == null ? row : InkWell(onTap: check.onTap, child: row);
   }
 }

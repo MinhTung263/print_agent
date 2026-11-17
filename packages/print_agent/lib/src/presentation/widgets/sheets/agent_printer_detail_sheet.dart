@@ -27,6 +27,8 @@ class AgentPrinterDetail {
     this.onTestPrint,
     this.onRemove,
     this.settings,
+    this.onReconnect,
+    this.onSwitchNetwork,
   });
 
   final String name;
@@ -59,6 +61,13 @@ class AgentPrinterDetail {
 
   /// Cài đặt riêng của máy in (app chủ dựng); `null` = không có.
   final Widget? settings;
+
+  /// "Kết nối lại" máy in đang lỗi (mở bảng kết nối lại, `true` = đã kết nối được); `null` =
+  /// máy in không lỗi / không kết nối lại được ở đây.
+  final Future<bool> Function()? onReconnect;
+
+  /// "Đổi mạng": máy in LAN ở mạng khác — chuyển sang đúng Wi-Fi của máy in; `null` = không có.
+  final Future<bool> Function()? onSwitchNetwork;
 }
 
 /// "Chi tiết máy in" khi bấm máy in trên sơ đồ: điện thoại mở bảng trượt,
@@ -173,6 +182,37 @@ class AgentPrinterDetailSheet extends StatelessWidget {
               ),
             ],
           ),
+          // Máy in đang lỗi: kết nối lại ngay tại đây (đóng chi tiết rồi mở bảng kết nối lại).
+          if (d.state == AgentPrinterDetailState.notReady &&
+              (d.onReconnect != null || d.onSwitchNetwork != null))
+            AppRow(
+              spacing: AppSpace.sm,
+              children: [
+                if (d.onReconnect != null)
+                  Expanded(
+                    child: _ActionButton(
+                      icon: Icons.refresh_rounded,
+                      label: LocaleKeys.printerSetting_agentReconnect,
+                      filled: true,
+                      onTap: () {
+                        Get.back<void>();
+                        unawaited(d.onReconnect!());
+                      },
+                    ),
+                  ),
+                if (d.onSwitchNetwork != null)
+                  Expanded(
+                    child: _ActionButton(
+                      icon: Icons.wifi_rounded,
+                      label: LocaleKeys.printerSetting_agentSwitchNetwork,
+                      onTap: () {
+                        Get.back<void>();
+                        unawaited(d.onSwitchNetwork!());
+                      },
+                    ),
+                  ),
+              ],
+            ),
           BaseCard.section(
             child: AppColumn(
               mainAxisSize: MainAxisSize.min,
@@ -249,6 +289,53 @@ class AgentPrinterDetailSheet extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Nút hành động ở đầu chi tiết máy in (Kết nối lại / Đổi mạng).
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.filled = false,
+  });
+
+  final IconData icon;
+
+  /// Khoá chuỗi đa ngôn ngữ.
+  final String label;
+  final VoidCallback onTap;
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) => BaseTap(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: AppSpace.sm),
+      decoration: BoxDecoration(
+        color: filled ? AppColors.primaryBlueBase : null,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.primaryBlueBase),
+      ),
+      child: AppRow(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        spacing: AppSpace.xs,
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: filled ? Colors.white : AppColors.primaryBlueBase,
+          ),
+          AppText(
+            label,
+            variant: .title,
+            textColor: filled ? Colors.white : AppColors.primaryBlueBase,
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 /// Popup chi tiết (máy tính / tablet): tiêu đề + nút đóng.

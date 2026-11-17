@@ -44,6 +44,7 @@ abstract final class AgentStationInfo {
         // Đã tắt nhận lệnh trên Agent → coi như chưa sẵn sàng.
         'ready': builtInConnected && !builtInOff,
         if (builtInOff) 'off': true,
+        if (builtIn.labelDpis.isNotEmpty) 'dpi': builtIn.labelDpis,
       };
     }
     final printers = _printers(statuses);

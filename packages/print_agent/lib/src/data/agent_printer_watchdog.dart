@@ -546,8 +546,14 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
     _setStatus(printer, AgentPrinterState.disconnected);
   }
 
+  /// Máy in USB trên Windows (`usbp:<đường dẫn thiết bị>`): rút cắm sang cổng khác thì
+  /// đường dẫn đổi — cổng máy in tìm lại theo VID/PID ([AgentPrinterGateway.relocate]).
+  static bool _isWindowsUsbPath(AgentPrinterRef p) =>
+      (p.refAddress ?? '').startsWith('usbp:');
+
   static bool _relocatable(AgentPrinterRef p) =>
       p.refKind == AgentPrinterKind.lan ||
+      _isWindowsUsbPath(p) ||
       (p.refKind != AgentPrinterKind.usb &&
           p.refKind != AgentPrinterKind.bluetooth &&
           (p.refMac?.isNotEmpty ?? false));

@@ -154,6 +154,30 @@ void main() {
       },
     );
 
+    test(
+      'máy USB Windows cắm sang cổng khác: lệnh in tìm lại theo địa chỉ mới',
+      () async {
+        const old = FakePrinter(
+          refId: 5,
+          refKind: AgentPrinterKind.builtIn,
+          refAddress: r'usbp:\\?\usb#vid_0483&pid_5740#6&1&0&1#{g}',
+          refName: 'Bill',
+        );
+        const moved = FakePrinter(
+          refId: 5,
+          refKind: AgentPrinterKind.builtIn,
+          refAddress: r'usbp:\\?\usb#vid_0483&pid_5740#6&1&0&2#{g}',
+          refName: 'Bill',
+        );
+        gateway.ready = false;
+        gateway.relocated = moved;
+        // Địa chỉ mới sẵn sàng ngay khi được tìm thấy.
+        gateway.readyFor = {moved.refAddress!};
+        final result = await watchdog.waitUntilReady(old);
+        expect(result?.refAddress, moved.refAddress);
+      },
+    );
+
     test('waitUntilReady trả máy in khi sẵn sàng', () async {
       expect(await watchdog.waitUntilReady(kitchen), kitchen);
       expect(watchdog.statuses.single.state, AgentPrinterState.connected);

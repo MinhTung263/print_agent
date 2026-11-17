@@ -83,4 +83,94 @@ void main() {
     host.companyKey = '1';
     expect(await AgentHeldJobStore(now: () => now).takePending(), hasLength(1));
   });
+
+  test(
+    'cúp điện khi nhiều phiếu đang xếp hàng: phiếu đang chờ in lại đủ, phiếu đang in dở thì không',
+    () async {
+      // Máy in chậm: "a" đang in, "b" "c" xếp hàng chờ — rồi mất điện (bỏ handler cũ).
+      final slow = FakeJobPrinter()..delay = const Duration(seconds: 3);
+      final old = handler(slow);
+      unawaited(old.handle(receipt('a')));
+      unawaited(old.handle(receipt('b')));
+      unawaited(old.handle(receipt('c')));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      // Mở lại: chỉ "b" "c" (chưa in) quay lại; "a" có thể đã ra giấy nên không in lại.
+      final fresh = handler();
+      expect(await fresh.restoreHeld(), 2);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(printer.printed.map((j) => j.dedupeKey), ['b', 'c']);
+    },
+  );
+
+  test('lệnh in ngay (không phải chờ): không ghi xuống máy', () async {
+    expect(await handler().handle(receipt('f')), isTrue);
+    expect(await handler().restoreHeld(), 0);
+    final store = AgentHeldJobStore(now: () => now);
+    expect(await store.takePending(), isEmpty);
+  });
+
+  test(
+    'lệnh quá lớn khi phải chờ: không lưu (đỡ ghi đĩa lúc cao điểm)',
+    () async {
+      final slow = FakeJobPrinter()..delay = const Duration(milliseconds: 300);
+      final h = handler(slow);
+      final big = PrintRelayJob(
+        kind: PrintRelayJobKind.receipt,
+        printer: const PrintRelayPrinter(
+          address: '10.0.0.9',
+          id: 4,
+          name: 'Bếp',
+        ),
+        images: [Uint8List(AgentJobHandler.maxPersistBytes + 1)],
+        key: 'big',
+      );
+      unawaited(h.handle(receipt('x')));
+      unawaited(h.handle(big));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(await handler().restoreHeld(), 0);
+    },
+  );
+
+  PrintRelayJob label(String key) => PrintRelayJob(
+    kind: PrintRelayJobKind.label,
+    printer: const PrintRelayPrinter(address: '10.0.0.9', id: 4, name: 'Tem'),
+    images: [
+      Uint8List.fromList([1, 2, 3]),
+    ],
+    key: key,
+  );
+
+  group('nhắc dò lại khe sau khi máy tem có giấy lại', () {
+    test('tem hết giấy rồi có giấy: nhắc một lần', () async {
+      printer.failuresFirst.add(
+        const AgentPrintFailure(AgentJobError.outOfPaper),
+      );
+      expect(await handler().handle(label('t1')), isTrue);
+      expect(host.notices, hasLength(1));
+      expect(host.notices.single, contains('Tem'), reason: 'tên máy in');
+      expect(host.notices.single, contains('dò lại khe'));
+    });
+
+    test('mở nắp rồi đóng: không nhắc (không phải đổi cuộn tem)', () async {
+      printer.failuresFirst.add(
+        const AgentPrintFailure(AgentJobError.coverOpen),
+      );
+      expect(await handler().handle(label('t2')), isTrue);
+      expect(host.notices, isEmpty);
+    });
+
+    test('phiếu hoá đơn hết giấy: không nhắc (không có khe tem)', () async {
+      printer.failuresFirst.add(
+        const AgentPrintFailure(AgentJobError.outOfPaper),
+      );
+      expect(await handler().handle(receipt('r1')), isTrue);
+      expect(host.notices, isEmpty);
+    });
+
+    test('in bình thường không hết giấy: không nhắc', () async {
+      expect(await handler().handle(label('t3')), isTrue);
+      expect(host.notices, isEmpty);
+    });
+  });
 }

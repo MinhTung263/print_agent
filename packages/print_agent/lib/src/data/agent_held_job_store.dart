@@ -41,8 +41,9 @@ class AgentHeldJobStore {
     } catch (_) {}
   }
 
-  /// Bắt đầu giữ [job]: lưu lại (đã lưu thì thôi).
-  Future<void> save(PrintRelayJob job) async {
+  /// Bắt đầu giữ [job]: lưu lại (đã lưu thì thôi). [order] = thứ tự lệnh đến Agent — khôi
+  /// phục theo đúng thứ tự này (lệnh đến trước in trước) dù lưu xuống máy lúc nào.
+  Future<void> save(PrintRelayJob job, {int? order}) async {
     final id = job.dedupeKey;
     if (id.isEmpty) return;
     final items = _read();
@@ -50,6 +51,7 @@ class AgentHeldJobStore {
     items.add({
       'id': id,
       'at': _now().millisecondsSinceEpoch,
+      'ord': ?order,
       'job': job.toMap(),
     });
     while (items.length > maxJobs) {
@@ -74,6 +76,15 @@ class AgentHeldJobStore {
     if (items.isEmpty) return const [];
     final cutoff = _now().subtract(maxAge).millisecondsSinceEpoch;
     final jobs = <PrintRelayJob>[];
+    // Theo thứ tự lệnh đến Agent (`ord`); lệnh cũ không có `ord` thì theo giờ lưu.
+    items.sort((a, b) {
+      final byOrder = ((a['ord'] as int?) ?? 0).compareTo(
+        (b['ord'] as int?) ?? 0,
+      );
+      return byOrder != 0
+          ? byOrder
+          : ((a['at'] as int?) ?? 0).compareTo((b['at'] as int?) ?? 0);
+    });
     for (final e in items) {
       final at = e['at'];
       if (at is! int || at < cutoff) continue;

@@ -78,14 +78,54 @@ class AgentSender<P extends AgentPrinterRef> {
   }) => _send(
     printer,
     force: force,
-    (target) => PrintRelayJob.label(
+    (target) async => PrintRelayJob.label(
       printer: target,
       images: images,
       size: size,
       copies: copies,
       sender: AgentDeviceName.label,
+      // Máy tem vàng bạc 300dpi: dựng ảnh mịn hơn 203dpi (Agent báo độ phân giải đầu in).
+      dotsPerMm: await _labelDotsPerMm(target),
     ),
   );
+
+  /// Số chấm/mm để dựng ảnh tem cho máy in [target]: theo độ phân giải Agent báo
+  /// ([dotsPerMmOf]); không biết / lỗi thì 8 (203dpi, như cũ).
+  Future<double> _labelDotsPerMm(PrintRelayPrinter target) async {
+    try {
+      final stations = await _relay().onlineStations().timeout(
+        const Duration(seconds: 2),
+      );
+      return dotsPerMmOf(stations, target);
+    } catch (_) {
+      return 8;
+    }
+  }
+
+  /// Máy tem [target] trên các trạm [stations] in ở bao nhiêu dpi (theo `builtIn.dpi` mỗi trạm
+  /// báo): 300dpi → ~11,81 chấm/mm, còn lại 8. Máy in tích hợp của trạm tra theo mã trạm, máy
+  /// khác theo địa chỉ.
+  static double dotsPerMmOf(
+    List<Map<Object?, Object?>> stations,
+    PrintRelayPrinter target,
+  ) {
+    int? dpi;
+    for (final station in stations) {
+      final builtIn = station['builtIn'];
+      final map = builtIn is Map ? builtIn['dpi'] : null;
+      if (map is! Map) continue;
+      final byStation = target.isBuiltIn && target.stationId != null;
+      if (byStation) {
+        if (station['id'] == target.stationId) dpi = _dpiOf(map['builtin']);
+      } else {
+        dpi ??= _dpiOf(map[target.address.trim()]);
+      }
+      if (dpi != null) break;
+    }
+    return dpi != null && dpi >= 300 ? 300 / 25.4 : 8;
+  }
+
+  static int? _dpiOf(Object? v) => v is num ? v.toInt() : null;
 
   /// [force]: gửi qua Agent kể cả khi tưởng in thẳng được (in thẳng đã lỗi).
   Future<bool?> _send(

@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:print_agent/print_agent.dart';
 // ignore: implementation_imports
 import 'package:print_agent/src/presentation/widgets/agent_printers_map.dart';
+// ignore: implementation_imports
+import 'package:print_agent/src/presentation/widgets/sheets/agent_printer_detail_sheet.dart';
 
 import 'support/fake_host.dart';
 import 'support/fake_station.dart';
@@ -158,4 +160,112 @@ void main() {
     final d = AgentPrintersMap.detailOf(_status(posBuiltIn), const {});
     expect(d.kind, 'builtin');
   });
+
+  test(
+    'tên nút: model ở dòng tên, loại máy ở dòng phụ (không bị cắt mất model)',
+    () {
+      final hd = AgentPrintersMap.splitName('Máy in hoá đơn · XP-80C');
+      expect(hd.title, 'XP-80C');
+      expect(hd.typeLine?.text, 'Hoá đơn');
+      final tem = AgentPrintersMap.splitName('Máy in tem · XP-420B');
+      expect(tem.title, 'XP-420B');
+      expect(tem.typeLine?.text, 'Tem');
+    },
+  );
+
+  test(
+    'tên không có dấu " · " hoặc thiếu model: giữ nguyên, không dòng phụ',
+    () {
+      expect(AgentPrintersMap.splitName('Bếp').title, 'Bếp');
+      expect(AgentPrintersMap.splitName('Bếp').typeLine, isNull);
+      expect(
+        AgentPrintersMap.splitName('Máy in tem · ').title,
+        'Máy in tem · ',
+      );
+      expect(AgentPrintersMap.splitName('').title, '');
+    },
+  );
+
+  test(
+    'địa chỉ USB của Windows / Linux CUPS là máy USB (không phải "tích hợp")',
+    () {
+      for (final a in [
+        r'usbp:\\?\usb#vid_0483&pid_5740#1#{g}',
+        'lpq:Xprinter',
+      ]) {
+        final p = FakePrinter(
+          refKind: AgentPrinterKind.builtIn,
+          refAddress: a,
+          refName: 'Máy in hoá đơn · XP',
+        );
+        expect(AgentPrintersMap.addressLineOf(_status(p))?.text, 'USB');
+      }
+    },
+  );
+
+  AgentPrinterStatus<AgentPrinterRef> statusOf(
+    FakePrinter p,
+    AgentPrinterState state,
+  ) => AgentPrinterStatus<AgentPrinterRef>(printer: p, state: state);
+
+  const lan = FakePrinter(
+    refKind: AgentPrinterKind.lan,
+    refAddress: '192.168.1.64',
+    refName: 'Máy in hoá đơn · HPRT',
+  );
+
+  test(
+    'chi tiết máy in lỗi: có "Kết nối lại"; máy ổn / đã tắt nhận lệnh thì không',
+    () {
+      final down = AgentPrintersMap.detailOf(
+        statusOf(lan, AgentPrinterState.disconnected),
+        const {},
+      );
+      expect(down.state, AgentPrinterDetailState.notReady);
+      expect(down.onReconnect, isNotNull);
+      expect(
+        down.onSwitchNetwork,
+        isNull,
+        reason: 'mất kết nối: chưa phải khác mạng',
+      );
+
+      final ok = AgentPrintersMap.detailOf(
+        statusOf(lan, AgentPrinterState.connected),
+        const {},
+      );
+      expect(ok.onReconnect, isNull);
+      expect(ok.onSwitchNetwork, isNull);
+
+      // Đã tắt nhận lệnh: không tính là lỗi.
+      final paused = AgentPrintersMap.detailOf(
+        statusOf(lan, AgentPrinterState.disconnected),
+        {AgentPrinterSwitches.keyOf(lan)},
+      );
+      expect(paused.state, AgentPrinterDetailState.paused);
+      expect(paused.onReconnect, isNull);
+    },
+  );
+
+  test(
+    'máy in LAN ở mạng khác: có thêm "Đổi mạng"; máy USB khác mạng không có',
+    () {
+      final other = AgentPrintersMap.detailOf(
+        statusOf(lan, AgentPrinterState.otherNetwork),
+        const {},
+      );
+      expect(other.onReconnect, isNotNull);
+      expect(other.onSwitchNetwork, isNotNull);
+
+      const usb = FakePrinter(
+        refKind: AgentPrinterKind.usb,
+        refAddress: 'usb:1',
+        refName: 'Máy in tem',
+      );
+      final usbOther = AgentPrintersMap.detailOf(
+        statusOf(usb, AgentPrinterState.otherNetwork),
+        const {},
+      );
+      expect(usbOther.onSwitchNetwork, isNull);
+    },
+  );
 }

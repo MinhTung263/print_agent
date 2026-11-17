@@ -127,6 +127,14 @@ abstract final class LocaleKeys {
   static const printerSetting_agentDoctorAllGood =
       'printerSetting_agentDoctorAllGood';
 
+  /// "Chạy nền ổn định"
+  static const printerSetting_agentDoctorBackground =
+      'printerSetting_agentDoctorBackground';
+
+  /// "Android có thể dừng trạm in khi tắt màn hình. Bấm để mở cài đặt pin, chọn ứng dụng này và đặt "Không hạn chế""
+  static const printerSetting_agentDoctorBackgroundFix =
+      'printerSetting_agentDoctorBackgroundFix';
+
   /// "Nhận phiếu qua Internet"
   static const printerSetting_agentDoctorInternet =
       'printerSetting_agentDoctorInternet';
@@ -148,6 +156,14 @@ abstract final class LocaleKeys {
       'printerSetting_agentDoctorIssues';
   static String printerSetting_agentDoctorIssuesTr({required Object count}) =>
       printerSetting_agentDoctorIssues.trParams({'count': '$count'});
+
+  /// "Giữ màn hình sáng"
+  static const printerSetting_agentDoctorKeepOpen =
+      'printerSetting_agentDoctorKeepOpen';
+
+  /// "iPhone / iPad khoá màn hình là ngừng nhận phiếu. Cắm nguồn và giữ ứng dụng mở trên màn hình (nên bật Truy cập được hướng dẫn tại quầy)"
+  static const printerSetting_agentDoctorKeepOpenHint =
+      'printerSetting_agentDoctorKeepOpenHint';
 
   /// "Nhận phiếu trong mạng quán"
   static const printerSetting_agentDoctorLan = 'printerSetting_agentDoctorLan';
@@ -379,6 +395,13 @@ abstract final class LocaleKeys {
 
   /// "mạng nội bộ"
   static const printerSetting_agentJobViaLan = 'printerSetting_agentJobViaLan';
+
+  /// "Máy in tem @printer đã có giấy lại. Nếu vừa đổi cuộn tem, hãy dò lại khe (cài đặt máy in → Căn chỉnh tem → Dò lại khe) để tem không bị lệch."
+  static const printerSetting_agentLabelRollReminder =
+      'printerSetting_agentLabelRollReminder';
+  static String printerSetting_agentLabelRollReminderTr({
+    required Object printer,
+  }) => printerSetting_agentLabelRollReminder.trParams({'printer': '$printer'});
 
   /// "Phiếu gần nhất lúc @time"
   static const printerSetting_agentLastJob = 'printerSetting_agentLastJob';

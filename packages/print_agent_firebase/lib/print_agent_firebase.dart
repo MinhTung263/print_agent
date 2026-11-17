@@ -118,15 +118,46 @@ class FirebasePrintRelayTransport implements PrintRelayTransport {
           'at': ServerValue.timestamp,
           'hb': ServerValue.timestamp,
         });
+        unawaited(_purgeOrphanJobs());
       } catch (_) {}
     });
+    var beats = 0;
     _heartbeat = Timer.periodic(heartbeatEvery, (_) {
+      // Mỗi ~10 phút dọn thêm lệnh mồ côi (máy gửi rớt mạng trước khi xoá lệnh).
+      if (++beats % 20 == 0) unawaited(_purgeOrphanJobs());
       unawaited(
         presence
             .update({'hb': ServerValue.timestamp})
             .catchError((Object _) {}),
       );
     });
+  }
+
+  /// Lệnh cũ hơn [orphanAfter] còn nằm trên `jobs` = mồ côi (máy gửi rớt mạng trước
+  /// khi xoá, trạm chưa nhận). Khoá `push()` tăng dần theo thời gian nên chỉ đọc
+  /// một đợt đầu (cũ nhất) — không tải cả nhánh, không cần chỉ mục.
+  static const Duration orphanAfter = Duration(minutes: 10);
+
+  Future<void> _purgeOrphanJobs() async {
+    try {
+      final snap = await _jobs.orderByKey().limitToFirst(100).get();
+      final value = snap.value;
+      if (value is! Map) return;
+      final now = DateTime.now().millisecondsSinceEpoch + _serverOffset;
+      for (final e in value.entries) {
+        final job = e.value;
+        final at = job is Map ? job['createdAt'] : null;
+        // Lệnh trạm đang in / đang giữ thì không đụng, dù đồng hồ máy gửi lệch.
+        final status = job is Map ? job['status'] : null;
+        if (status == PrintRelayStatus.printing ||
+            status == PrintRelayStatus.held) {
+          continue;
+        }
+        if (at is num && now - at.toInt() > orphanAfter.inMilliseconds) {
+          await _jobs.child('${e.key}').remove();
+        }
+      }
+    } catch (_) {}
   }
 
   @override

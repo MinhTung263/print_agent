@@ -16,6 +16,9 @@ class FakeGateway implements AgentPrinterGateway<FakePrinter> {
   bool usbAttached = false;
   bool usbConnects = true;
   bool ready = true;
+
+  /// Địa chỉ luôn sẵn sàng dù [ready] = false (máy in vừa đổi cổng).
+  Set<String> readyFor = {};
   int readyChecks = 0;
   FakePrinter? relocated;
   int builtInRestarts = 0;
@@ -46,7 +49,7 @@ class FakeGateway implements AgentPrinterGateway<FakePrinter> {
   @override
   Future<bool> isReady(FakePrinter printer) async {
     readyChecks++;
-    return ready;
+    return ready || readyFor.contains(printer.refAddress);
   }
 
   @override

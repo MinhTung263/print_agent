@@ -23,6 +23,56 @@ void main() {
     ),
   );
 
+  testWidgets(
+    'máy lỗi: có nút Kết nối lại (và Đổi mạng khi khác mạng); máy ổn thì không',
+    (t) async {
+      Future<bool> never() async => true;
+      final reconnect = LocaleKeys.printerSetting_agentReconnect.tr;
+      final switchNet = LocaleKeys.printerSetting_agentSwitchNetwork.tr;
+
+      await pump(
+        t,
+        AgentPrinterDetail(
+          name: 'HPRT',
+          kind: 'lan',
+          state: AgentPrinterDetailState.notReady,
+          on: true,
+          onReconnect: never,
+        ),
+      );
+      expect(find.text(reconnect), findsOneWidget);
+      expect(find.text(switchNet), findsNothing);
+
+      await pump(
+        t,
+        AgentPrinterDetail(
+          name: 'HPRT',
+          kind: 'lan',
+          state: AgentPrinterDetailState.notReady,
+          on: true,
+          onReconnect: never,
+          onSwitchNetwork: never,
+        ),
+      );
+      expect(find.text(reconnect), findsOneWidget);
+      expect(find.text(switchNet), findsOneWidget);
+
+      // Máy đang ổn: không có nút dù có callback.
+      await pump(
+        t,
+        AgentPrinterDetail(
+          name: 'HPRT',
+          kind: 'lan',
+          state: AgentPrinterDetailState.ready,
+          on: true,
+          onReconnect: never,
+        ),
+      );
+      expect(find.text(reconnect), findsNothing);
+      expect(t.takeException(), isNull);
+    },
+  );
+
   testWidgets('máy in LAN: tên, trạng thái, IP, MAC, mã, trạm in, công tắc', (
     t,
   ) async {

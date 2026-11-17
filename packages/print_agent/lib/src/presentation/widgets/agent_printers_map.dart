@@ -5,7 +5,10 @@ import 'package:print_agent/src/presentation/kit/kit.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:print_agent/src/presentation/utils/agent_peer_cluster.dart';
+import 'package:print_agent/src/presentation/utils/agent_printer_issue.dart';
 import 'package:print_agent/src/presentation/widgets/sheets/agent_printer_detail_sheet.dart';
+import 'package:print_agent/src/presentation/widgets/sheets/agent_reconnect_sheet.dart';
+import 'package:print_agent/src/presentation/widgets/sheets/agent_wifi_switch_sheet.dart';
 
 /// Máy này là Agent: đám mây ↔ máy này ↔ các máy in Agent quản lý.
 class AgentPrintersMap extends StatelessWidget {
@@ -53,15 +56,19 @@ class AgentPrintersMap extends StatelessWidget {
           ),
           nodes: [
             // Thứ tự người dùng tự sắp ([AgentMapLayout]).
-            for (final s in AgentMapLayout.sorted(
-              watchdog.statuses.toList(),
-              AgentMapLayout.printers[service.stationId] ?? const <String>[],
-              (s) => selfPrinterKey(s.printer),
+            for (final (s, label) in _labeled(
+              AgentMapLayout.sorted(
+                watchdog.statuses.toList(),
+                AgentMapLayout.printers[service.stationId] ?? const <String>[],
+                (s) => selfPrinterKey(s.printer),
+              ),
             ))
               AgentMapNode(
                 icon: _printerIcon(s.printer.refKind),
-                title: s.printer.nameOrNull ?? '',
+                // Tên ngắn nhận ra máy (model); loại máy (hoá đơn / tem) ở dòng dưới.
+                title: label.title,
                 lines: [
+                  ?label.typeLine,
                   // Đã tắt nhận lệnh trên Agent này ([AgentPrinterSwitches]).
                   if (off.contains(AgentPrinterSwitches.keyOf(s.printer)))
                     AgentMapLine(
@@ -102,6 +109,63 @@ class AgentPrintersMap extends StatelessWidget {
     );
   }
 
+  /// Tên hiện trên nút: "Máy in hoá đơn · XP-80C" bị cắt đúng phần model nên khách không phân
+  /// biệt được máy nào. Tách: DÒNG TÊN = phần phân biệt (model), DÒNG PHỤ = loại máy
+  /// ("Hoá đơn" / "Tem"). Hai máy trùng tên: máy LAN thêm số cuối IP, máy khác đánh số thứ tự.
+  static List<
+    (
+      AgentPrinterStatus<AgentPrinterRef>,
+      ({String title, AgentMapLine? typeLine}),
+    )
+  >
+  _labeled(List<AgentPrinterStatus<AgentPrinterRef>> sorted) {
+    final base = [
+      for (final s in sorted) splitName(s.printer.nameOrNull ?? ''),
+    ];
+    final count = <String, int>{};
+    for (final b in base) {
+      count[b.title] = (count[b.title] ?? 0) + 1;
+    }
+    final seen = <String, int>{};
+    return [
+      for (var i = 0; i < sorted.length; i++)
+        (() {
+          var title = base[i].title;
+          if ((count[title] ?? 0) > 1) {
+            final n = seen[title] = (seen[title] ?? 0) + 1;
+            final addr = (sorted[i].printer.refAddress ?? '').trim();
+            title = _isIpv4(addr)
+                ? '$title · .${addr.split(':').first.split('.').last}'
+                : '$title #$n';
+          }
+          return (sorted[i], (title: title, typeLine: base[i].typeLine));
+        })(),
+    ];
+  }
+
+  /// "Máy in hoá đơn · XP-80C" → tên "XP-80C" + dòng phụ "Hoá đơn". Không có dấu " · " thì
+  /// giữ nguyên tên, không dòng phụ.
+  @visibleForTesting
+  static ({String title, AgentMapLine? typeLine}) splitName(String name) {
+    final i = name.indexOf(' · ');
+    if (i <= 0) return (title: name, typeLine: null);
+    final model = name.substring(i + 3).trim();
+    if (model.isEmpty) return (title: name, typeLine: null);
+    var type = name.substring(0, i).trim();
+    if (type.toLowerCase().startsWith('máy in ')) {
+      type = type.substring(7).trim();
+    }
+    if (type.isNotEmpty) {
+      type = type[0].toUpperCase() + type.substring(1);
+    }
+    return (
+      title: model,
+      typeLine: type.isEmpty
+          ? null
+          : AgentMapLine(type, icon: Icons.label_outline_rounded),
+    );
+  }
+
   /// Wi-Fi máy in LAN đang nằm: cùng dải với máy này → Wi-Fi hiện tại; còn lại
   /// lấy Wi-Fi đã nhớ lúc in được gần nhất.
   String? _printerWifi(
@@ -139,6 +203,15 @@ class AgentPrintersMap extends StatelessWidget {
                 ? AgentPrinterDetailState.ready
                 : AgentPrinterDetailState.notReady),
       on: !paused,
+      onReconnect: _isIssue(s, paused: paused)
+          ? () => AgentReconnectSheet.show(p)
+          : null,
+      onSwitchNetwork:
+          _isIssue(s, paused: paused) &&
+              s.state == AgentPrinterState.otherNetwork &&
+              p.refKind == AgentPrinterKind.lan
+          ? () => AgentWifiSwitchSheet.show([p])
+          : null,
       address: p.refAddress,
       mac: p.refMac,
       // Mã -1 của máy in chính Agent chỉ là mã nội bộ — không hiện cho khách.
@@ -160,6 +233,12 @@ class AgentPrintersMap extends StatelessWidget {
           : () => PrintAgentUi.onRemovePrinter!(p),
     );
   }
+
+  /// Máy in đang lỗi kết nối và còn nhận lệnh (máy đã tắt nhận lệnh không tính là lỗi).
+  static bool _isIssue(
+    AgentPrinterStatus<AgentPrinterRef> s, {
+    required bool paused,
+  }) => !paused && AgentPrinterIssue.isConnectionLost(s.state);
 
   /// Bật / tắt nhận lệnh cho máy in [p] + thông báo kèm nút Hoàn tác.
   static Future<void> _toggle(AgentPrinterRef p) async {
@@ -268,7 +347,9 @@ class AgentPrintersMap extends StatelessWidget {
   static bool _isLocalUsb(String? address) {
     final a = (address ?? '').trim();
     return a.startsWith('usb:') ||
+        a.startsWith('usbp:') ||
         a.startsWith('queue:') ||
+        a.startsWith('lpq:') ||
         a.startsWith('cups:');
   }
 

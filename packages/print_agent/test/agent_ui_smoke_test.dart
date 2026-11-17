@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
@@ -46,7 +45,7 @@ void main() {
     await t.pumpWidget(
       const GetMaterialApp(home: Scaffold(body: PrintStationToggle())),
     );
-    await t.tap(find.byType(CupertinoSwitch));
+    await t.tap(find.byType(AgentSwitch));
     await t.pumpAndSettle();
     expect(station.enabledCalls, [true]);
     expect(t.takeException(), isNull);

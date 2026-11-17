@@ -41,6 +41,7 @@ export 'src/web/web_receipt_image.dart';
 export 'src/domain/ports/agent_printer_gateway.dart';
 
 // Giao diện (dùng chung app EasyPOS và Agent máy tính).
+export 'src/presentation/kit/agent_switch.dart';
 export 'src/presentation/kit/agent_ui_kit.dart';
 export 'src/presentation/kit/material_agent_ui_kit.dart';
 export 'src/presentation/agent_leave_guard.dart';

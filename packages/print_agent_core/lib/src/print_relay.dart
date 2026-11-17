@@ -280,6 +280,8 @@ class PrintRelay {
         unawaited(setStation(false));
       });
     }
+    // iOS: giữ màn hình sáng — khoá màn hình là iOS treo kết nối nền.
+    if (Platform.isIOS) await PrinterLabel.setKeepScreenOn(true);
     await _updateNotification(requestPermission: requestPermission);
     return true;
   }
@@ -401,6 +403,7 @@ class PrintRelay {
     await _lanServer?.stop();
     _lanServer = null;
     if (Platform.isAndroid) await PrinterLabel.stopKeepAlive();
+    if (Platform.isIOS) await PrinterLabel.setKeepScreenOn(false);
   }
 
   Future<void> _updateNotification({bool requestPermission = false}) async {
@@ -432,12 +435,51 @@ class PrintRelay {
     if (force) return true;
     // Máy in tích hợp của một Agent cụ thể: chỉ in được qua Agent đó.
     if (printer.isBuiltIn && printer.stationId != null) return true;
+    // Lần trước in thẳng lỗi mà qua Agent được (Wi-Fi chặn các máy nói chuyện với
+    // nhau): đi Agent luôn, khỏi chờ 10 giây thử kết nối vô ích mỗi phiếu.
+    if (await _prefersRelay(printer)) return true;
     // In thẳng được (cùng mạng / USB đang cắm) → luồng bình thường, KHÔNG đi
     // Agent. Chắc chắn không in thẳng được (khác mạng / 4G / USB cắm ở máy khác)
     // → đi Agent luôn, khỏi chờ thử kết nối vô ích. Không có Agent trực tuyến
     // thì [relay] trả `null`, nơi gọi in như cũ.
     return !await PrintRelayClient.canPrintDirectly(printer);
   }
+
+  /// Smart Route Cache: máy in → (hết hạn, chữ ký mạng) khi in thẳng lỗi nhưng đường
+  /// qua Agent thành công. Hết hạn sau [routeCacheTtl] hoặc ngay khi đổi mạng.
+  final Map<String, ({DateTime until, String network})> _relayFirst = {};
+
+  static Duration routeCacheTtl = const Duration(minutes: 20);
+
+  /// Chữ ký mạng hiện tại (các IPv4 của máy) — đổi Wi-Fi / cắm dây thì đổi.
+  static Future<String> _networkSignature() async {
+    final ips = await PrintRelayLanServer.localIpv4s();
+    return (List.of(ips)..sort()).join(',');
+  }
+
+  Future<bool> _prefersRelay(PrintRelayPrinter printer) async {
+    final mark = _relayFirst[printer.address];
+    if (mark == null) return false;
+    if (DateTime.now().isAfter(mark.until) ||
+        mark.network != await _networkSignature()) {
+      _relayFirst.remove(printer.address);
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _rememberRelayFirst(PrintRelayPrinter printer) async {
+    if (printer.isBuiltIn || printer.isUsb) return;
+    _relayFirst[printer.address] = (
+      until: DateTime.now().add(routeCacheTtl),
+      network: await _networkSignature(),
+    );
+  }
+
+  /// Quên đường nhớ của [printer] (hoặc của mọi máy in khi `null`).
+  void forgetRoute([PrintRelayPrinter? printer]) => printer == null
+      ? _relayFirst.clear()
+      : _relayFirst.remove(printer.address);
 
   /// Lệnh in tới [printer] sẽ đi qua trạm (để nơi gọi bỏ bước kiểm tra kết nối
   /// thẳng tới máy in — trên 4G bước đó luôn thất bại). Dừng ngay ở kênh đầu tiên
@@ -493,6 +535,10 @@ class PrintRelay {
       // trạm đang rớt mà kênh kia còn): thử kênh kế trước khi báo lỗi.
       if (result != PrintRelayResult.notDelivered &&
           result != PrintRelayResult.noResponse) {
+        // In thẳng đã lỗi ([force]) mà Agent in được → nhớ đường này.
+        if (force && result == PrintRelayResult.done) {
+          unawaited(_rememberRelayFirst(printer));
+        }
         return result;
       }
       last = result;

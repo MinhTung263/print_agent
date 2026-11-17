@@ -16,13 +16,22 @@ class AgentPrintFailure {
 
 /// Khổ giấy + chức năng in của máy in tích hợp (báo cho máy khác).
 class AgentBuiltInSpec {
-  const AgentBuiltInSpec({this.paper, this.templates = const []});
+  const AgentBuiltInSpec({
+    this.paper,
+    this.templates = const [],
+    this.labelDpis = const {},
+  });
 
   /// Tên khổ giấy của app (VD `size80`).
   final String? paper;
 
   /// Tên các chức năng in (VD `temporaryPrintForm`).
   final List<String> templates;
+
+  /// Độ phân giải đầu in của các máy tem 300dpi trên Agent này: `{'builtin': 300, '<địa chỉ>':
+  /// 300}` (chỉ ghi máy KHÁC 203dpi). Máy gửi dựng ảnh tem đúng độ phân giải này (tem vàng bạc
+  /// nét hơn); thiếu = 203dpi như cũ.
+  final Map<String, int> labelDpis;
 }
 
 /// Cổng in của app chủ cho module Agent — chỉ phần thật sự riêng của app:

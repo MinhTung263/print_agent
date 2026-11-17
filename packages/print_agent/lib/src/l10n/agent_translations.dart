@@ -42,12 +42,18 @@ const Map<String, Map<String, String>> agentTranslations = {
         "Gỡ trạm khỏi danh sách trên mọi máy. Nếu máy đó vẫn bật Trạm in thì có thể tự hiện lại — cập nhật EasyPOS hoặc tắt Trạm in ngay trên máy đó để xoá hẳn.",
     'printerSetting_agentDeleted': "Đã xoá @agent khỏi danh sách",
     'printerSetting_agentDoctorAllGood': "Mọi thứ đều ổn",
+    'printerSetting_agentDoctorBackground': "Chạy nền ổn định",
+    'printerSetting_agentDoctorBackgroundFix':
+        "Android có thể dừng trạm in khi tắt màn hình. Bấm để mở cài đặt pin, chọn ứng dụng này và đặt \"Không hạn chế\"",
     'printerSetting_agentDoctorInternet': "Nhận phiếu qua Internet",
     'printerSetting_agentDoctorInternetDown':
         "Mất kết nối — kiểm tra mạng của máy này",
     'printerSetting_agentDoctorInternetOk': "Đang kết nối",
     'printerSetting_agentDoctorInternetWait': "Đang kết nối…",
     'printerSetting_agentDoctorIssues': "Có @count việc cần xem",
+    'printerSetting_agentDoctorKeepOpen': "Giữ màn hình sáng",
+    'printerSetting_agentDoctorKeepOpenHint':
+        "iPhone / iPad khoá màn hình là ngừng nhận phiếu. Cắm nguồn và giữ ứng dụng mở trên màn hình (nên bật Truy cập được hướng dẫn tại quầy)",
     'printerSetting_agentDoctorLan': "Nhận phiếu trong mạng quán",
     'printerSetting_agentDoctorLanOff':
         "Chưa mở — máy khác vẫn gửi được qua Internet nhưng chậm hơn",
@@ -119,6 +125,8 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentJobUnknownSender': "máy chưa rõ tên",
     'printerSetting_agentJobViaCloud': "Internet",
     'printerSetting_agentJobViaLan': "mạng nội bộ",
+    'printerSetting_agentLabelRollReminder':
+        "Máy in tem @printer đã có giấy lại. Nếu vừa đổi cuộn tem, hãy dò lại khe (cài đặt máy in → Căn chỉnh tem → Dò lại khe) để tem không bị lệch.",
     'printerSetting_agentLastJob': "Phiếu gần nhất lúc @time",
     'printerSetting_agentLeaveChangeCompany':
         "Đổi công ty sẽ tạm dừng trạm in của cửa hàng hiện tại. Khi quay lại cửa hàng này, trạm in tự bật lại.",
@@ -343,12 +351,18 @@ const Map<String, Map<String, String>> agentTranslations = {
         "Removes the station from the list on every device. If that device still has Print Station on it may show up again — update EasyPOS or turn Print Station off on that device to remove it for good.",
     'printerSetting_agentDeleted': "Deleted @agent from the list",
     'printerSetting_agentDoctorAllGood': "Everything looks good",
+    'printerSetting_agentDoctorBackground': "Stable in the background",
+    'printerSetting_agentDoctorBackgroundFix':
+        "Android may stop the print station when the screen is off. Tap to open battery settings, choose this app and set \"Unrestricted\"",
     'printerSetting_agentDoctorInternet': "Receive tickets over the Internet",
     'printerSetting_agentDoctorInternetDown':
         "Disconnected — check this device's network",
     'printerSetting_agentDoctorInternetOk': "Connected",
     'printerSetting_agentDoctorInternetWait': "Connecting…",
     'printerSetting_agentDoctorIssues': "@count things need attention",
+    'printerSetting_agentDoctorKeepOpen': "Keep the screen on",
+    'printerSetting_agentDoctorKeepOpenHint':
+        "An iPhone / iPad stops receiving orders when it locks. Keep it plugged in with the app open on screen (Guided Access at the counter is recommended)",
     'printerSetting_agentDoctorLan': "Receive tickets on the shop network",
     'printerSetting_agentDoctorLanOff':
         "Not open — other devices can still send over the Internet, but slower",
@@ -423,6 +437,8 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentJobUnknownSender': "unnamed device",
     'printerSetting_agentJobViaCloud': "internet",
     'printerSetting_agentJobViaLan': "local network",
+    'printerSetting_agentLabelRollReminder':
+        "Label printer @printer has paper again. If you just changed the label roll, re-detect the gap (printer settings → Label alignment → Re-detect gap) so labels do not drift.",
     'printerSetting_agentLastJob': "Last job at @time",
     'printerSetting_agentLeaveChangeCompany':
         "Switching company pauses printing for the current store. The print station turns back on when you return to this store.",

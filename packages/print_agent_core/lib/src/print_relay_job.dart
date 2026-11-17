@@ -143,7 +143,8 @@ class PrintRelayJob {
   );
 
   /// Lệnh in tem. Mặc định thu ảnh về đúng độ phân giải máy in
-  /// ([PrinterLabel.shrinkLabelImage]) rồi đổi sang đen / trắng
+  /// ([PrinterLabel.shrinkLabelImage], [dotsPerMm]: 8 ở 203dpi, ~11,81 ở 300dpi — tem vàng
+  /// bạc cần mịn hơn) rồi đổi sang đen / trắng
   /// ([PrintRelayImage.compact]) để gửi qua mạng nhanh hơn.
   static Future<PrintRelayJob> label({
     required PrintRelayPrinter printer,
@@ -152,6 +153,7 @@ class PrintRelayJob {
     int copies = 1,
     bool shrink = true,
     String? sender,
+    double dotsPerMm = 8,
   }) async => PrintRelayJob(
     kind: PrintRelayJobKind.label,
     printer: printer,
@@ -159,7 +161,11 @@ class PrintRelayJob {
         ? [
             for (final i in images)
               await PrintRelayImage.compact(
-                await PrinterLabel.shrinkLabelImage(i, size),
+                await PrinterLabel.shrinkLabelImage(
+                  i,
+                  size,
+                  dotsPerMm: dotsPerMm,
+                ),
               ),
           ]
         : images,

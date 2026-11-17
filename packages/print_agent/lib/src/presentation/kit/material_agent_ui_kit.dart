@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../domain/ports/agent_host.dart';
+import 'agent_switch.dart';
 import 'agent_ui_kit.dart';
 import 'kit_tokens.dart';
 
@@ -205,11 +205,7 @@ class MaterialAgentUiKit implements AgentUiKit {
             ),
           ),
         ),
-      CupertinoSwitch(
-        value: value,
-        onChanged: onChanged,
-        activeTrackColor: AppColors.primaryBlueBase,
-      ),
+      AgentSwitch(value: value, onChanged: onChanged),
     ],
   );
 
