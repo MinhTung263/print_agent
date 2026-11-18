@@ -5,7 +5,7 @@
 # Chạy CI trên GitHub cho commit hiện tại (Windows + Linux + macOS), đợi xong rồi TẢI bộ cài về
 # ~/Downloads/easypos-print-agent-build/<windows|linux|macos>/ để cài thử. Khách KHÔNG nhận bản này.
 #
-#   ./build.sh            # build commit đã push lên main (đẩy main trước nếu chưa)
+#   ./build.sh            # build commit đã push lên master (đẩy master trước nếu chưa)
 #   ./build.sh --no-wait  # chỉ chạy CI, không chờ / không tải
 # ==============================================================================
 set -euo pipefail

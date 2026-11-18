@@ -2,7 +2,7 @@
 
 ## Quy trình mỗi lần ra bản mới
 1. Sửa `version:` trong `apps/desktop/pubspec.yaml` (ví dụ `0.2.0+3`; số sau dấu `+` là số build, tăng mỗi lần).
-2. Commit và đẩy lên `main`, chờ CI xanh.
+2. Commit và đẩy lên `master`, chờ CI xanh.
 3. Gắn tag đúng bằng `v` + số phiên bản và đẩy lên:
    ```bash
    git tag v0.2.0 && git push origin v0.2.0

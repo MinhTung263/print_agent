@@ -2,7 +2,7 @@
 # ==============================================================================
 # TRẠM IN EASYPOS - PHÁT HÀNH BẢN MỚI (Windows + Linux + macOS)
 # ==============================================================================
-# Một lệnh: tăng số phiên bản → commit → đẩy main → gắn tag vX.Y.Z → CI build + phát hành lên
+# Một lệnh: tăng số phiên bản → commit → đẩy master → gắn tag vX.Y.Z → CI build + phát hành lên
 # GitHub Releases → in link tải. Các Agent đã cài tự cập nhật (xem apps/desktop/installer/RELEASE.md).
 #
 #   ./release.sh                    # hỏi kiểu tăng (patch / minor / major / nhập tay)
@@ -76,20 +76,20 @@ say "Phát hành $CUR_LINE → $NEW_LINE (tag $TAG)"
 
 # --- kiểm tra an toàn ---
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-[ "$BRANCH" = "main" ] || die "Đang ở nhánh '$BRANCH' — chỉ phát hành từ main."
+[ "$BRANCH" = "master" ] || die "Đang ở nhánh '$BRANCH' — chỉ phát hành từ master."
 git rev-parse "$TAG" >/dev/null 2>&1 && die "Tag $TAG đã tồn tại."
 command -v gh >/dev/null || die "Cần cài GitHub CLI (gh) và đăng nhập: gh auth login"
-git fetch -q origin main
-[ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || {
-  git merge-base --is-ancestor origin/main HEAD || die "main trên máy cũ hơn origin/main — git pull trước."
+git fetch -q origin master
+[ "$(git rev-parse HEAD)" = "$(git rev-parse origin/master)" ] || {
+  git merge-base --is-ancestor origin/master HEAD || die "master trên máy cũ hơn origin/master — git pull trước."
 }
 # Thay đổi chưa commit: chỉ cho phép file ngoài những gì sẽ phát hành (không bị kéo vào commit).
 DIRTY="$(git status --porcelain | grep -v '^??' | grep -v ' pubspec.yaml$' || true)"
 if [ -n "$DIRTY" ]; then
   echo "Có thay đổi CHƯA commit (sẽ KHÔNG vào bản phát hành):"; echo "$DIRTY" | sed 's/^/    /'
-  echo "Bản phát hành chỉ gồm những gì đã commit và push lên main."
+  echo "Bản phát hành chỉ gồm những gì đã commit và push lên master."
 fi
-UNPUSHED="$(git log origin/main..HEAD --oneline | wc -l | tr -d ' ')"
+UNPUSHED="$(git log origin/master..HEAD --oneline | wc -l | tr -d ' ')"
 [ "$UNPUSHED" = 0 ] || say "$UNPUSHED commit chưa push — sẽ được đẩy cùng bản phát hành."
 
 if [ "$SKIP_TESTS" = 0 ] && [ "$DRY" = 0 ]; then
@@ -110,8 +110,8 @@ if [ "$DRY" = 0 ]; then
 fi
 run git add "$PUBSPEC"
 run git commit -m "chore(release): $TAG ($NEW_LINE)" -- "$PUBSPEC"
-say "Đẩy main + tag $TAG"
-run git push origin main
+say "Đẩy master + tag $TAG"
+run git push origin master
 run git tag "$TAG"
 run git push origin "$TAG"
 
