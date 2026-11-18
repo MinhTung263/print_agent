@@ -14,10 +14,7 @@ dependencies:
   # Cùng repo: app lấy module qua git thì đường dẫn này vẫn đúng.
   print_agent_core:
     path: ../print_agent_core
-  printer_label:
-    git:
-      url: https://github.com/MinhTung263/printer_label.git
-      ref: feature/print-agent
+  printer_label: ^2.5.0
   get: ^4.7.3
   collection: ^1.19.0
   intl: '>=0.19.0 <1.0.0'
