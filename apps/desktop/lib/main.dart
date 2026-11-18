@@ -20,6 +20,9 @@ import 'ui/dashboard/add_printer_action.dart';
 import 'ui/dashboard/agent_settings_card.dart';
 import 'ui/dashboard/printer_settings_panel.dart';
 import 'ui/dashboard/printer_test_print_action.dart';
+import 'ui/dashboard/update_card.dart';
+import 'update/agent_updater.dart';
+import 'update/app_version.dart';
 import 'ui/login_page.dart';
 
 /// EasyPOS Print Agent (Windows / Linux / macOS): nhận lệnh in của công ty qua
@@ -38,6 +41,17 @@ Future<void> main(List<String> args) async {
 
   final config = AgentConfig.load();
   final agent = DesktopAgent(config);
+  // Tự cập nhật: hỏi GitHub Releases, tải ngầm, cài khi máy rảnh (không in lệnh nào gần đây).
+  final updater = AgentUpdater(
+    current: AppVersion.current,
+    autoInstall: AgentStore.get('autoUpdate') != '0',
+    onAutoInstallChanged: (on) => AgentStore.set('autoUpdate', on ? '1' : '0'),
+    sinceLastJob: () {
+      AgentJobLogStore.ensureLoaded();
+      final logs = AgentJobLogStore.logs;
+      return logs.isEmpty ? null : DateTime.now().difference(logs.first.at);
+    },
+  )..start();
   // Nút "Thêm máy in" trên sơ đồ / bảng trạm in này.
   PrintAgentUi.onAddPrinter = () => desktopAddPrinter(agent);
   // Nút "Xoá máy in" trong chi tiết máy in trên sơ đồ: bỏ máy in đã chọn để chọn lại.
@@ -102,7 +116,11 @@ Future<void> main(List<String> args) async {
         listenable: agent,
         builder: (_, _) => agent.config.ready
             ? AgentPage(
-                side: [const LocalNetworkBanner(), const AgentSettingsCard()],
+                side: [
+                  const LocalNetworkBanner(),
+                  UpdateCard(updater: updater),
+                  const AgentSettingsCard(),
+                ],
               )
             : LoginPage(agent: agent),
       ),

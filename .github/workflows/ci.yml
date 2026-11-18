@@ -3,11 +3,14 @@
 #   (hàng in "Generic / Text Only" ghi ra file — so từng byte ESC/POS).
 # - build-windows / build-linux: bản chạy được, tải ở mục Artifacts của lần chạy;
 #   kèm bộ cài Setup .exe (Inno Setup) và gói .deb (apps/desktop/installer/).
+# - release: chỉ khi đẩy tag `vX.Y.Z` (khớp `version:` trong apps/desktop/pubspec.yaml) — đưa bộ cài
+#   lên GitHub Releases (tên cố định cho link "bản mới nhất" + `update.json` cho Agent tự cập nhật).
 name: CI
 
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -34,6 +37,10 @@ jobs:
 
       - name: Lấy thư viện
         run: flutter pub get
+
+      - name: Script phát hành (Linux)
+        if: runner.os == 'Linux'
+        run: python3 -m unittest discover -s .github/scripts -p 'test_make_release.py' -v
 
       - name: Hàng in RAW thử (Windows)
         if: runner.os == 'Windows'
@@ -92,9 +99,14 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      # APP_VERSION = `version:` trong pubspec: Agent biết mình đang ở bản nào để so với bản mới
+      # (bản chạy từ mã nguồn không có APP_VERSION thì tắt tự cập nhật).
       - name: Build
         working-directory: apps/desktop
-        run: flutter build windows --release
+        shell: pwsh
+        run: |
+          $v = (Select-String -Path pubspec.yaml -Pattern '^version:\s*(\S+)').Matches[0].Groups[1].Value
+          flutter build windows --release "--dart-define=APP_VERSION=$v"
       # Kèm thư viện Visual C++ (app-local) — máy khách chưa cài VC++ Redistributable
       # vẫn chạy được.
       - name: Kèm thư viện VC++ runtime
@@ -159,7 +171,9 @@ jobs:
       - run: flutter pub get
       - name: Build
         working-directory: apps/desktop
-        run: flutter build linux --release
+        run: |
+          V="$(sed -n -E 's/^version:[[:space:]]*([^[:space:]#]+).*/\1/p' pubspec.yaml | head -n1)"
+          flutter build linux --release --dart-define=APP_VERSION="$V"
       - uses: actions/upload-artifact@v4
         with:
           name: easypos-print-agent-linux
@@ -177,3 +191,36 @@ jobs:
           name: easypos-print-agent-linux-deb
           path: apps/desktop/build/installer/*.deb
           if-no-files-found: error
+
+  # Phát hành: chỉ khi đẩy tag `vX.Y.Z`. Bộ cài đi kèm tên CỐ ĐỊNH (link "bản mới nhất" trên trang tải
+  # về) và `update.json` (Agent hỏi file này để biết có bản mới, tải đúng file và kiểm tra mã băm).
+  release:
+    name: Phát hành
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: easypos-print-agent-windows-setup
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: easypos-print-agent-linux-deb
+          path: dist
+      - name: Chuẩn bị tệp phát hành
+        env:
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 .github/scripts/make_release.py dist "$TAG" "$REPO" apps/desktop/pubspec.yaml
+          ls -la dist
+      - name: Tạo bản phát hành
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" dist/* --title "Trạm in EasyPOS $TAG" --generate-notes

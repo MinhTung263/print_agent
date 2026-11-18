@@ -110,6 +110,8 @@ Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""{#FirewallRule}"" dir=in action=allow protocol=TCP localport={#LanPort} program=""{app}\{#MyAppExeName}"" profile=any enable=yes"; Flags: runhidden waituntilterminated; StatusMsg: "{cm:FirewallStatus}"
 ; Tuỳ chọn mở app ngay sau khi cài (chạy bằng tài khoản người dùng, không phải admin).
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runasoriginaluser
+; Cập nhật ngầm (Agent tự cập nhật chạy bộ cài với /VERYSILENT /RESTART=1): mở lại app sau khi cài xong.
+Filename: "{app}\{#MyAppExeName}"; Flags: nowait skipifnotsilent runasoriginaluser; Check: ShouldRestartApp
 
 [UninstallRun]
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /T /IM {#MyAppExeName}"; Flags: runhidden waituntilterminated; RunOnceId: "KillApp"
@@ -126,6 +128,12 @@ begin
   // taskkill trả 128 khi không có tiến trình nào — bỏ qua.
   if ResultCode = 0 then
     Sleep(1000);
+end;
+
+// Chạy ngầm kèm /RESTART=1 (Agent tự cập nhật): cài xong mở lại app.
+function ShouldRestartApp(): Boolean;
+begin
+  Result := ExpandConstant('{param:RESTART|0}') = '1';
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
