@@ -138,3 +138,40 @@ class PrinterPickerEmpty extends StatelessWidget {
     ),
   );
 }
+
+/// Máy in USB hệ điều hành thấy nhưng Agent chưa dùng được: hiện lý do + cách xử lý bằng chữ dễ hiểu (không
+/// im lặng để khách tự đoán vì sao máy in vừa cắm không có trong danh sách).
+class PrinterUsbHints extends StatelessWidget {
+  const PrinterUsbHints({super.key, required this.hints});
+
+  final List<String> hints;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: AgentColors.warning.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 8,
+      children: [
+        for (final h in hints)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 8,
+            children: [
+              Icon(Icons.usb_off_rounded, size: 18, color: AgentColors.warning),
+              Expanded(
+                child: Text(
+                  'Máy in USB chưa dùng được — $h',
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+      ],
+    ),
+  );
+}

@@ -70,9 +70,13 @@ class _ProgressiveDiscovery extends _FakeDiscovery
   _ProgressiveDiscovery({super.models, super.types}) : super(const []);
 
   final stream = StreamController<List<PrinterOption>>();
+  List<String> hints = const [];
 
   @override
   Stream<List<PrinterOption>> findStream() => stream.stream;
+
+  @override
+  Future<List<String>> usbHints() async => hints;
 }
 
 void main() {
@@ -489,6 +493,58 @@ void main() {
       await t.tap(find.text('Kiểm tra kết nối'));
       await t.pumpAndSettle();
       expect(find.text('Máy in tem'), findsOneWidget);
+    });
+
+    testWidgets(
+      'máy in USB hệ điều hành thấy mà chưa dùng được: hiện lý do + cách xử lý, không im lặng',
+      (t) async {
+        final d = _ProgressiveDiscovery()
+          ..hints = [
+            'XP-80C: hệ điều hành thấy máy in nhưng chưa cho dùng cổng in. Chạy "sudo modprobe usblp".',
+          ];
+        await t.binding.setSurfaceSize(const Size(1000, 900));
+        await t.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => showPrinterPickerDialog(context, discovery: d),
+                child: const Text('mở'),
+              ),
+            ),
+          ),
+        );
+        await t.tap(find.text('mở'));
+        await t.pump(const Duration(milliseconds: 100));
+        d.stream.add(const []);
+        await d.stream.close();
+        await t.pumpAndSettle();
+        expect(
+          find.textContaining('Máy in USB chưa dùng được'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('sudo modprobe usblp'), findsOneWidget);
+      },
+    );
+
+    testWidgets('không có vấn đề USB: không hiện khung gợi ý', (t) async {
+      final d = _ProgressiveDiscovery();
+      await t.binding.setSurfaceSize(const Size(1000, 900));
+      await t.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showPrinterPickerDialog(context, discovery: d),
+              child: const Text('mở'),
+            ),
+          ),
+        ),
+      );
+      await t.tap(find.text('mở'));
+      await t.pump(const Duration(milliseconds: 100));
+      d.stream.add(const []);
+      await d.stream.close();
+      await t.pumpAndSettle();
+      expect(find.textContaining('Máy in USB chưa dùng được'), findsNothing);
     });
 
     testWidgets(

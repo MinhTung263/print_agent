@@ -87,6 +87,9 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
   bool _settingUp = false;
   List<String> _networks = const [];
 
+  /// Máy in USB hệ điều hành thấy nhưng chưa dùng được (lý do + cách xử lý).
+  List<String> _usbHints = const [];
+
   @override
   void initState() {
     super.initState();
@@ -141,9 +144,13 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
       found = await d.find();
     }
     final networks = await d.scannedNetworks();
+    final hints = d is ProgressivePrinterDiscovery
+        ? await d.usbHints()
+        : const <String>[];
     if (!mounted) return;
     setState(() {
       _networks = networks;
+      _usbHints = hints;
       _options = _decorate(found);
       _scanning = false;
       if (widget.multi) {
@@ -405,6 +412,10 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
                           else
                             _tile(all[i], null),
                         ],
+                      if (_usbHints.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        PrinterUsbHints(hints: _usbHints),
+                      ],
                       const SizedBox(height: 12),
                       ManualIpField(
                         discovery: widget.discovery,

@@ -81,6 +81,15 @@ class DesktopPrinterDiscovery implements ProgressivePrinterDiscovery {
     ];
   }
 
+  @override
+  Future<List<String>> usbHints() async {
+    try {
+      return [for (final i in await UsbPrinters.issues()) '$i'];
+    } catch (_) {
+      return const [];
+    }
+  }
+
   PrinterOption _usbOption(UsbPrinterInfo p) => PrinterOption.usb(
     address: p.address,
     name: p.name,

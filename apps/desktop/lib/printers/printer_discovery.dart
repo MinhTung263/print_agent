@@ -50,4 +50,8 @@ abstract interface class PrinterDiscovery {
 abstract interface class ProgressivePrinterDiscovery
     implements PrinterDiscovery {
   Stream<List<PrinterOption>> findStream();
+
+  /// Máy in USB mà hệ điều hành thấy nhưng chưa dùng được, kèm lý do và cách xử lý (hiện dưới danh sách để
+  /// khách biết vì sao "cắm rồi mà không thấy"); rỗng khi không có.
+  Future<List<String>> usbHints();
 }
