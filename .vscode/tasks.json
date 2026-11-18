@@ -1,4 +1,35 @@
 {
   "version": "2.0.0",
-  "tasks": []
+  "tasks": [
+    {
+      "label": "🖨 Agent [Build thử] Build 3 hệ điều hành + tải về (build.sh)",
+      "type": "shell",
+      "command": "bash build.sh",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true,
+        "clear": true,
+        "close": false
+      }
+    },
+    {
+      "label": "🖨 Agent [Phát hành] Tăng version + tag + GitHub Releases (release.sh)",
+      "type": "shell",
+      "command": "bash release.sh",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true,
+        "clear": true,
+        "close": false
+      }
+    }
+  ]
 }
