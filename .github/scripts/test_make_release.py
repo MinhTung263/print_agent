@@ -59,5 +59,27 @@ class MakeRelease(unittest.TestCase):
         self.assertEqual(json.loads((self.dist / "update.json").read_text())["build"], 0)
 
 
+
+class MakeReleaseMac(unittest.TestCase):
+    setUp = MakeRelease.setUp
+
+    def test_co_dmg_macos(self):
+        (self.dist / "TramInEasyPOS-0.2.0.dmg").write_bytes(b"dmg-bytes")
+        r = run(self.dist, "v0.2.0", self.pubspec)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        m = json.loads((self.dist / "update.json").read_text())
+        self.assertEqual(
+            m["macos"]["url"],
+            "https://github.com/owner/repo/releases/download/v0.2.0/TramInEasyPOS-0.2.0.dmg",
+        )
+        import hashlib
+        self.assertEqual(m["macos"]["sha256"], hashlib.sha256(b"dmg-bytes").hexdigest())
+        self.assertTrue((self.dist / "TramInEasyPOS.dmg").exists())
+
+    def test_khong_dmg_thi_khong_co_macos(self):
+        run(self.dist, "v0.2.0", self.pubspec)
+        self.assertNotIn("macos", json.loads((self.dist / "update.json").read_text()))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -58,13 +58,24 @@
     </ol>
   </section>
 
+  <section class="card" id="mac">
+    <h2>macOS</h2>
+    <p class="meta">macOS 11 trở lên · <span class="ver">bản mới nhất</span></p>
+    <a class="btn" href="https://github.com/MinhTung263/print_agent/releases/latest/download/TramInEasyPOS.dmg">Tải bản macOS (.dmg)</a>
+    <ol>
+      <li>Mở tệp .dmg, kéo <b>Agent</b> vào thư mục <b>Applications</b>.</li>
+      <li>Lần đầu mở: bấm chuột phải vào Agent, chọn <b>Open</b>, rồi <b>Open</b> lần nữa (macOS cảnh báo vì ứng dụng chưa được Apple xác nhận).</li>
+      <li>Cập nhật: Agent báo có bản mới, bấm "Tải về" rồi thay bản cũ.</li>
+    </ol>
+  </section>
+
   <p class="hint">Cần hỗ trợ? Mở Trạm in, vào mục "Chọn máy in" — nếu máy in cắm rồi mà không thấy, Trạm in sẽ ghi rõ lý do và cách xử lý.
   Các bản cũ: <a href="https://github.com/MinhTung263/print_agent/releases">tất cả bản phát hành</a>.</p>
 </main>
 <script>
 // Máy nào thì hiện khung đó lên đầu; ghi số phiên bản mới nhất (nếu hỏi được GitHub).
-const ua = navigator.userAgent, isLinux = /Linux/i.test(ua) && !/Android/i.test(ua), isWin = /Windows/i.test(ua);
-const main = isLinux ? document.getElementById('linux') : document.getElementById('win');
+const ua = navigator.userAgent, isLinux = /Linux/i.test(ua) && !/Android/i.test(ua), isMac = /Mac/i.test(ua) && !/iPhone|iPad/i.test(ua);
+const main = document.getElementById(isLinux ? 'linux' : isMac ? 'mac' : 'win');
 main.classList.add('main'); main.parentNode.insertBefore(main, main.parentNode.querySelector('section'));
 fetch('https://api.github.com/repos/MinhTung263/print_agent/releases/latest').then((r) => r.ok ? r.json() : null).then((j) => {
   const v = j && j.tag_name; if (!v) return;

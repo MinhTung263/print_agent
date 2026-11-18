@@ -27,6 +27,10 @@ class UpdateCard extends StatelessWidget {
             'Đang tải bản $next',
             '${(u.progress * 100).round()}%',
           ),
+          UpdateStage.manual => (
+            'Có bản mới $next',
+            'Bấm "Tải về", mở tệp .dmg rồi kéo Agent vào thư mục Applications (thay bản cũ).',
+          ),
           UpdateStage.ready => (
             'Có bản mới $next',
             u.autoInstall
@@ -62,6 +66,11 @@ class UpdateCard extends StatelessWidget {
                 LinearProgressIndicator(
                   value: u.progress == 0 ? null : u.progress,
                 ),
+              if (stage == UpdateStage.manual)
+                FilledButton(
+                  onPressed: () => unawaited(u.openDownload()),
+                  child: const Text('Tải về'),
+                ),
               if (stage == UpdateStage.ready)
                 FilledButton(
                   onPressed: () => unawaited(u.install()),
@@ -79,16 +88,17 @@ class UpdateCard extends StatelessWidget {
                     ),
                   ),
                 ),
-              AppRow(
-                spacing: AppSpace.sm,
-                children: [
-                  const Expanded(child: AppText('Tự cập nhật khi máy rảnh')),
-                  AgentSwitch(
-                    value: u.autoInstall,
-                    onChanged: u.setAutoInstall,
-                  ),
-                ],
-              ),
+              if (!u.manualOnly)
+                AppRow(
+                  spacing: AppSpace.sm,
+                  children: [
+                    const Expanded(child: AppText('Tự cập nhật khi máy rảnh')),
+                    AgentSwitch(
+                      value: u.autoInstall,
+                      onChanged: u.setAutoInstall,
+                    ),
+                  ],
+                ),
             ],
           ),
         );

@@ -107,6 +107,7 @@ void main() {
     bool? saved;
     final u = AgentUpdater(
       current: AppVersion.parse('0.1.0'),
+      os: 'windows',
       autoInstall: true,
       onAutoInstallChanged: (on) => saved = on,
     );

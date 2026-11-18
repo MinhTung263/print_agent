@@ -47,6 +47,7 @@ class _FakeInstaller implements UpdateInstaller {
 }
 
 void main() {
+  _macTests();
   group('AppVersion', () {
     test('đọc 0.2.0, 0.2.0+3, v0.2.0+3; sai thì null', () {
       expect(AppVersion.parse('0.2.0+3').toString(), '0.2.0+3');
@@ -337,5 +338,53 @@ void main() {
       expect(inst.installed.single.path, endsWith('_amd64.deb'));
       u.dispose();
     });
+  });
+}
+
+void _macTests() {
+  group('macOS (chỉ báo + mở trang tải, không tự cài)', () {
+    test('manifest có bản macOS (.dmg)', () {
+      final m = UpdateManifest.parse(
+        jsonEncode({
+          'version': '0.2.0',
+          'build': 3,
+          'macos': {
+            'url': '$_base/TramInEasyPOS-0.2.0.dmg',
+            'sha256': sha256.convert(utf8.encode('dmg')).toString(),
+          },
+        }),
+      )!;
+      expect(m.assetFor('macos')!.fileName, 'TramInEasyPOS-0.2.0.dmg');
+      expect(m.assetFor('windows'), isNull);
+    });
+
+    test(
+      'có bản mới: stage manual, KHÔNG tải, KHÔNG cài; "Tải về" mở đúng địa chỉ',
+      () async {
+        Uri? opened;
+        var downloaded = false;
+        final u = AgentUpdater(
+          current: AppVersion.parse('0.1.0+1'),
+          os: 'macos',
+          fetch: (_) async => jsonEncode({
+            'version': '0.2.0',
+            'build': 3,
+            'macos': {
+              'url': '$_base/TramInEasyPOS-0.2.0.dmg',
+              'sha256': sha256.convert(utf8.encode('dmg')).toString(),
+            },
+          }),
+          download: (a, t, p) async => downloaded = true,
+          openUrl: (url) async => opened = url,
+        );
+        expect(u.manualOnly, isTrue);
+        await u.check();
+        expect(u.stage, UpdateStage.manual);
+        expect(downloaded, isFalse);
+        await u.openDownload();
+        expect(opened.toString(), '$_base/TramInEasyPOS-0.2.0.dmg');
+        u.dispose();
+      },
+    );
   });
 }

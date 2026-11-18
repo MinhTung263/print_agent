@@ -17,6 +17,9 @@ enum UpdateStage {
   /// Có bản mới, đang tải.
   downloading,
 
+  /// Có bản mới nhưng máy này không tự cài được (macOS): khách bấm "Tải về" rồi cài tay.
+  manual,
+
   /// Đã tải và kiểm tra mã băm xong, sẵn sàng cài.
   ready,
   installing,
@@ -53,6 +56,7 @@ class AgentUpdater extends ChangeNotifier {
     this.idleBeforeInstall = const Duration(minutes: 10),
     this.autoInstall = true,
     this.onAutoInstallChanged,
+    Future<void> Function(Uri url)? openUrl,
   }) : manifestUrl = manifestUrl ?? defaultManifestUrl,
        _fetch = fetch ?? _httpFetch,
        _download = download ?? _httpDownload,
@@ -60,7 +64,8 @@ class AgentUpdater extends ChangeNotifier {
        _os = os ?? Platform.operatingSystem,
        _workDir = workDir,
        _sinceLastJob = sinceLastJob,
-       _onExit = onExit ?? (() => exit(0));
+       _onExit = onExit ?? (() => exit(0)),
+       _openUrl = openUrl ?? _systemOpen;
 
   static final Uri defaultManifestUrl = Uri.parse(
     'https://github.com/MinhTung263/print_agent/releases/latest/download/update.json',
@@ -88,6 +93,7 @@ class AgentUpdater extends ChangeNotifier {
   final Directory? _workDir;
   final Duration? Function()? _sinceLastJob;
   final void Function() _onExit;
+  final Future<void> Function(Uri url) _openUrl;
 
   UpdateStage stage = UpdateStage.idle;
 
@@ -112,6 +118,16 @@ class AgentUpdater extends ChangeNotifier {
   bool _disposed = false;
 
   bool get enabled => current != null;
+
+  /// Hệ điều hành này không tự cài bản mới (macOS): chỉ báo và mở trang tải.
+  bool get manualOnly => _os == 'macos';
+
+  /// Mở trang tải bản mới bằng trình duyệt / Finder (macOS).
+  Future<void> openDownload() async {
+    final asset = available?.assetFor(_os);
+    if (asset == null) return;
+    await _openUrl(asset.url);
+  }
 
   /// Bật / tắt tự cài khi máy rảnh ([onAutoInstallChanged] lưu lại lựa chọn).
   void setAutoInstall(bool on) {
@@ -169,6 +185,11 @@ class AgentUpdater extends ChangeNotifier {
       return;
     }
     available = m;
+    // macOS: không tải / không cài ngầm (chưa ký Developer ID) — chỉ báo có bản mới và mở trang tải.
+    if (manualOnly) {
+      _set(UpdateStage.manual, error: null);
+      return;
+    }
     await _downloadAndVerify(asset);
   }
 
@@ -262,6 +283,18 @@ class AgentUpdater extends ChangeNotifier {
     _idleTimer?.cancel();
     super.dispose();
   }
+}
+
+Future<void> _systemOpen(Uri url) async {
+  try {
+    if (Platform.isMacOS) {
+      await Process.run('open', [url.toString()]);
+    } else if (Platform.isWindows) {
+      await Process.run('cmd', ['/c', 'start', '', url.toString()]);
+    } else {
+      await Process.run('xdg-open', [url.toString()]);
+    }
+  } catch (_) {}
 }
 
 Future<String> _httpFetch(Uri url) async {

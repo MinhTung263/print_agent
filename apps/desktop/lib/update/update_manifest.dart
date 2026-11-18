@@ -16,11 +16,20 @@ class UpdateAsset {
 /// `update.json` đính kèm mỗi bản phát hành (do CI tạo, xem `.github/scripts/make_release.py`):
 /// `{version, build, notes?, windows:{url, sha256}, linux:{url, sha256}}`.
 class UpdateManifest {
-  const UpdateManifest(this.version, this.windows, this.linux, {this.notes});
+  const UpdateManifest(
+    this.version,
+    this.windows,
+    this.linux, {
+    this.macos,
+    this.notes,
+  });
 
   final AppVersion version;
   final UpdateAsset? windows;
   final UpdateAsset? linux;
+
+  /// Ảnh đĩa `.dmg` cho macOS (khách tải về cài tay — macOS không tự cài được vì chưa ký Developer ID).
+  final UpdateAsset? macos;
   final String? notes;
 
   /// Tải bộ cài chỉ từ trang phát hành GitHub của dự án: `update.json` bị sửa / giả mạo cũng không kéo
@@ -51,11 +60,13 @@ class UpdateManifest {
 
       final windows = asset(j['windows']);
       final linux = asset(j['linux']);
-      if (windows == null && linux == null) return null;
+      final macos = asset(j['macos']);
+      if (windows == null && linux == null && macos == null) return null;
       return UpdateManifest(
         v,
         windows,
         linux,
+        macos: macos,
         notes: j['notes'] is String ? j['notes'] as String : null,
       );
     } catch (_) {
@@ -67,6 +78,7 @@ class UpdateManifest {
   UpdateAsset? assetFor(String os) => switch (os) {
     'windows' => windows,
     'linux' => linux,
+    'macos' => macos,
     _ => null,
   };
 }

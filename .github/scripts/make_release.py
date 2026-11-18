@@ -3,10 +3,11 @@
 
     make_release.py <thư mục bộ cài> <tag> <owner/repo> <pubspec.yaml>
 
-Thư mục chứa `TramInEasyPOS-Setup-<ver>.exe` và `easypos-print-agent_<ver>_amd64.deb` (do CI build).
+Thư mục chứa `TramInEasyPOS-Setup-<ver>.exe`, `easypos-print-agent_<ver>_amd64.deb` và (nếu có)
+`TramInEasyPOS-<ver>.dmg` (macOS) do CI build.
 Kiểm tra tag khớp `version:` trong pubspec (đẩy nhầm tag thì dừng, không phát hành bản sai). Ghi thêm:
-- `TramInEasyPOS-Setup.exe`, `easypos-print-agent_amd64.deb`: tên cố định cho link `releases/latest/download/...`;
-- `update.json`: {version, build, notes, windows:{url,sha256}, linux:{url,sha256}}.
+- `TramInEasyPOS-Setup.exe`, `easypos-print-agent_amd64.deb`, `TramInEasyPOS.dmg`: tên cố định cho link `releases/latest/download/...`;
+- `update.json`: {version, build, windows:{url,sha256}, linux:{url,sha256}, macos:{url,sha256}}.
 """
 import hashlib
 import json
@@ -32,14 +33,19 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def build_manifest(version: str, build: int, tag: str, repo: str, exe: Path, deb: Path) -> dict:
+def build_manifest(
+    version: str, build: int, tag: str, repo: str, exe: Path, deb: Path, dmg: Path | None = None
+) -> dict:
     base = f"https://github.com/{repo}/releases/download/{quote(tag)}"
-    return {
+    manifest = {
         "version": version,
         "build": build,
         "windows": {"url": f"{base}/{quote(exe.name)}", "sha256": sha256(exe)},
         "linux": {"url": f"{base}/{quote(deb.name)}", "sha256": sha256(deb)},
     }
+    if dmg is not None:
+        manifest["macos"] = {"url": f"{base}/{quote(dmg.name)}", "sha256": sha256(dmg)}
+    return manifest
 
 
 def main(argv: list[str]) -> int:
@@ -56,10 +62,17 @@ def main(argv: list[str]) -> int:
     if len(exes) != 1 or len(debs) != 1:
         print(f"Cần đúng 1 .exe và 1 .deb trong {dist}, thấy {len(exes)} / {len(debs)}")
         return 1
+    dmgs = sorted(p for p in dist.glob("TramInEasyPOS-*.dmg") if p.name != "TramInEasyPOS.dmg")
+    if len(dmgs) > 1:
+        print(f"Thấy {len(dmgs)} tệp .dmg trong {dist}, cần tối đa 1")
+        return 1
     exe, deb = exes[0], debs[0]
-    manifest = build_manifest(version, build, tag, repo, exe, deb)
+    dmg = dmgs[0] if dmgs else None
+    manifest = build_manifest(version, build, tag, repo, exe, deb, dmg)
     shutil.copy(exe, dist / "TramInEasyPOS-Setup.exe")
     shutil.copy(deb, dist / "easypos-print-agent_amd64.deb")
+    if dmg is not None:
+        shutil.copy(dmg, dist / "TramInEasyPOS.dmg")
     (dist / "update.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
