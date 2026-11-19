@@ -22,12 +22,19 @@ abstract interface class StorePrinterRepository {
   Future<void> create(StorePrinter printer);
 }
 
-class StorePrinterApi implements StorePrinterRepository {
+/// Đọc + sửa chức năng máy in của cửa hàng (Agent chọn chức năng cho máy in).
+abstract interface class StorePrinterEditor implements StorePrinterRepository {
+  /// Đổi chức năng (mã của app) của [printer] trên máy chủ; ném [StoreApiException] khi lỗi.
+  Future<void> updateTemplates(StorePrinter printer, List<int> templates);
+}
+
+class StorePrinterApi implements StorePrinterEditor {
   StorePrinterApi(this._session, {required int? Function() companyId})
     : _companyId = companyId;
 
   static const _listPath = '/api/client/page/print-setting/get-with-paging';
   static const _createPath = '/api/client/page/print-setting/create';
+  static const _updatePath = '/api/client/page/print-setting/update';
 
   final AuthSession _session;
   final int? Function() _companyId;
@@ -56,6 +63,24 @@ class StorePrinterApi implements StorePrinterRepository {
     );
     if (json is Map && json['status'] == false) {
       throw StoreApiException(json['reason']?.toString() ?? 'Tạo máy in lỗi');
+    }
+  }
+
+  @override
+  Future<void> updateTemplates(
+    StorePrinter printer,
+    List<int> templates,
+  ) async {
+    final company = _companyId();
+    if (company == null) throw const StoreApiException('Chưa đăng nhập');
+    if (printer.id == null) throw const StoreApiException('Máy in chưa lưu');
+    final json = await _send(
+      'POST',
+      Uri.parse('${AuthService.host}$_updatePath'),
+      body: printer.toUpdateJson(templates, company),
+    );
+    if (json is Map && json['status'] == false) {
+      throw StoreApiException(json['reason']?.toString() ?? 'Sửa máy in lỗi');
     }
   }
 

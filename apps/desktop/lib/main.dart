@@ -10,6 +10,9 @@ import 'agent/agent_config.dart';
 import 'agent/agent_printer.dart';
 import 'agent/agent_store.dart';
 import 'agent/desktop_agent.dart';
+import 'agent/desktop_print_routing_store.dart';
+import 'agent/store_printer_sync.dart';
+import 'store/store_printer.dart';
 import 'desktop/autostart.dart';
 import 'desktop/desktop_shell.dart';
 import 'desktop/firewall_guard.dart';
@@ -54,6 +57,31 @@ Future<void> main(List<String> args) async {
   )..start();
   // Nút "Thêm máy in" trên sơ đồ / bảng trạm in này.
   PrintAgentUi.onAddPrinter = () => desktopAddPrinter(agent);
+  // Máy tem (nhận ra qua loại máy): chỉ chọn được chức năng "Tem nhãn".
+  PrintAgentUi.printerIsLabel = (printer) {
+    final address = printer.refAddress ?? '';
+    if (address.isEmpty) return null;
+    return agent.settingsOf(address).type == PrinterType.label ? true : null;
+  };
+  // Thẻ "In theo chức năng" (Tool in ver 3).
+  final routing = DesktopPrintRoutingStore(agent);
+  PrintAgentUi.printRouting = routing;
+  // Máy in của máy này ứng với máy in nào trong cửa hàng (khớp theo IP).
+  PrintAgentUi.printerRoutingName = (printer) =>
+      routing.nameOfAddress(printer.refAddress ?? '', mac: printer.refMac);
+  // Nhãn "Từ EasyPOS" cho máy in do đồng bộ từ cửa hàng thêm vào.
+  PrintAgentUi.printerBadge = (printer) =>
+      StorePrinterSync.isFromStore(
+        agent.config.companyId,
+        printer.refAddress ?? '',
+        mac: printer.refMac,
+      )
+      ? 'Từ EasyPOS'
+      : null;
+  // Tải sẵn danh sách máy in cửa hàng (đã đăng nhập) để khớp ngay khi mở chi tiết máy in.
+  if (config.ready) {
+    unawaited(routing.refresh().catchError((_) => <StorePrinter>[]));
+  }
   // Nút "Xoá máy in" trong chi tiết máy in trên sơ đồ: bỏ máy in đã chọn để chọn lại.
   PrintAgentUi.onRemovePrinter = (printer) async {
     final address = (printer.refAddress ?? '').trim();

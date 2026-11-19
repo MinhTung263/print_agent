@@ -15,6 +15,8 @@ import '../printers/paper_size_detector.dart';
 import 'agent_config.dart';
 import 'agent_printer.dart';
 import 'printer_settings.dart';
+import 'store_printer_sync.dart';
+import '../store/store_printer.dart';
 import 'printer_settings_memory.dart';
 import 'agent_store.dart';
 import 'desktop_agent_host.dart';
@@ -232,7 +234,10 @@ class DesktopAgent extends ChangeNotifier {
 
   /// Xoá máy in của Agent (để chọn lại / thêm lại): máy bán hàng không còn thấy "máy
   /// in của trạm in" này cho tới khi chọn máy in mới.
-  Future<void> removePrinter() => update(_config.withoutPrinter());
+  Future<void> removePrinter() {
+    StorePrinterSync.ignore(_config.companyId, _config.printer);
+    return update(_config.withoutPrinter());
+  }
 
   /// Thêm máy in [address] vào trạm in: chưa có máy in chính thì làm máy in chính, có rồi
   /// thì thêm vào danh sách máy in (hiện trên sơ đồ). Trả `false` khi máy in đã có.
@@ -243,6 +248,7 @@ class DesktopAgent extends ChangeNotifier {
         gateway.extras.contains(a)) {
       return false;
     }
+    StorePrinterSync.unignore(_config.companyId, a);
     // Máy từng thêm trước đây: cài đặt (tắt cắt giấy, còi, khổ giấy...) quay về.
     final mac = await _macForRemember(a);
     final saved = PrinterSettingsMemory.recall(
@@ -370,9 +376,66 @@ class DesktopAgent extends ChangeNotifier {
     return added;
   }
 
+  /// Thêm máy in LAN của cửa hàng chưa có trên Agent vào sơ đồ (đồng bộ từ máy chủ EasyPOS).
+  /// Chỉ khi Trạm in đang bật; bỏ qua máy đã có, máy người dùng từng xoá, và máy vượt giới hạn.
+  /// Trả số máy đã thêm.
+  Future<int> syncStorePrinters(List<StorePrinter> printers) async {
+    if (!_config.ready || !isOn) return 0;
+    final skip = StorePrinterSync.ignored(_config.companyId);
+    // MAC các máy Agent đã có: máy đổi IP (Agent tự tìm lại theo MAC) không bị thêm lần nữa
+    // chỉ vì IP trong cửa hàng còn cũ.
+    final haveMacs = {
+      for (final e in gateway.extras.items)
+        if (e.mac.isNotEmpty) StorePrinterSync.normMac(e.mac),
+      if (_config.printerMac.isNotEmpty)
+        StorePrinterSync.normMac(_config.printerMac),
+    };
+    var added = 0;
+    for (final p in printers) {
+      final a = p.ip.trim();
+      final mac = StorePrinterSync.normMac(p.mac);
+      if (!StorePrinterSync.isSyncable(p) ||
+          skip.contains(a) ||
+          a == _config.printer.trim() ||
+          gateway.extras.contains(a) ||
+          (mac.isNotEmpty && haveMacs.contains(mac))) {
+        continue;
+      }
+      // Chưa có máy in chính thì máy đầu tiên làm máy in chính (như "Thêm máy in").
+      if (!_config.hasPrinter) {
+        if (await addPrinter(a)) {
+          StorePrinterSync.markAdded(_config.companyId, a, mac: mac);
+          added++;
+        }
+        continue;
+      }
+      if (!gateway.extras.add(
+        a,
+        name: p.name.trim(),
+        mac: p.mac ?? '',
+        type: StorePrinterSync.typeOf(p),
+        paper: StorePrinterSync.paperOf(p),
+      )) {
+        break; // hết chỗ (giới hạn số máy in thêm)
+      }
+      StorePrinterSync.markAdded(_config.companyId, a, mac: mac);
+      // Cửa hàng chưa lưu MAC: đọc từ bảng ARP để sau này máy đổi IP vẫn tìm lại được.
+      if (mac.isEmpty) unawaited(_learnExtraMac(a));
+      added++;
+    }
+    if (added > 0) {
+      notifyListeners();
+      gateway.extrasChanged();
+      unawaited(service.relay.refreshStationInfo());
+    }
+    return added;
+  }
+
   /// Bỏ máy in thêm [address]; `false` khi không phải máy in thêm.
   bool removeExtraPrinter(String address) {
     if (!gateway.extras.remove(address)) return false;
+    // Máy người dùng đã xoá: đồng bộ máy in cửa hàng không tự thêm lại.
+    StorePrinterSync.ignore(_config.companyId, address);
     notifyListeners();
     gateway.extrasChanged();
     unawaited(service.relay.refreshStationInfo());

@@ -29,6 +29,25 @@ void main() {
   });
 
   group('AgentPrinterWatchdog', () {
+    test(
+      'lượt dò đầu: mọi máy in lên sơ đồ CÙNG LÚC (không hiện dần từng máy)',
+      () async {
+        gateway.printers = [kitchen, usb];
+        final sizes = <int>[];
+        final sub = watchdog.statuses.listen((l) {
+          if (l.isNotEmpty) sizes.add(l.length);
+        });
+        await watchdog.checkNow();
+        await sub.cancel();
+        expect(sizes, isNotEmpty);
+        expect(
+          sizes.first,
+          2,
+          reason: 'lần cập nhật đầu tiên đã có đủ 2 máy in (đang kiểm tra)',
+        );
+      },
+    );
+
     test('prune bỏ máy in đã xoá khỏi cài đặt', () {
       gateway.printers = [kitchen, usb];
       watchdog.report(kitchen, AgentPrinterState.connected);

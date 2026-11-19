@@ -54,8 +54,19 @@ abstract final class PrinterPickerList {
               type: o.type,
               warning: o.warning,
               hardBlock: o.hardBlock,
+              mac: o.mac,
             )
           : o,
+  ];
+
+  /// Gắn MAC cho máy ở [address].
+  static List<PrinterOption> withMac(
+    List<PrinterOption> all,
+    String address,
+    String mac,
+  ) => [
+    for (final o in all)
+      o.address.isNotEmpty && o.address == address ? o.withMac(mac) : o,
   ];
 
   /// Gắn loại máy in (tem / hoá đơn) đã nhận ra cho máy ở [address].

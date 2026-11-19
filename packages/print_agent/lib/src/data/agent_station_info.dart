@@ -9,7 +9,7 @@ import 'agent_printer_switches.dart';
 /// qua máy in tích hợp, bật / tắt máy in từ xa).
 abstract final class AgentStationInfo {
   /// Tối đa số máy in báo kèm (thông tin trực tuyến không quá nặng).
-  static const int maxPrinters = 30;
+  static const int maxPrinters = 50;
 
   static Map<String, Object?> build({
     required String name,

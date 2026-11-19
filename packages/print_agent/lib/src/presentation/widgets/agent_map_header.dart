@@ -13,6 +13,8 @@ class AgentMapHeader extends StatelessWidget {
     required this.isAgent,
     required this.onRefresh,
     this.onArrange,
+    this.offlineAgents,
+    this.onClearOffline,
   });
 
   final bool isAgent;
@@ -20,6 +22,12 @@ class AgentMapHeader extends StatelessWidget {
 
   /// Mở "Sắp xếp sơ đồ" (đổi thứ tự Agent / máy in).
   final VoidCallback? onArrange;
+
+  /// Số máy Agent ngoại tuyến đang nhớ (đọc trong Obx để cập nhật khi danh sách đổi).
+  final int Function()? offlineAgents;
+
+  /// Xoá hết các máy Agent ngoại tuyến (hỏi xác nhận ở nơi gọi).
+  final VoidCallback? onClearOffline;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +63,17 @@ class AgentMapHeader extends StatelessWidget {
               ),
             ),
           ),
+        if (offlineAgents != null && onClearOffline != null)
+          Obx(() {
+            // Đọc danh sách đã biết để Obx dựng lại khi có máy thêm / bớt.
+            KnownAgents.items.length;
+            return offlineAgents!() > 0
+                ? AgentMapHeaderAction(
+                    icon: Icons.delete_sweep_rounded,
+                    onTap: onClearOffline,
+                  )
+                : const SizedBox.shrink();
+          }),
         Obx(
           () => AgentMapHeaderAction(
             icon: Icons.refresh_rounded,

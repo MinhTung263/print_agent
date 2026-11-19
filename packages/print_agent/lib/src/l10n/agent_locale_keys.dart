@@ -89,6 +89,24 @@ abstract final class LocaleKeys {
   static const printerSetting_agentBuiltInPrinter =
       'printerSetting_agentBuiltInPrinter';
 
+  /// "Xoá các máy Agent ngoại tuyến"
+  static const printerSetting_agentClearOffline =
+      'printerSetting_agentClearOffline';
+
+  /// "Xoá @count máy Agent đang ngoại tuyến khỏi danh sách (cả trên kênh trung chuyển)? Máy đang chạy sẽ không bị ảnh hưởng."
+  static const printerSetting_agentClearOfflineConfirm =
+      'printerSetting_agentClearOfflineConfirm';
+  static String printerSetting_agentClearOfflineConfirmTr({
+    required Object count,
+  }) => printerSetting_agentClearOfflineConfirm.trParams({'count': '$count'});
+
+  /// "Đã xoá @count máy Agent ngoại tuyến"
+  static const printerSetting_agentClearOfflineDone =
+      'printerSetting_agentClearOfflineDone';
+  static String printerSetting_agentClearOfflineDoneTr({
+    required Object count,
+  }) => printerSetting_agentClearOfflineDone.trParams({'count': '$count'});
+
   /// "Internet"
   static const printerSetting_agentCloud = 'printerSetting_agentCloud';
 
@@ -964,6 +982,34 @@ abstract final class LocaleKeys {
   static const printerSetting_agentZoneMyPrinters =
       'printerSetting_agentZoneMyPrinters';
 
+  /// "in phiếu báo bếp khi huỷ món"
+  static const printerSetting_fnHintCancelDish =
+      'printerSetting_fnHintCancelDish';
+
+  /// "in phiếu gửi bếp / bar để chế biến"
+  static const printerSetting_fnHintKitchen = 'printerSetting_fnHintKitchen';
+
+  /// "in tem nhãn dán lên sản phẩm / ly"
+  static const printerSetting_fnHintLabel = 'printerSetting_fnHintLabel';
+
+  /// "in hoá đơn khi khách thanh toán"
+  static const printerSetting_fnHintPayment = 'printerSetting_fnHintPayment';
+
+  /// "in mã QR để khách quét thanh toán"
+  static const printerSetting_fnHintPaymentQr =
+      'printerSetting_fnHintPaymentQr';
+
+  /// "in đơn thuốc"
+  static const printerSetting_fnHintPrescription =
+      'printerSetting_fnHintPrescription';
+
+  /// "in phiếu tạm tính để khách kiểm tra trước khi trả tiền"
+  static const printerSetting_fnHintProvisional =
+      'printerSetting_fnHintProvisional';
+
+  /// "in phiếu cung ứng (lấy hàng, chuyển món)"
+  static const printerSetting_fnHintSupply = 'printerSetting_fnHintSupply';
+
   /// "Trạm in"
   static const printerSetting_printStationChannel =
       'printerSetting_printStationChannel';
@@ -998,6 +1044,41 @@ abstract final class LocaleKeys {
   static const printerSetting_printStationWaiting =
       'printerSetting_printStationWaiting';
 
+  /// "Chọn các chức năng sẽ in ra máy này. Tự lưu khi bấm."
+  static const printerSetting_printerFunctionsHint =
+      'printerSetting_printerFunctionsHint';
+
+  /// "Máy in này chưa có trong danh sách máy in của cửa hàng nên chưa chọn được chức năng. Thêm máy in vào cửa hàng (trên EasyPOS hoặc để Agent tự thêm) rồi quay lại."
+  static const printerSetting_printerFunctionsNotInStore =
+      'printerSetting_printerFunctionsNotInStore';
+
+  /// "Đang in ở máy @printer — chọn để chuyển sang máy này"
+  static const printerSetting_printerFunctionsOther =
+      'printerSetting_printerFunctionsOther';
+  static String printerSetting_printerFunctionsOtherTr({
+    required Object printer,
+  }) => printerSetting_printerFunctionsOther.trParams({'printer': '$printer'});
+
+  /// "Gợi ý cho máy này"
+  static const printerSetting_printerFunctionsSuggest =
+      'printerSetting_printerFunctionsSuggest';
+
+  /// "Dùng gợi ý"
+  static const printerSetting_printerFunctionsSuggestApply =
+      'printerSetting_printerFunctionsSuggestApply';
+
+  /// "Chức năng in của máy này"
+  static const printerSetting_printerFunctionsTitle =
+      'printerSetting_printerFunctionsTitle';
+
+  /// "iPhone / iPad không hỗ trợ in qua USB. Máy in này chỉ in được khi Agent chạy trên Android hoặc máy tính — hãy dùng máy in LAN / Wi-Fi."
+  static const printerSetting_printerUsbUnsupported =
+      'printerSetting_printerUsbUnsupported';
+
+  /// "iOS không hỗ trợ USB"
+  static const printerSetting_printerUsbUnsupportedShort =
+      'printerSetting_printerUsbUnsupportedShort';
+
   /// "@printerName hết giấy / đang mở nắp. Trạm in đang giữ phiếu, lắp giấy (đóng nắp) xong sẽ tự in — không cần in lại."
   static const printerSetting_relayHeld = 'printerSetting_relayHeld';
   static String printerSetting_relayHeldTr({required Object printerName}) =>
@@ -1018,6 +1099,90 @@ abstract final class LocaleKeys {
   /// "Trạm in đang tắt hoặc mất mạng, hãy kiểm tra máy trạm in đang mở app và có internet"
   static const printerSetting_remotePrintTimeout =
       'printerSetting_remotePrintTimeout';
+
+  /// "Thêm chức năng"
+  static const printerSetting_routingAdd = 'printerSetting_routingAdd';
+
+  /// "Hỏi số bản in mỗi lần in"
+  static const printerSetting_routingAskCopies =
+      'printerSetting_routingAskCopies';
+
+  /// "Mỗi chức năng đang in ra máy nào"
+  static const printerSetting_routingCardHint =
+      'printerSetting_routingCardHint';
+
+  /// "Chức năng"
+  static const printerSetting_routingColFunction =
+      'printerSetting_routingColFunction';
+
+  /// "Máy in"
+  static const printerSetting_routingColPrinter =
+      'printerSetting_routingColPrinter';
+
+  /// "Chọn máy in cho từng chức năng"
+  static const printerSetting_routingConfigure =
+      'printerSetting_routingConfigure';
+
+  /// "Số bản"
+  static const printerSetting_routingCopies = 'printerSetting_routingCopies';
+
+  /// "Chưa cấu hình — mọi chức năng in như mặc định"
+  static const printerSetting_routingEmpty = 'printerSetting_routingEmpty';
+
+  /// "Số bản tối thiểu là 1"
+  static const printerSetting_routingErrCopies =
+      'printerSetting_routingErrCopies';
+
+  /// "Trùng tên chức năng"
+  static const printerSetting_routingErrDuplicate =
+      'printerSetting_routingErrDuplicate';
+
+  /// "Chọn máy in"
+  static const printerSetting_routingErrPrinter =
+      'printerSetting_routingErrPrinter';
+
+  /// "Chọn mẫu in"
+  static const printerSetting_routingErrTemplate =
+      'printerSetting_routingErrTemplate';
+
+  /// "Chọn máy in và mẫu in cho từng chức năng. Dùng chung cho cả cửa hàng."
+  static const printerSetting_routingHint = 'printerSetting_routingHint';
+
+  /// "Muốn đổi: bấm vào máy in trên sơ đồ rồi chọn chức năng của máy đó."
+  static const printerSetting_routingHowTo = 'printerSetting_routingHowTo';
+
+  /// "Chưa có mẫu in cho chức năng này"
+  static const printerSetting_routingNoTemplate =
+      'printerSetting_routingNoTemplate';
+
+  /// "Chưa có máy"
+  static const printerSetting_routingNone = 'printerSetting_routingNone';
+
+  /// "Xem trước hoá đơn khi thanh toán"
+  static const printerSetting_routingPreview = 'printerSetting_routingPreview';
+
+  /// "Máy in"
+  static const printerSetting_routingPrinter = 'printerSetting_routingPrinter';
+
+  /// "Bỏ chức năng này"
+  static const printerSetting_routingRemove = 'printerSetting_routingRemove';
+
+  /// "Lưu"
+  static const printerSetting_routingSave = 'printerSetting_routingSave';
+
+  /// "Chưa lưu được, thử lại"
+  static const printerSetting_routingSaveFailed =
+      'printerSetting_routingSaveFailed';
+
+  /// "Đã lưu cấu hình in"
+  static const printerSetting_routingSaved = 'printerSetting_routingSaved';
+
+  /// "Mẫu in"
+  static const printerSetting_routingTemplate =
+      'printerSetting_routingTemplate';
+
+  /// "In theo chức năng"
+  static const printerSetting_routingTitle = 'printerSetting_routingTitle';
 
   /// "Máy in của @stationName"
   static const printerSetting_stationBuiltInNameNamed =

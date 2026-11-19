@@ -60,6 +60,35 @@ void main() {
     expect(d.name, 'Máy in tem · XP-420B');
   });
 
+  test('iOS không in USB được: máy in USB có cảnh báo, máy LAN thì không', () {
+    const usbSaved = FakePrinter(
+      refId: 5,
+      refKind: AgentPrinterKind.usb,
+      refAddress: 'v1155_p22336',
+      refName: 'XP-80C',
+    );
+    const lan = FakePrinter(
+      refId: 6,
+      refKind: AgentPrinterKind.lan,
+      refAddress: '192.168.1.5',
+      refName: 'LAN',
+    );
+    addTearDown(() => PrintAgentUi.usbSupported = true);
+    expect(
+      AgentPrintersMap.detailOf(_status(usbSaved), const {}).usbUnsupported,
+      isFalse,
+    );
+    PrintAgentUi.usbSupported = false;
+    expect(
+      AgentPrintersMap.detailOf(_status(usbSaved), const {}).usbUnsupported,
+      isTrue,
+    );
+    expect(
+      AgentPrintersMap.detailOf(_status(lan), const {}).usbUnsupported,
+      isFalse,
+    );
+  });
+
   group('máy in chính là máy USB của Agent máy tính', () {
     const usb = FakePrinter(
       refId: -1,
@@ -268,4 +297,25 @@ void main() {
       expect(usbOther.onSwitchNetwork, isNull);
     },
   );
+
+  test('ghép loại máy + kiểu kết nối thành MỘT hàng "Hoá đơn | USB"', () {
+    final hd = AgentPrintersMap.splitName('Máy in hoá đơn · XP-80C');
+    final usb = AgentPrintersMap.addressLineOf(
+      _status(
+        const FakePrinter(
+          refId: 1,
+          refKind: AgentPrinterKind.usb,
+          refAddress: 'usb:1',
+          refName: 'XP',
+        ),
+      ),
+    );
+    final joined = AgentPrintersMap.joinLines(hd.typeLine, usb)!;
+    expect(joined.text, hd.typeLine!.text);
+    expect(joined.next?.text, 'USB');
+    // Thiếu một phần: hiện phần còn lại.
+    expect(AgentPrintersMap.joinLines(null, usb)?.text, 'USB');
+    expect(AgentPrintersMap.joinLines(hd.typeLine, null)?.next, isNull);
+    expect(AgentPrintersMap.joinLines(null, null), isNull);
+  });
 }

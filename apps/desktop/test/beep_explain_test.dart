@@ -27,6 +27,7 @@ void main() {
 
   test('không ai trả lời: máy in tắt / đổi IP', () {
     expect(_why(), contains('Không có thiết bị nào trả lời'));
+    expect(_why(), contains('AP Isolation'));
   });
 
   test('khác dải mạng: báo khác mạng', () {

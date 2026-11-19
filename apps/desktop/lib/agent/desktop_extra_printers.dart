@@ -15,7 +15,7 @@ import 'printer_type.dart';
 class DesktopExtraPrinters {
   DesktopExtraPrinters(this._companyKey);
 
-  static const int maxPrinters = 10;
+  static const int maxPrinters = 50;
 
   final String Function() _companyKey;
 

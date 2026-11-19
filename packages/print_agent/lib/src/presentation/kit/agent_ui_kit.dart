@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:print_agent/src/domain/entities/agent_printer_ref.dart';
 
 import '../../domain/ports/agent_host.dart';
+import '../../domain/ports/agent_print_routing_store.dart';
 import '../ports/agent_station.dart';
 
 /// Cỡ / đậm chữ — cùng tên với design system của app EasyPOS.
@@ -165,6 +166,23 @@ abstract final class PrintAgentUi {
   /// `null` = máy in này không có cài đặt riêng.
   static Widget? Function(AgentPrinterRef printer)? printerSettings;
 
+  /// Thiết bị này in được qua USB không? `false` (iPhone / iPad) = máy in USB hiện cảnh báo
+  /// "không hỗ trợ" thay vì chờ kết nối mãi.
+  static bool usbSupported = true;
+
+  /// Nhãn nguồn của máy in [printer] hiện trên sơ đồ (VD "Từ EasyPOS" cho máy đồng bộ từ cửa
+  /// hàng); `null` = không có nhãn.
+  static String? Function(AgentPrinterRef printer)? printerBadge;
+
+  /// Tên máy in trong danh sách máy in của cửa hàng ứng với [printer] (để chọn chức năng): app
+  /// chủ tự khớp (VD Agent máy tính khớp theo địa chỉ IP). Trả `null` = máy này chưa có trong
+  /// cửa hàng. Không đặt hook = dùng tên máy in như hiện có (app EasyPOS).
+  static String? Function(AgentPrinterRef printer)? printerRoutingName;
+
+  /// Máy in [printer] là máy in TEM (nhận ra qua loại máy)? `true` = máy tem: chỉ cho chọn chức
+  /// năng "Tem nhãn"; `null` / không có = chưa rõ (cho chọn mọi chức năng).
+  static bool? Function(AgentPrinterRef printer)? printerIsLabel;
+
   /// App chủ tự lo nút in thử của máy in [printer] (trong phần cài đặt riêng): chi tiết
   /// không hiện thêm nút "In thử" chung — tránh nhiều nút in thử cho cùng một máy.
   static bool Function(AgentPrinterRef printer)? hasOwnTestPrint;
@@ -172,6 +190,10 @@ abstract final class PrintAgentUi {
   /// Nút hành động riêng của app chủ cho máy in [printer], đặt CÙNG HÀNG với "Xoá máy in" ở chân
   /// chi tiết máy in (VD "In thử"). `null` hoặc trả `null` = không có.
   static Widget? Function(AgentPrinterRef printer)? printerFooterAction;
+
+  /// Cấu hình in theo chức năng của tài khoản (Tool in ver 3): app chủ cài đặt qua API tài
+  /// khoản. `null` = ẩn thẻ "In theo chức năng".
+  static AgentPrintRoutingStore? printRouting;
 
   /// [station]: điều khiển máy Agent của app chủ (màn Máy Agent cần).
   static void init(

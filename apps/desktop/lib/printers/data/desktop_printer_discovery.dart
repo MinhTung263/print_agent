@@ -9,6 +9,7 @@ import 'package:printer_label/printer_label.dart' show PrinterLabel;
 
 import '../../agent/agent_printer.dart';
 import '../../agent/printer_type.dart';
+import '../lan_dhcp_auto_enable.dart';
 import '../printer_discovery.dart';
 import '../printer_option.dart';
 import '../printer_beep_plan.dart';
@@ -43,6 +44,7 @@ class DesktopPrinterDiscovery implements ProgressivePrinterDiscovery {
     for (final p in lan)
       PrinterOption.lan(
         p.address,
+        mac: p.mac,
         hardBlock: p.issue == LanPrinterIssue.ipConflict,
         warning: switch (p.issue) {
           LanPrinterIssue.none => null,
@@ -160,6 +162,48 @@ class DesktopPrinterDiscovery implements ProgressivePrinterDiscovery {
   }
 
   @override
+  Future<DhcpEnsureResult> ensureDhcp(String address) async {
+    if (UsbPrinters.isLocal(address)) return DhcpEnsureResult(address);
+    final parsed = parsePrinterAddress(address);
+    if (parsed == null) return DhcpEnsureResult(address);
+    final (ip, port) = parsed;
+    final r = await LanDhcpAutoEnable.instance.ensure(ip);
+    final next = r.ip == ip ? address : (port == 9100 ? r.ip : '${r.ip}:$port');
+    return DhcpEnsureResult(next, enabled: r.enabled, failed: r.failed);
+  }
+
+  /// Bảng ARP đọc chung cho cả lượt quét: đọc bảng là chạy một tiến trình `arp` — máy yếu mà quét ra nhiều
+  /// máy in thì mỗi máy một tiến trình rất tốn. Giữ vài giây rồi đọc lại (máy mới thấy cần MAC mới).
+  static Map<String, String> _arpCache = const {};
+  static DateTime _arpAt = DateTime.fromMillisecondsSinceEpoch(0);
+  static Future<Map<String, String>>? _arpLoading;
+
+  static Future<Map<String, String>> _arp() {
+    if (DateTime.now().difference(_arpAt) < const Duration(seconds: 3)) {
+      return Future.value(_arpCache);
+    }
+    return _arpLoading ??= ArpTable.read()
+        .then((t) {
+          _arpCache = t;
+          _arpAt = DateTime.now();
+          return t;
+        })
+        .whenComplete(() {
+          _arpLoading = null;
+        });
+  }
+
+  @override
+  Future<String?> macOf(String address) async {
+    try {
+      final host = parsePrinterAddress(address)?.$1 ?? address;
+      return (await _arp())[host];
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
   Future<PrinterType?> typeOf(String address, {String? model}) async {
     // Máy USB: loại máy tự báo trong chuỗi định danh IEEE 1284 (`CMD:TSPL2` / `CMD:ESC/POS`).
     if (UsbPrinters.isLocal(address)) {
@@ -253,7 +297,9 @@ class DesktopPrinterDiscovery implements ProgressivePrinterDiscovery {
                 'Có thể không phải máy in hoặc IP bị trùng — kiểm tra lại IP máy in.';
     }
     return 'Không có thiết bị nào trả lời ở $ip — máy in đang tắt, chưa nối mạng hoặc đã '
-        'đổi IP.';
+        'đổi IP. Máy in đã bật và nối mạng mà vẫn không thấy: Wi-Fi có thể đang bật "cách ly '
+        'thiết bị" (AP Isolation / mạng khách) — tắt tuỳ chọn đó trên router hoặc cắm dây mạng '
+        'cho máy tính.';
   }
 
   @override

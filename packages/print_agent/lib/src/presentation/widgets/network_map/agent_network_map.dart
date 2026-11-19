@@ -95,12 +95,22 @@ class _AgentNetworkMapState extends State<AgentNetworkMap>
   /// Ô một máy in (tên + 2 dòng phụ đọc được).
   static const double _leafSlot = 96;
   static const int _maxLeavesPerRow = 4;
+
+  /// Cửa hàng nhiều máy in: xếp dày hơn (6 cột) để sơ đồ không dài ra quá.
+  static const int _maxLeavesPerRowMany = 6;
+  static const int _manyPrinters = 8;
+
+  static int _perRowMax(int printers) =>
+      printers > _manyPrinters ? _maxLeavesPerRowMany : _maxLeavesPerRow;
   static const double _minBranchWidth = 150;
   static const double _branchGap = 10;
 
   /// Vùng tên + tối đa 2 dòng phụ dưới vòng tròn.
   static const double _labelBlock = 56;
-  static const double _rowGap = 124;
+  static const double _rowGap = 136;
+
+  /// Lề trong khung nhánh hai bên: chừa chỗ cho trục nối bên trái các hàng máy in sau.
+  static const double _leafPad = 14;
   static const double _cloudY = 34;
 
   static const Color _selfColor = Color(0xFF0074BD);
@@ -114,7 +124,9 @@ class _AgentNetworkMapState extends State<AgentNetworkMap>
 
   static double _branchWidth(_Branch b) => math.max(
     _minBranchWidth,
-    math.min(math.max(b.printers.length, 1), _maxLeavesPerRow) * _leafSlot + 12,
+    math.min(math.max(b.printers.length, 1), _perRowMax(b.printers.length)) *
+            _leafSlot +
+        _leafPad * 2,
   );
 
   @override
@@ -236,26 +248,57 @@ class _AgentNetworkMapState extends State<AgentNetworkMap>
           final firstLeafY = nodeBottom.dy + 64;
           final perRow = math.max(
             1,
-            math.min(_maxLeavesPerRow, ((bw - 12) / _leafSlot).floor()),
+            math.min(
+              _perRowMax(br.printers.length),
+              ((bw - _leafPad * 2) / _leafSlot).floor(),
+            ),
           );
+          final trunkLeft = x + _leafPad / 2;
+          if (br.printers.length > perRow) {
+            // Máy → thanh ngang hàng đầu → trục trái (đi tiếp xuống các hàng sau).
+            links.add(
+              AgentMapLink(
+                nodeBottom,
+                Offset(trunkLeft, firstLeafY - 16),
+                br.printers.first.state,
+                curved: false,
+                busY: firstLeafY - 46,
+              ),
+            );
+          }
           var branchBottom = nodeBottom.dy;
           for (var i = 0; i < br.printers.length; i++) {
             final row = i ~/ perRow;
             final inRow = math.min(perRow, br.printers.length - row * perRow);
-            final slot = (bw - 12) / inRow;
+            final slot = (bw - _leafPad * 2) / inRow;
             final pos = Offset(
-              x + 6 + slot * (i % perRow) + slot / 2,
+              x + _leafPad + slot * (i % perRow) + slot / 2,
               firstLeafY + row * _rowGap,
             );
-            links.add(
-              AgentMapLink(
-                nodeBottom,
-                pos.translate(0, -28),
-                br.printers[i].state,
-                curved: false,
-                busY: pos.dy - 46,
-              ),
-            );
+            // Hàng đầu: nối thẳng từ máy qua thanh ngang. Các hàng sau: nối từ TRỤC dọc ở mép trái
+            // khung (nằm ngoài vùng tên máy in) rẽ ngang vào khoảng trống GIỮA hai hàng — đường
+            // không xuyên qua tên máy in nào.
+            if (row == 0) {
+              links.add(
+                AgentMapLink(
+                  nodeBottom,
+                  pos.translate(0, -28),
+                  br.printers[i].state,
+                  curved: false,
+                  busY: pos.dy - 46,
+                ),
+              );
+            } else {
+              links.add(
+                AgentMapLink(
+                  Offset(trunkLeft, firstLeafY - 16),
+                  pos.translate(0, -28),
+                  br.printers[i].state,
+                  curved: false,
+                  busY: pos.dy - 40,
+                ),
+              );
+            }
             views.add(
               AgentMapNodeView(
                 node: br.printers[i],

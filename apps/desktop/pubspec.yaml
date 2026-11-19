@@ -24,7 +24,7 @@ dependencies:
     path: ../../packages/print_agent
   print_agent_core:
     path: ../../packages/print_agent_core
-  printer_label: ^2.5.0
+  printer_label: ^2.5.1
   tray_manager: ^0.5.3
   window_manager: ^0.5.2
 

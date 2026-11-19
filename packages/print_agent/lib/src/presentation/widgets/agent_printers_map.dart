@@ -72,18 +72,29 @@ class AgentPrintersMap extends StatelessWidget {
                 // Tên ngắn nhận ra máy (model); loại máy (hoá đơn / tem) ở dòng dưới.
                 title: label.title,
                 lines: [
-                  ?label.typeLine,
+                  // "Hoá đơn | USB": loại máy và kiểu kết nối CÙNG MỘT HÀNG.
+                  ?joinLines(label.typeLine, addressLineOf(s)),
                   // Đã tắt nhận lệnh trên Agent này ([AgentPrinterSwitches]).
                   if (off.contains(AgentPrinterSwitches.keyOf(s.printer)))
                     AgentMapLine(
                       LocaleKeys.printerSetting_agentPrinterOffState.tr,
                       icon: Icons.block_rounded,
                     ),
-                  ?addressLineOf(s),
+                  if (_usbBlocked(s.printer))
+                    AgentMapLine(
+                      LocaleKeys.printerSetting_printerUsbUnsupportedShort.tr,
+                      icon: Icons.warning_amber_rounded,
+                    ),
+                  // Máy do đồng bộ từ cửa hàng EasyPOS thêm vào.
+                  if (PrintAgentUi.printerBadge?.call(s.printer)
+                      case final badge?)
+                    AgentMapLine(badge, icon: Icons.storefront_rounded),
                   if (_printerWifi(s, subnets) case final wifi?)
                     AgentMapLine(wifi, icon: Icons.wifi_rounded),
                 ],
-                state: off.contains(AgentPrinterSwitches.keyOf(s.printer))
+                state:
+                    off.contains(AgentPrinterSwitches.keyOf(s.printer)) ||
+                        _usbBlocked(s.printer)
                     ? AgentLinkState.inactive
                     : switch (s.state) {
                         AgentPrinterState.connected => AgentLinkState.connected,
@@ -185,6 +196,10 @@ class AgentPrintersMap extends StatelessWidget {
     return PrintAgentUi.station.wifi.ssidOf(s.printer);
   }
 
+  /// Máy in USB nhưng thiết bị này không in USB được (iOS).
+  static bool _usbBlocked(AgentPrinterRef p) =>
+      !PrintAgentUi.usbSupported && p.refKind == AgentPrinterKind.usb;
+
   /// Chi tiết một máy in của máy này (bảng hiện khi bấm máy in trên sơ đồ).
   @visibleForTesting
   static AgentPrinterDetail detailOf(
@@ -223,6 +238,12 @@ class AgentPrintersMap extends StatelessWidget {
       // Mã -1 của máy in chính Agent chỉ là mã nội bộ — không hiện cho khách.
       id: p.refKind == AgentPrinterKind.builtIn ? null : p.refId,
       station: PrintAgentUi.station.displayName,
+      functionsEditable: true,
+      usbUnsupported: _usbBlocked(p),
+      routingName: PrintAgentUi.printerRoutingName == null
+          ? (p.nameOrNull ?? p.refAddress ?? '')
+          : PrintAgentUi.printerRoutingName!(p),
+      isLabelPrinter: PrintAgentUi.printerIsLabel?.call(p),
       onToggle: () => unawaited(_toggle(p)),
       onTestPrint: (PrintAgentUi.hasOwnTestPrint?.call(p) ?? false)
           ? null
@@ -327,6 +348,20 @@ class AgentPrintersMap extends StatelessWidget {
     AgentPrinterKind.bluetooth => Icons.bluetooth_rounded,
     _ => Icons.print_rounded,
   };
+
+  /// Ghép loại máy ([type]) và kiểu kết nối ([address]) thành MỘT hàng "Hoá đơn | USB";
+  /// thiếu một phần thì hiện phần còn lại.
+  @visibleForTesting
+  static AgentMapLine? joinLines(AgentMapLine? type, AgentMapLine? address) {
+    if (type == null) return address;
+    if (address == null) return type;
+    return AgentMapLine(
+      type.text,
+      icon: type.icon,
+      color: type.color,
+      next: address,
+    );
+  }
 
   /// Dòng phụ dưới tên máy in trên sơ đồ: kiểu kết nối (LAN / USB / tích hợp);
   /// `null` = chỉ hiện tên.

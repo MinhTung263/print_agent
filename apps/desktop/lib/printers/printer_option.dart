@@ -14,6 +14,7 @@ class PrinterOption {
     this.type,
     this.warning,
     this.hardBlock = false,
+    this.mac,
   });
 
   factory PrinterOption.lan(
@@ -23,6 +24,7 @@ class PrinterOption {
     PrinterType? type,
     String? warning,
     bool hardBlock = false,
+    String? mac,
   }) => PrinterOption(
     kind: PrinterOptionKind.lan,
     address: address,
@@ -33,6 +35,7 @@ class PrinterOption {
     type: type,
     warning: warning,
     hardBlock: hardBlock,
+    mac: mac,
   );
 
   /// Máy in USB; [setupPort] khác `null` = chưa cài đặt (cài một lần).
@@ -72,7 +75,23 @@ class PrinterOption {
   /// Cảnh báo mềm (VD chưa kết nối được) vẫn cho thêm và cho bíp thử.
   final bool hardBlock;
 
+  /// MAC máy in (máy tự báo qua UDP hoặc đọc từ bảng ARP); `null` = chưa biết. Nhờ MAC biết máy
+  /// này CHÍNH là máy đã thêm dù IP đã đổi.
+  final String? mac;
+
   bool get blocked => hardBlock;
+
+  PrinterOption withMac(String? mac) => PrinterOption(
+    kind: kind,
+    address: address,
+    title: title,
+    subtitle: subtitle,
+    setupPort: setupPort,
+    type: type,
+    warning: warning,
+    hardBlock: hardBlock,
+    mac: mac,
+  );
 
   PrinterOption withType(PrinterType? type) => PrinterOption(
     kind: kind,
@@ -83,6 +102,7 @@ class PrinterOption {
     type: type,
     warning: warning,
     hardBlock: hardBlock,
+    mac: mac,
   );
 
   bool get needsSetup => setupPort != null;

@@ -30,6 +30,11 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentBuiltInInUse': "Đang dùng để in",
     'printerSetting_agentBuiltInNotUsed': "Chưa bật dùng",
     'printerSetting_agentBuiltInPrinter': "Máy in có sẵn trên máy",
+    'printerSetting_agentClearOffline': "Xoá các máy Agent ngoại tuyến",
+    'printerSetting_agentClearOfflineConfirm':
+        "Xoá @count máy Agent đang ngoại tuyến khỏi danh sách (cả trên kênh trung chuyển)? Máy đang chạy sẽ không bị ảnh hưởng.",
+    'printerSetting_agentClearOfflineDone':
+        "Đã xoá @count máy Agent ngoại tuyến",
     'printerSetting_agentCloud': "Internet",
     'printerSetting_agentCloudConnecting': "Đang kết nối…",
     'printerSetting_agentCloudDown': "Mất kết nối",
@@ -281,6 +286,15 @@ const Map<String, Map<String, String>> agentTranslations = {
         "Chưa in được lần nào trên máy này nên chưa biết máy in ở Wi-Fi nào",
     'printerSetting_agentZoneCompanyAgents': "Trạm in của cửa hàng (@count)",
     'printerSetting_agentZoneMyPrinters': "Máy in của máy này",
+    'printerSetting_fnHintCancelDish': "in phiếu báo bếp khi huỷ món",
+    'printerSetting_fnHintKitchen': "in phiếu gửi bếp / bar để chế biến",
+    'printerSetting_fnHintLabel': "in tem nhãn dán lên sản phẩm / ly",
+    'printerSetting_fnHintPayment': "in hoá đơn khi khách thanh toán",
+    'printerSetting_fnHintPaymentQr': "in mã QR để khách quét thanh toán",
+    'printerSetting_fnHintPrescription': "in đơn thuốc",
+    'printerSetting_fnHintProvisional':
+        "in phiếu tạm tính để khách kiểm tra trước khi trả tiền",
+    'printerSetting_fnHintSupply': "in phiếu cung ứng (lấy hàng, chuyển món)",
     'printerSetting_printStationChannel': "Trạm in",
     'printerSetting_printStationHint':
         "Máy khác Wi-Fi hoặc dùng mạng di động sẽ gửi phiếu sang, máy này in ra máy in ở quầy. Máy này cần cùng mạng với máy in (hoặc cắm USB vào máy in) và đang mở app",
@@ -291,6 +305,18 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_printStationUnavailable':
         "Chưa bật được trạm in, hãy kiểm tra kết nối internet rồi thử lại",
     'printerSetting_printStationWaiting': "Đang chờ phiếu in từ máy khác",
+    'printerSetting_printerFunctionsHint':
+        "Chọn các chức năng sẽ in ra máy này. Tự lưu khi bấm.",
+    'printerSetting_printerFunctionsNotInStore':
+        "Máy in này chưa có trong danh sách máy in của cửa hàng nên chưa chọn được chức năng. Thêm máy in vào cửa hàng (trên EasyPOS hoặc để Agent tự thêm) rồi quay lại.",
+    'printerSetting_printerFunctionsOther':
+        "Đang in ở máy @printer — chọn để chuyển sang máy này",
+    'printerSetting_printerFunctionsSuggest': "Gợi ý cho máy này",
+    'printerSetting_printerFunctionsSuggestApply': "Dùng gợi ý",
+    'printerSetting_printerFunctionsTitle': "Chức năng in của máy này",
+    'printerSetting_printerUsbUnsupported':
+        "iPhone / iPad không hỗ trợ in qua USB. Máy in này chỉ in được khi Agent chạy trên Android hoặc máy tính — hãy dùng máy in LAN / Wi-Fi.",
+    'printerSetting_printerUsbUnsupportedShort': "iOS không hỗ trợ USB",
     'printerSetting_relayHeld':
         "@printerName hết giấy / đang mở nắp. Trạm in đang giữ phiếu, lắp giấy (đóng nắp) xong sẽ tự in — không cần in lại.",
     'printerSetting_relayNoStation':
@@ -299,6 +325,33 @@ const Map<String, Map<String, String>> agentTranslations = {
         "Trạm in không in được tới @printerName",
     'printerSetting_remotePrintTimeout':
         "Trạm in đang tắt hoặc mất mạng, hãy kiểm tra máy trạm in đang mở app và có internet",
+    'printerSetting_routingAdd': "Thêm chức năng",
+    'printerSetting_routingAskCopies': "Hỏi số bản in mỗi lần in",
+    'printerSetting_routingCardHint': "Mỗi chức năng đang in ra máy nào",
+    'printerSetting_routingColFunction': "Chức năng",
+    'printerSetting_routingColPrinter': "Máy in",
+    'printerSetting_routingConfigure': "Chọn máy in cho từng chức năng",
+    'printerSetting_routingCopies': "Số bản",
+    'printerSetting_routingEmpty':
+        "Chưa cấu hình — mọi chức năng in như mặc định",
+    'printerSetting_routingErrCopies': "Số bản tối thiểu là 1",
+    'printerSetting_routingErrDuplicate': "Trùng tên chức năng",
+    'printerSetting_routingErrPrinter': "Chọn máy in",
+    'printerSetting_routingErrTemplate': "Chọn mẫu in",
+    'printerSetting_routingHint':
+        "Chọn máy in và mẫu in cho từng chức năng. Dùng chung cho cả cửa hàng.",
+    'printerSetting_routingHowTo':
+        "Muốn đổi: bấm vào máy in trên sơ đồ rồi chọn chức năng của máy đó.",
+    'printerSetting_routingNoTemplate': "Chưa có mẫu in cho chức năng này",
+    'printerSetting_routingNone': "Chưa có máy",
+    'printerSetting_routingPreview': "Xem trước hoá đơn khi thanh toán",
+    'printerSetting_routingPrinter': "Máy in",
+    'printerSetting_routingRemove': "Bỏ chức năng này",
+    'printerSetting_routingSave': "Lưu",
+    'printerSetting_routingSaveFailed': "Chưa lưu được, thử lại",
+    'printerSetting_routingSaved': "Đã lưu cấu hình in",
+    'printerSetting_routingTemplate': "Mẫu in",
+    'printerSetting_routingTitle': "In theo chức năng",
     'printerSetting_stationBuiltInNameNamed': "Máy in của @stationName",
     'printerSetting_stationBuiltInOfflineState': "Đang tắt",
     'printerSetting_stationBuiltInOnline': "Đang bật",
@@ -339,6 +392,10 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentBuiltInInUse': "In use",
     'printerSetting_agentBuiltInNotUsed': "Not enabled",
     'printerSetting_agentBuiltInPrinter': "Built-in printer",
+    'printerSetting_agentClearOffline': "Remove offline Agents",
+    'printerSetting_agentClearOfflineConfirm':
+        "Remove @count offline Agent(s) from the list (including the relay)? Running Agents are not affected.",
+    'printerSetting_agentClearOfflineDone': "Removed @count offline Agent(s)",
     'printerSetting_agentCloud': "Internet",
     'printerSetting_agentCloudConnecting': "Connecting…",
     'printerSetting_agentCloudDown': "Disconnected",
@@ -597,6 +654,18 @@ const Map<String, Map<String, String>> agentTranslations = {
         "Never printed from this device, so the printer's Wi-Fi is unknown",
     'printerSetting_agentZoneCompanyAgents': "Company print stations (@count)",
     'printerSetting_agentZoneMyPrinters': "Printers of this device",
+    'printerSetting_fnHintCancelDish':
+        "prints a slip to the kitchen when a dish is cancelled",
+    'printerSetting_fnHintKitchen': "prints the kitchen / bar order slip",
+    'printerSetting_fnHintLabel': "prints labels for products / cups",
+    'printerSetting_fnHintPayment': "prints the receipt when the guest pays",
+    'printerSetting_fnHintPaymentQr':
+        "prints a QR code for the guest to scan and pay",
+    'printerSetting_fnHintPrescription': "prints prescriptions",
+    'printerSetting_fnHintProvisional':
+        "prints the bill for the guest to check before paying",
+    'printerSetting_fnHintSupply':
+        "prints supply slips (picking, moving items)",
     'printerSetting_printStationChannel': "Print station",
     'printerSetting_printStationHint':
         "Devices on another Wi-Fi or on mobile data print through this print station. It must be on the printer's network (or connected to the printer by USB) with the app open",
@@ -609,6 +678,18 @@ const Map<String, Map<String, String>> agentTranslations = {
         "Could not turn on the print station, check the internet connection and try again",
     'printerSetting_printStationWaiting':
         "Waiting for print jobs from other devices",
+    'printerSetting_printerFunctionsHint':
+        "Pick which functions print here. Saved automatically.",
+    'printerSetting_printerFunctionsNotInStore':
+        "This printer is not in the store's printer list yet, so functions can't be set. Add it to the store (in EasyPOS, or let the Agent add it) and come back.",
+    'printerSetting_printerFunctionsOther':
+        "Now printing on @printer — tap to move here",
+    'printerSetting_printerFunctionsSuggest': "Suggested for this printer",
+    'printerSetting_printerFunctionsSuggestApply': "Use suggestion",
+    'printerSetting_printerFunctionsTitle': "Functions printed on this printer",
+    'printerSetting_printerUsbUnsupported':
+        "iPhone / iPad can't print over USB. This printer only works when the Agent runs on Android or a computer — use a LAN / Wi-Fi printer instead.",
+    'printerSetting_printerUsbUnsupportedShort': "USB is not supported on iOS",
     'printerSetting_relayHeld':
         "@printerName is out of paper / cover open. The print station is holding the ticket and will print it when the printer is ready — no need to print again.",
     'printerSetting_relayNoStation':
@@ -617,6 +698,33 @@ const Map<String, Map<String, String>> agentTranslations = {
         "The print station could not print to @printerName",
     'printerSetting_remotePrintTimeout':
         "The print station did not respond, check that it has the app open and internet access",
+    'printerSetting_routingAdd': "Add function",
+    'printerSetting_routingAskCopies': "Ask for copies on every print",
+    'printerSetting_routingCardHint': "Which printer each function prints on",
+    'printerSetting_routingColFunction': "Function",
+    'printerSetting_routingColPrinter': "Printer",
+    'printerSetting_routingConfigure': "Choose a printer for each function",
+    'printerSetting_routingCopies': "Copies",
+    'printerSetting_routingEmpty':
+        "Not configured — every function prints as default",
+    'printerSetting_routingErrCopies': "At least 1 copy",
+    'printerSetting_routingErrDuplicate': "Duplicate function name",
+    'printerSetting_routingErrPrinter': "Choose a printer",
+    'printerSetting_routingErrTemplate': "Choose a template",
+    'printerSetting_routingHint':
+        "Pick a printer and template for each function. Shared by the whole store.",
+    'printerSetting_routingHowTo':
+        "To change: tap a printer on the map and pick its functions.",
+    'printerSetting_routingNoTemplate': "No template for this function yet",
+    'printerSetting_routingNone': "No printer yet",
+    'printerSetting_routingPreview': "Preview the receipt on payment",
+    'printerSetting_routingPrinter': "Printer",
+    'printerSetting_routingRemove': "Remove this function",
+    'printerSetting_routingSave': "Save",
+    'printerSetting_routingSaveFailed': "Could not save, try again",
+    'printerSetting_routingSaved': "Print settings saved",
+    'printerSetting_routingTemplate': "Template",
+    'printerSetting_routingTitle': "Print by function",
     'printerSetting_stationBuiltInNameNamed': "Built-in printer (@stationName)",
     'printerSetting_stationBuiltInOfflineState': "Offline",
     'printerSetting_stationBuiltInOnline': "Online",

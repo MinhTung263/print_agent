@@ -12,6 +12,7 @@ import 'package:print_agent/src/presentation/widgets/agent_map_header.dart';
 import 'package:print_agent/src/presentation/widgets/agent_printers_map.dart';
 import 'package:print_agent/src/presentation/widgets/agent_doctor_card.dart';
 import 'package:print_agent/src/presentation/widgets/agent_stats_card.dart';
+import 'package:print_agent/src/presentation/widgets/routing/agent_print_routing_card.dart';
 import 'package:print_agent/src/presentation/widgets/sender_agents_map.dart';
 
 /// Màn "Máy Agent": sơ đồ kết nối + cài đặt.
@@ -205,6 +206,49 @@ class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
     }
   }
 
+  /// Các máy Agent đã biết mà đang ngoại tuyến (không có trong danh sách trực tuyến).
+  List<Map<Object?, Object?>> _offlineAgents() {
+    final online = {
+      for (final a
+          in (_relay.isStation.value ? _relay.stations.value : _agents))
+        a['id']?.toString(),
+    };
+    return [
+      for (final k in KnownAgents.items)
+        if (!online.contains(k.id)) k.info,
+    ];
+  }
+
+  /// Xoá mọi máy Agent ngoại tuyến (cả trên kênh trung chuyển): hỏi xác nhận một lần.
+  Future<void> _clearOfflineAgents() async {
+    final offline = _offlineAgents();
+    if (offline.isEmpty) return;
+    await Get.dialog<void>(
+      AppConfirmDialog(
+        title: LocaleKeys.printerSetting_agentClearOffline.tr,
+        content: LocaleKeys.printerSetting_agentClearOfflineConfirmTr(
+          count: '${offline.length}',
+        ),
+        confirmText: LocaleKeys.printerSetting_agentDelete.tr,
+        onConfirm: () async {
+          Get.back<void>();
+          var done = 0;
+          for (final info in offline) {
+            if (await PrintAgentUi.station.deleteAgent(info)) done++;
+          }
+          unawaited(
+            AppNotification.show(
+              message: LocaleKeys.printerSetting_agentClearOfflineDoneTr(
+                count: '$done',
+              ),
+              type: AppNotificationType.success,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   /// Chỉ dựng lại khi trạng thái kênh thật sự đổi (Firebase phát lặp giá trị).
   void _setCloud(String name, bool ok) {
     if (!mounted || _cloud[name] == ok) return;
@@ -234,6 +278,8 @@ class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
                     AgentMapHeader(
                       isAgent: isAgent,
                       onRefresh: () => unawaited(_reload(check: true)),
+                      offlineAgents: () => _offlineAgents().length,
+                      onClearOffline: () => unawaited(_clearOfflineAgents()),
                       onArrange: () => unawaited(
                         AgentMapArrangeSheet.show(isAgent: isAgent),
                       ),
@@ -260,6 +306,9 @@ class _AgentPageState extends State<AgentPage> with WidgetsBindingObserver {
             if (isAgent) AgentStatsCard(autoRestart: _autoRestart),
             // "Bác sĩ trạm in": cái gì đang ổn / cần xem.
             if (isAgent) AgentDoctorCard(cloud: cloud),
+            // Cấu hình in theo chức năng (theo tài khoản) — chỉ khi app chủ nối kho cấu hình.
+            if (isAgent && PrintAgentUi.printRouting != null)
+              AgentPrintRoutingCard(store: PrintAgentUi.printRouting!),
             if (isAgent) ...widget.agentSide,
             ...widget.side,
             // Máy in có sẵn của các trạm in: bật / tắt trong bảng mở từ sơ đồ

@@ -1,6 +1,24 @@
 import '../agent/printer_type.dart';
 import 'printer_option.dart';
 
+/// Kết quả [PrinterDiscovery.ensureDhcp].
+class DhcpEnsureResult {
+  const DhcpEnsureResult(
+    this.address, {
+    this.enabled = false,
+    this.failed = false,
+  });
+
+  /// Địa chỉ máy in sau khi xử lý (khác ban đầu khi router cấp IP mới).
+  final String address;
+
+  /// Vừa bật DHCP cho máy.
+  final bool enabled;
+
+  /// Máy đang IP tĩnh nhưng không bật được DHCP.
+  final bool failed;
+}
+
 /// Cổng tìm / cài máy in của trạm in máy tính (domain). Giao diện chỉ dùng cổng
 /// này — cài đặt cụ thể (plugin printer_label, mạng của máy) ở tầng dữ liệu
 /// ([DesktopPrinterDiscovery]); test thay bằng bản giả.
@@ -14,6 +32,9 @@ abstract interface class PrinterDiscovery {
   /// Tên model máy in mạng ở [address] (không gửi gì vào cổng in); `null` khi
   /// không đọc được.
   Future<String?> modelOf(String address);
+
+  /// MAC máy in mạng ở [address] (bảng ARP); `null` khi không đọc được.
+  Future<String?> macOf(String address);
 
   /// Máy in mạng ở [address] là máy in tem hay máy in hoá đơn (hỏi trạng thái, không
   /// in gì); `null` khi chưa rõ. [model] (nếu đã biết) giúp đoán khi máy không trả lời.
@@ -39,6 +60,10 @@ abstract interface class PrinterDiscovery {
   /// Các dải mạng máy này đang quét tìm máy in (VD `192.168.1.x`) — hiện cho người
   /// dùng biết máy in phải cùng dải này.
   Future<List<String>> scannedNetworks();
+
+  /// Máy in mạng [address] đang IP tĩnh (tắt DHCP) thì bật DHCP rồi tìm lại máy theo MAC. Máy đã bật
+  /// DHCP / USB / không đọc được cấu hình: trả nguyên [address].
+  Future<DhcpEnsureResult> ensureDhcp(String address);
 
   /// IPv4 nội bộ của máy này (điền sẵn dải mạng khi nhập IP tay).
   Future<String?> localIp();

@@ -230,7 +230,36 @@ class _LineView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final next = line.next;
+    if (next == null) return _segment(line);
+    // "Hoá đơn | USB": hai phần một hàng; hẹp quá thì thu nhỏ chữ, không xuống dòng / tràn.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: AppRow(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 6,
+        children: [
+          _segment(line, flexible: false),
+          Container(
+            width: 1,
+            height: 12,
+            color: AppColors.dsGray2.withValues(alpha: 0.4),
+          ),
+          _segment(next, flexible: false),
+        ],
+      ),
+    );
+  }
+
+  static Widget _segment(AgentMapLine line, {bool flexible = true}) {
     final icon = line.icon;
+    final text = AppText.raw(
+      line.text,
+      variant: .caption,
+      tone: .secondary,
+      textAlign: TextAlign.center,
+      maxLines: 1,
+    );
     return AppRow(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -238,15 +267,7 @@ class _LineView extends StatelessWidget {
       children: [
         if (icon != null)
           Icon(icon, size: 13, color: line.color ?? AppColors.dsGray2),
-        Flexible(
-          child: AppText.raw(
-            line.text,
-            variant: .caption,
-            tone: .secondary,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-          ),
-        ),
+        if (flexible) Flexible(child: text) else text,
       ],
     );
   }

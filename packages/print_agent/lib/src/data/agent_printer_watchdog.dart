@@ -454,11 +454,32 @@ class AgentPrinterWatchdog<P extends AgentPrinterRef> {
     }
   }
 
+  /// Đưa MỌI máy in chưa có trạng thái lên sơ đồ ngay (ở "đang kiểm tra"), trong MỘT lần cập
+  /// nhật. Không thì máy in hiện dần từng cái theo lượt dò (USB đợi từng máy, LAN đợi cả
+  /// lượt) — sơ đồ nháy, bố cục nhảy khi mở app / cửa hàng nhiều máy in.
+  void _seedChecking() {
+    final known = {for (final s in statuses) _keyOf(s.printer)};
+    final missing = <AgentPrinterStatus<P>>[
+      for (final p in List.of(_gateway.printers))
+        if ((p.refKind == AgentPrinterKind.lan ||
+                p.refKind == AgentPrinterKind.usb) &&
+            !known.contains(_keyOf(p)))
+          AgentPrinterStatus<P>(
+            printer: p,
+            state: AgentPrinterState.checking,
+            checkedAt: DateTime.now(),
+          ),
+    ];
+    if (missing.isEmpty) return;
+    statuses.assignAll([...statuses, ...missing]);
+  }
+
   Future<void> _checkAll({bool force = false}) async {
     if (_checking || (_printing > 0 && !force)) return;
     _checking = true;
     isChecking.value = true;
     try {
+      _seedChecking();
       // Máy in tích hợp (Sunmi / T1-G...) mất kết nối: nối lại.
       if (_gateway.hasBuiltIn && !_gateway.builtInConnected) {
         _log('[AGENT] Máy in tích hợp mất kết nối — nối lại');

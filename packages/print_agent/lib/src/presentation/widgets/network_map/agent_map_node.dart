@@ -14,7 +14,11 @@ enum AgentMapNodeKind { device, agent }
 /// Một dòng phụ dưới tên nút: chữ + biểu tượng nhỏ cho biết đó là gì (VD
 /// biểu tượng mạng LAN trước IP, Wi-Fi trước tên Wi-Fi).
 class AgentMapLine {
-  const AgentMapLine(this.text, {this.icon, this.color});
+  const AgentMapLine(this.text, {this.icon, this.color, this.next});
+
+  /// Phần thứ hai CÙNG MỘT HÀNG, sau vạch ngăn — VD "Hoá đơn | USB" (loại máy | kiểu kết nối)
+  /// thay vì hai dòng riêng (tiết kiệm chỗ, nhất là khi cửa hàng nhiều máy in).
+  final AgentMapLine? next;
 
   final String text;
   final IconData? icon;

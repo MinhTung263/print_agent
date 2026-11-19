@@ -15,6 +15,12 @@ Future<void> desktopAddPrinter(DesktopAgent agent) async {
     context,
     current: agent.config.printer,
     added: {for (final e in agent.gateway.extras.items) e.address},
+    addedMacs: {
+      for (final e in agent.gateway.extras.items)
+        if (e.mac.isNotEmpty) e.mac.trim().toUpperCase().replaceAll('-', ':'),
+      if (agent.config.printerMac.isNotEmpty)
+        agent.config.printerMac.trim().toUpperCase().replaceAll('-', ':'),
+    },
     connectedOf: agent.isPrinterConnected,
   );
   if (picked != null && picked.isNotEmpty) await agent.addPrinters(picked);

@@ -40,6 +40,7 @@ Future<List<String>?> showPrintersPickerDialog(
   BuildContext context, {
   String current = '',
   Set<String> added = const {},
+  Set<String> addedMacs = const {},
   bool Function(String address)? connectedOf,
   PrinterDiscovery discovery = const DesktopPrinterDiscovery(),
 }) => showDialog<List<String>>(
@@ -47,6 +48,7 @@ Future<List<String>?> showPrintersPickerDialog(
   builder: (_) => _PrinterPickerDialog(
     current: current,
     added: added,
+    addedMacs: addedMacs,
     connectedOf: connectedOf,
     discovery: discovery,
     multi: true,
@@ -57,6 +59,7 @@ class _PrinterPickerDialog extends StatefulWidget {
   const _PrinterPickerDialog({
     required this.current,
     this.added = const {},
+    this.addedMacs = const {},
     this.connectedOf,
     required this.discovery,
     this.multi = false,
@@ -67,6 +70,9 @@ class _PrinterPickerDialog extends StatefulWidget {
 
   /// Địa chỉ các máy đã thêm vào trạm (ngoài máy in chính): hiện "Đã thêm", không chọn lại.
   final Set<String> added;
+
+  /// MAC các máy đã thêm: máy dò thấy cùng MAC là máy đã thêm (dù IP đã đổi).
+  final Set<String> addedMacs;
 
   /// Máy [address] đang kết nối không (trạng thái sống của trạm in) — hiện cạnh máy đã thêm.
   final bool Function(String address)? connectedOf;
@@ -104,6 +110,7 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
   /// rồi kết quả cuối) thì áp lại — thẻ không mất tên model / nhãn loại đã hiện.
   final Map<String, String> _models = {};
   final Map<String, PrinterType> _types = {};
+  final Map<String, String> _macs = {};
 
   List<PrinterOption> _decorate(List<PrinterOption> list) {
     var out = list;
@@ -112,6 +119,9 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
     }
     for (final e in _types.entries) {
       out = PrinterPickerList.withType(out, e.key, e.value);
+    }
+    for (final e in _macs.entries) {
+      out = PrinterPickerList.withMac(out, e.key, e.value);
     }
     return out;
   }
@@ -188,6 +198,17 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
         ]);
       });
     }
+    // MAC (bảng ARP) để biết máy này có phải máy đã thêm nhưng đổi IP không.
+    if (!_macs.containsKey(address)) {
+      final mac = await widget.discovery.macOf(address);
+      if (!mounted) return;
+      if (mac != null && mac.isNotEmpty) {
+        _macs[address] = mac;
+        setState(
+          () => _options = PrinterPickerList.withMac(_options, address, mac),
+        );
+      }
+    }
     final type = await widget.discovery.typeOf(address, model: model);
     if (!mounted || type == null) return;
     _types[address] = type;
@@ -213,11 +234,75 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
   /// thì về cách đầu).
   final Map<String, (int, DateTime)> _beeps = {};
 
+  /// Máy [o] đang IP tĩnh (tắt DHCP) thì bật DHCP rồi tải lại máy theo IP mới (danh sách, lựa chọn,
+  /// model / loại / MAC). Trả địa chỉ dùng tiếp (đổi khi router cấp IP khác). Máy USB / đã DHCP: nguyên vẹn.
+  Future<String> _ensureDhcp(PrinterOption o) async {
+    if (o.kind != PrinterOptionKind.lan || o.address.isEmpty) return o.address;
+    final r = await widget.discovery.ensureDhcp(o.address);
+    if (!mounted) return r.address;
+    final messenger = ScaffoldMessenger.of(context);
+    if (r.failed) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'Máy in "${o.title}" đang dùng IP tĩnh (tắt DHCP) nhưng chưa bật được DHCP — hãy bật trong cài đặt mạng của máy in.',
+          ),
+        ),
+      );
+      return o.address;
+    }
+    if (!r.enabled) return o.address;
+    if (r.address != o.address) _replaceAddress(o.address, r.address);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          'Đã bật DHCP cho "${o.title}" (trước đó dùng IP tĩnh). IP hiện tại: ${r.address}',
+        ),
+      ),
+    );
+    return r.address;
+  }
+
+  /// Máy đổi IP (VD sau khi bật DHCP): thay địa chỉ ở mọi nơi rồi đọc lại model / loại / MAC ở IP mới.
+  void _replaceAddress(String from, String to) {
+    PrinterOption move(PrinterOption o) => o.address == from
+        ? PrinterOption.lan(
+            to,
+            manual: false,
+            model: _models[from],
+            type: o.type,
+            mac: o.mac,
+          )
+        : o;
+    setState(() {
+      _options = [for (final o in _options) move(o)];
+      _manual.replaceRange(0, _manual.length, [
+        for (final m in _manual) move(m),
+      ]);
+      if (_selected == from) _selected = to;
+      if (_checked.remove(from)) _checked.add(to);
+      for (final map in [_models, _types, _macs]) {
+        final v = map.remove(from);
+        if (v != null) map[to] = v;
+      }
+      _identified
+        ..remove(from)
+        ..add(to);
+    });
+    unawaited(_identify(to));
+  }
+
   /// Bíp máy [o]. Bấm lại (trong 30 giây) khi không nghe thấy thì thử cách khác ([PrinterBeepPlan]) — máy
   /// chưa rõ loại hay nhận sai loại vẫn có cách bíp được. (Thông báo hiện dưới hộp thoại nên không đặt nút
   /// bấm trong thông báo được — khách bấm lại chính nút loa.)
   Future<void> _beep(PrinterOption o) async {
     final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
+    // Máy IP tĩnh: bật DHCP trước rồi bíp ở IP mới.
+    final address = await _ensureDhcp(o);
+    if (!mounted) return;
+    if (address != o.address) {
+      o = _all.firstWhere((x) => x.address == address, orElse: () => o);
+    }
     final prev = _beeps[o.address];
     final attempt =
         prev != null &&
@@ -256,7 +341,13 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
 
   /// Máy [o] đã có trong trạm (máy in chính hoặc máy đã thêm) — thêm lại không được.
   bool _isAdded(PrinterOption o) =>
-      o.address.isNotEmpty && widget.added.contains(o.address);
+      (o.address.isNotEmpty && widget.added.contains(o.address)) ||
+      _macAdded(o.mac);
+
+  bool _macAdded(String? mac) {
+    final m = (mac ?? '').trim().toUpperCase().replaceAll('-', ':');
+    return m.isNotEmpty && widget.addedMacs.contains(m);
+  }
 
   /// Hiện trạng thái kết nối cho máy đang dùng / đã thêm (khi có nguồn trạng thái).
   bool _showsConnection(PrinterOption o) =>
@@ -311,7 +402,7 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
     final failed = <String>[];
     for (final o in picked) {
       if (!o.needsSetup) {
-        addresses.add(o.address);
+        addresses.add(await _ensureDhcp(o));
         continue;
       }
       final address = await widget.discovery.setupUsb(o.setupPort!);
@@ -343,7 +434,11 @@ class _PrinterPickerDialogState extends State<_PrinterPickerDialog> {
     final option = _all.where((o) => o.key == _selected).firstOrNull;
     if (option == null) return;
     if (!option.needsSetup) {
-      Navigator.of(context).pop(option.address);
+      // Chọn máy IP tĩnh: bật DHCP rồi dùng IP mới.
+      setState(() => _settingUp = true);
+      final address = await _ensureDhcp(option);
+      if (!mounted) return;
+      Navigator.of(context).pop(address);
       return;
     }
     setState(() => _settingUp = true);

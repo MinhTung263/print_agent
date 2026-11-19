@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:print_agent/src/domain/entities/agent_test_print_result.dart';
 import 'package:print_agent/src/presentation/kit/kit.dart';
+import 'package:print_agent/src/presentation/widgets/routing/agent_printer_functions.dart';
 
 import 'agent_printer_remove_button.dart';
 import 'agent_test_print_button.dart';
@@ -30,6 +31,10 @@ class AgentPrinterDetail {
     this.footerAction,
     this.onReconnect,
     this.onSwitchNetwork,
+    this.functionsEditable = false,
+    this.usbUnsupported = false,
+    this.routingName,
+    this.isLabelPrinter,
   });
 
   final String name;
@@ -72,6 +77,19 @@ class AgentPrinterDetail {
 
   /// "Đổi mạng": máy in LAN ở mạng khác — chuyển sang đúng Wi-Fi của máy in; `null` = không có.
   final Future<bool> Function()? onSwitchNetwork;
+
+  /// Máy in của máy này: cho chọn chức năng in (Tạm tính, Thanh toán...) ngay trong chi tiết
+  /// khi app chủ nối kho cấu hình ([PrintAgentUi.printRouting]).
+  final bool functionsEditable;
+
+  /// Máy in USB nhưng thiết bị này (iOS) không in USB được: hiện cảnh báo.
+  final bool usbUnsupported;
+
+  /// Tên máy in này trong danh sách máy in của cửa hàng; `null` = chưa có trong cửa hàng.
+  final String? routingName;
+
+  /// Máy in tem (`true`): chỉ chọn được chức năng "Tem nhãn"; `null` = chưa rõ.
+  final bool? isLabelPrinter;
 }
 
 /// "Chi tiết máy in" khi bấm máy in trên sơ đồ: điện thoại mở bảng trượt,
@@ -259,6 +277,36 @@ class AgentPrinterDetailSheet extends StatelessWidget {
               ],
             ),
           ),
+          if (d.usbUnsupported)
+            const BaseCard.section(
+              child: AppText(
+                LocaleKeys.printerSetting_printerUsbUnsupported,
+                variant: .body,
+                tone: .secondary,
+                maxLines: 5,
+              ),
+            ),
+          if (d.functionsEditable &&
+              PrintAgentUi.printRouting != null &&
+              d.routingName == null)
+            const BaseCard.section(
+              child: AppText(
+                LocaleKeys.printerSetting_printerFunctionsNotInStore,
+                variant: .caption,
+                tone: .secondary,
+                maxLines: 4,
+              ),
+            ),
+          if (d.functionsEditable &&
+              PrintAgentUi.printRouting != null &&
+              d.routingName != null)
+            BaseCard.section(
+              child: AgentPrinterFunctions(
+                store: PrintAgentUi.printRouting!,
+                printerName: d.routingName!,
+                isLabelPrinter: d.isLabelPrinter == true,
+              ),
+            ),
           if (d.settings != null) BaseCard.section(child: d.settings!),
           if (d.onTestPrint != null)
             AgentTestPrintButton(name: d.name, onTestPrint: d.onTestPrint!),

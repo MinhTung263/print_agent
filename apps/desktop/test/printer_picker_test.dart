@@ -39,6 +39,13 @@ class _FakeDiscovery implements PrinterDiscovery {
   PrinterOption missing(String address) => PrinterOption.lan(address);
 
   @override
+  Future<String?> macOf(String address) async => null;
+
+  @override
+  Future<DhcpEnsureResult> ensureDhcp(String address) async =>
+      DhcpEnsureResult(address);
+
+  @override
   Future<String?> modelOf(String address) async => models[address];
 
   @override
@@ -592,4 +599,28 @@ void main() {
       },
     );
   });
+
+  test(
+    'MAC: gắn được cho máy dò thấy và giữ nguyên khi đổi tên model / loại',
+    () {
+      var all = [PrinterOption.lan('192.168.1.50', mac: 'AA:BB:CC:00:11:22')];
+      all = PrinterPickerList.withModel(all, '192.168.1.50', 'XP-80C');
+      all = PrinterPickerList.withType(
+        all,
+        '192.168.1.50',
+        PrinterType.receipt,
+      );
+      expect(all.single.mac, 'AA:BB:CC:00:11:22');
+      expect(all.single.title, 'XP-80C');
+      // Máy chưa biết MAC: đọc từ bảng ARP rồi gắn thêm.
+      var other = [PrinterOption.lan('192.168.1.51')];
+      expect(other.single.mac, isNull);
+      other = PrinterPickerList.withMac(
+        other,
+        '192.168.1.51',
+        'AA:BB:CC:00:11:33',
+      );
+      expect(other.single.mac, 'AA:BB:CC:00:11:33');
+    },
+  );
 }
