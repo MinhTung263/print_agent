@@ -88,6 +88,8 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentJobErrBuiltIn': "Máy in có sẵn trên máy chưa sẵn sàng",
     'printerSetting_agentJobErrBusy': "Máy in đang bận (máy khác đang in)",
     'printerSetting_agentJobErrCoverOpen': "Máy in đang mở nắp",
+    'printerSetting_agentJobErrInterrupted':
+        "Mất kết nối với máy in khi đang in, phiếu có thể chưa ra đủ",
     'printerSetting_agentJobErrNoContent': "Phiếu in không có nội dung",
     'printerSetting_agentJobErrNotReady':
         "Máy in không phản hồi (tắt nguồn, mất mạng hoặc hết giấy)",
@@ -104,6 +106,8 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentJobHintBusy':
         "Máy khác đang dùng máy in này. Chờ vài giây rồi thử lại.",
     'printerSetting_agentJobHintCoverOpen': "Đóng nắp máy in lại.",
+    'printerSetting_agentJobHintInterrupted':
+        "Kiểm tra phiếu đã ra đủ chưa, nếu thiếu thì in lại. Không tự in lại để tránh in trùng.",
     'printerSetting_agentJobHintNoContent': "Gửi lại phiếu từ máy bán hàng.",
     'printerSetting_agentJobHintNotReady':
         "Kiểm tra máy in đã bật, có giấy và đã nối mạng / cắm USB.",
@@ -451,6 +455,8 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentJobErrBusy':
         "Printer is busy (another device is printing)",
     'printerSetting_agentJobErrCoverOpen': "Printer cover is open",
+    'printerSetting_agentJobErrInterrupted':
+        "Lost connection to the printer while printing, so the receipt may be incomplete",
     'printerSetting_agentJobErrNoContent': "The print job has no content",
     'printerSetting_agentJobErrNotReady':
         "Printer not responding (powered off, offline or out of paper)",
@@ -467,6 +473,8 @@ const Map<String, Map<String, String>> agentTranslations = {
     'printerSetting_agentJobHintBusy':
         "Another device is using this printer. Wait a few seconds and try again.",
     'printerSetting_agentJobHintCoverOpen': "Close the printer cover.",
+    'printerSetting_agentJobHintInterrupted':
+        "Check whether the receipt came out in full and print again if it did not. It is not retried automatically to avoid printing twice.",
     'printerSetting_agentJobHintNoContent':
         "Send the job again from the point of sale.",
     'printerSetting_agentJobHintNotReady':

@@ -281,6 +281,10 @@ abstract final class LocaleKeys {
   static const printerSetting_agentJobErrCoverOpen =
       'printerSetting_agentJobErrCoverOpen';
 
+  /// "Mất kết nối với máy in khi đang in, phiếu có thể chưa ra đủ"
+  static const printerSetting_agentJobErrInterrupted =
+      'printerSetting_agentJobErrInterrupted';
+
   /// "Phiếu in không có nội dung"
   static const printerSetting_agentJobErrNoContent =
       'printerSetting_agentJobErrNoContent';
@@ -325,6 +329,10 @@ abstract final class LocaleKeys {
   /// "Đóng nắp máy in lại."
   static const printerSetting_agentJobHintCoverOpen =
       'printerSetting_agentJobHintCoverOpen';
+
+  /// "Kiểm tra phiếu đã ra đủ chưa, nếu thiếu thì in lại. Không tự in lại để tránh in trùng."
+  static const printerSetting_agentJobHintInterrupted =
+      'printerSetting_agentJobHintInterrupted';
 
   /// "Gửi lại phiếu từ máy bán hàng."
   static const printerSetting_agentJobHintNoContent =

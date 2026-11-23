@@ -12,6 +12,8 @@ abstract final class AgentJobErrorText {
     AgentJobError.builtInNotReady =>
       LocaleKeys.printerSetting_agentJobErrBuiltIn,
     AgentJobError.sendFailed => LocaleKeys.printerSetting_agentJobErrSend,
+    AgentJobError.interrupted =>
+      LocaleKeys.printerSetting_agentJobErrInterrupted,
     AgentJobError.outOfPaper => LocaleKeys.printerSetting_agentJobErrOutOfPaper,
     AgentJobError.coverOpen => LocaleKeys.printerSetting_agentJobErrCoverOpen,
     AgentJobError.overheated => LocaleKeys.printerSetting_agentJobErrOverheated,
@@ -30,6 +32,8 @@ abstract final class AgentJobErrorText {
     AgentJobError.builtInNotReady =>
       LocaleKeys.printerSetting_agentJobHintBuiltIn,
     AgentJobError.sendFailed => LocaleKeys.printerSetting_agentJobHintSend,
+    AgentJobError.interrupted =>
+      LocaleKeys.printerSetting_agentJobHintInterrupted,
     AgentJobError.outOfPaper =>
       LocaleKeys.printerSetting_agentJobHintOutOfPaper,
     AgentJobError.coverOpen => LocaleKeys.printerSetting_agentJobHintCoverOpen,

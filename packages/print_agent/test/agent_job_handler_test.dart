@@ -95,6 +95,23 @@ void main() {
     expect(printer.printed, hasLength(1));
   });
 
+  test(
+    'đứt giữa chừng (interrupted): KHÔNG tự in lại, KHÔNG giữ lệnh — tránh in trùng',
+    () async {
+      // Lỗi xảy ra SAU khi đã gửi một phần: in lại / giữ lệnh rồi in lại sẽ ra hai bản (phiếu đã ra dở).
+      printer.failuresFirst.add(
+        const AgentPrintFailure(AgentJobError.interrupted),
+      );
+      var held = 0;
+      final ok = await jobs.handle(
+        receipt('10.0.0.9', key: 'dut', onHeld: () => held++),
+      );
+      expect(ok, isFalse);
+      expect(held, 0, reason: 'không giữ lệnh');
+      expect(printer.printed, isEmpty, reason: 'không tự in lại');
+    },
+  );
+
   test('cùng máy in: lệnh ra đúng thứ tự gửi (FIFO)', () async {
     printer.delay = const Duration(milliseconds: 20);
     final first = receipt('10.0.0.9', key: 'first');

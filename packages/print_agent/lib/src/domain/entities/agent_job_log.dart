@@ -17,6 +17,10 @@ enum AgentJobError {
   /// Kết nối được máy in nhưng gửi lệnh in lỗi.
   sendFailed,
 
+  /// Đứt kết nối khi ĐANG gửi: phiếu có thể đã ra một phần. KHÔNG tự thử lại / giữ lệnh (có thể in trùng) — khác
+  /// [unreachable] / [busy] là lỗi xảy ra TRƯỚC khi gửi byte nào.
+  interrupted,
+
   /// Máy in báo hết giấy.
   outOfPaper,
 
